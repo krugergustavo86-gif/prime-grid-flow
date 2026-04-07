@@ -130,6 +130,25 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
                     {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                disabled={l.paidInstallments >= l.totalInstallments}
+                                onClick={() => {
+                                  updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
+                                  toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
+                                }}
+                              >
+                                <CheckCircle className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Pagar parcela</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
