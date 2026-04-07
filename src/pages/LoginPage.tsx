@@ -6,8 +6,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import logoPrimegrid from "@/assets/logo-primegrid.png";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
