@@ -65,18 +65,22 @@ export function ReceivablesTab(props: Props) {
     setModalOpen(false);
   };
 
-  const handlePayment = () => {
+  const handlePaymentOrAdd = () => {
     if (!paymentModal || !paymentAmount) return;
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) { toast.error("Informe um valor válido"); return; }
-    const newPaid = paymentModal.paidValue + amount;
-    if (newPaid > paymentModal.value) { toast.error("Valor pago excede o valor total"); return; }
-    const updates: Partial<Receivable> = { paidValue: newPaid };
-    if (newPaid >= paymentModal.value) {
-      updates.status = "Recebido";
+    const r = paymentModal.receivable;
+    if (paymentModal.mode === "pay") {
+      const newPaid = r.paidValue + amount;
+      if (newPaid > r.value) { toast.error("Valor pago excede o valor total"); return; }
+      const updates: Partial<Receivable> = { paidValue: newPaid };
+      if (newPaid >= r.value) updates.status = "Recebido";
+      props.updateReceivable(r.id, updates);
+      toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
+    } else {
+      props.updateReceivable(r.id, { value: r.value + amount });
+      toast.success(`${formatCurrency(amount)} adicionado à dívida`);
     }
-    props.updateReceivable(paymentModal.id, updates);
-    toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
     setPaymentModal(null);
     setPaymentAmount("");
   };
