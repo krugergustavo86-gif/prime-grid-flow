@@ -93,11 +93,11 @@ export function createPatrimonySeed(): PatrimonyData {
       { id: generateId(), group: "Outros Ativos", description: "Inversores Solar", valueMarket: 70000 },
     ],
     receivables: [
-      { id: generateId(), description: "Carteira de Cheques", value: 353888.00, dueDate: "10/03/2026", type: "Cheque", status: "A vencer" },
-      { id: generateId(), description: "Carteira de Boletos", value: 2615532.24, type: "Boleto", status: "A vencer" },
-      { id: generateId(), description: "Serviços Caminhão", value: 979791.94, type: "Serviço", status: "A vencer" },
-      { id: generateId(), description: "Solar + BESS", value: 2278195.00, dueDate: "10/03/2026", type: "Solar", status: "A vencer" },
-      { id: generateId(), description: "Acerto Rodrigo", value: 147000.00, type: "Acerto", status: "A vencer", notes: "Pagamento mensal – abater conforme parcelas Rodrigo + financ. Cresol" },
+      { id: generateId(), description: "Carteira de Cheques", value: 353888.00, paidValue: 0, dueDate: "10/03/2026", type: "Cheque", status: "A vencer" },
+      { id: generateId(), description: "Carteira de Boletos", value: 2615532.24, paidValue: 0, type: "Boleto", status: "A vencer" },
+      { id: generateId(), description: "Serviços Caminhão", value: 979791.94, paidValue: 0, type: "Serviço", status: "A vencer" },
+      { id: generateId(), description: "Solar + BESS", value: 2278195.00, paidValue: 0, dueDate: "10/03/2026", type: "Solar", status: "A vencer" },
+      { id: generateId(), description: "Acerto Rodrigo", value: 147000.00, paidValue: 0, type: "Acerto", status: "A vencer", notes: "Pagamento mensal – abater conforme parcelas Rodrigo + financ. Cresol" },
     ],
     doubtfulCredits: [
       { id: generateId(), description: "Boletos em Atraso", value: 248000, responsible: "Financeiro" },
