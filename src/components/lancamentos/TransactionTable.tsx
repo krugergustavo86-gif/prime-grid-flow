@@ -100,11 +100,11 @@ export function TransactionTable({ transactions, locked, onEdit, onDelete }: Tra
               <tr key={tx.id} className={`border-b hover:bg-muted/20 ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
                 <td className="p-3 tabular-nums text-foreground">{formatDateBR(tx.date)}</td>
                 <td className="p-3 text-foreground">{tx.description}</td>
-                <td className="p-3">
-                  <Badge variant={tx.type === "Entrada" ? "default" : "destructive"} className={tx.type === "Entrada" ? "bg-chart-entrada text-success-foreground" : ""}>
-                    {tx.type}
-                  </Badge>
-                </td>
+                  <td className="p-3">
+                    <span className={tx.type === "Entrada" ? "inline-flex items-center rounded-full bg-chart-entrada px-2 py-0.5 text-xs font-medium text-success-foreground" : "inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground"}>
+                      {tx.type}
+                    </span>
+                  </td>
                 <td className="p-3 text-muted-foreground">{tx.category}</td>
                 <td className="p-3 text-right tabular-nums font-medium text-foreground">{formatCurrency(tx.value)}</td>
                 <td className="p-3 text-muted-foreground text-xs max-w-[150px] truncate">{tx.notes || "—"}</td>
@@ -117,10 +117,10 @@ export function TransactionTable({ transactions, locked, onEdit, onDelete }: Tra
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(tx)}>
+                        <DropdownMenuItem onSelect={() => onEdit(tx)}>
                           <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeleteId(tx.id)} className="text-destructive">
+                        <DropdownMenuItem onSelect={() => setDeleteId(tx.id)} className="text-destructive">
                           <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -154,10 +154,10 @@ export function TransactionTable({ transactions, locked, onEdit, onDelete }: Tra
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(tx)}>
+                      <DropdownMenuItem onSelect={() => onEdit(tx)}>
                         <Pencil className="h-3.5 w-3.5 mr-2" /> Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeleteId(tx.id)} className="text-destructive">
+                      <DropdownMenuItem onSelect={() => setDeleteId(tx.id)} className="text-destructive">
                         <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
                       </DropdownMenuItem>
                     </DropdownMenuContent>
