@@ -35,6 +35,8 @@ function statusBadge(status: string) {
 export function PayablesTab({ payables, addPayable, updatePayable, deletePayable, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Payable | null>(null);
+  const [payModalPayable, setPayModalPayable] = useState<Payable | null>(null);
+  const [payValue, setPayValue] = useState("");
 
   const activePays = payables.filter(p => p.status !== "Pago");
   const total = activePays.reduce((s, p) => s + p.value, 0);
