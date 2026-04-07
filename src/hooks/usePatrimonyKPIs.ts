@@ -6,6 +6,9 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
     const totalAssets = data.assets.reduce((s, a) => s + a.valueMarket, 0);
     const totalReceivables = data.receivables.reduce((s, r) => s + r.value, 0);
     const totalCash = data.cashEntries.reduce((s, c) => s + c.balance, 0);
+    const cashAvailableOnly = data.cashEntries
+      .filter(c => c.description.toLowerCase().includes("saldo em conta"))
+      .reduce((s, c) => s + c.balance, 0);
     const totalDoubtful = data.doubtfulCredits.reduce((s, d) => s + d.value, 0);
 
     const totalLoanBalance = data.loans.reduce((s, l) => {
@@ -28,7 +31,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
       netPatrimony,
       perPartner,
       totalAPagar,
-      cashAvailable: totalCash,
+      cashAvailable: cashAvailableOnly,
       totalReceivables,
       totalDoubtful,
       totalAssets,
