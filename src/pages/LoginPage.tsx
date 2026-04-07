@@ -42,7 +42,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary">Prime Grid</h1>
+          <img src={logoPrimegrid} alt="PrimeGrid Energia" width={120} height={120} className="mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Financeiro</p>
         </div>
 
