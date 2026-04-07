@@ -23,6 +23,7 @@ interface Props {
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
+  readOnly?: boolean;
 }
 
 const TYPES: ReceivableType[] = ["Cheque", "Boleto", "Serviço", "Solar", "Acerto", "Outro"];
@@ -38,7 +39,7 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
-  const { receivables, doubtfulCredits, cashEntries } = props;
+  const { receivables, doubtfulCredits, cashEntries, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
@@ -80,9 +81,11 @@ export function ReceivablesTab(props: Props) {
       <div className="bg-card rounded-lg border">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold text-foreground">Recebíveis</h3>
-          <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Novo
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo
+            </Button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -92,7 +95,7 @@ export function ReceivablesTab(props: Props) {
                 <th className="text-right p-3 font-medium text-muted-foreground">Valor</th>
                 <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Tipo</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>
+                {!readOnly && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -102,6 +105,7 @@ export function ReceivablesTab(props: Props) {
                   <td className="p-3 text-right tabular-nums font-medium">{formatCurrency(r.value)}</td>
                   <td className="p-3 hidden md:table-cell">{r.type}</td>
                   <td className="p-3">{statusBadge(r.status)}</td>
+                  {!readOnly && (
                   <td className="p-3 text-right">
                     <div className="flex gap-1 justify-end">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(r); setModalOpen(true); }}>
@@ -123,6 +127,7 @@ export function ReceivablesTab(props: Props) {
                       </AlertDialog>
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -174,7 +179,7 @@ export function ReceivablesTab(props: Props) {
                 <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Observações</th>
                 <th className="text-left p-3 font-medium text-muted-foreground hidden sm:table-cell">Ref.</th>
                 <th className="text-right p-3 font-medium text-muted-foreground">Saldo</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>
+                {!readOnly && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -184,28 +189,18 @@ export function ReceivablesTab(props: Props) {
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{c.notes || "—"}</td>
                   <td className="p-3 text-xs text-muted-foreground hidden sm:table-cell">{c.refDate}</td>
                   <td className="p-3 text-right tabular-nums font-bold text-primary">{formatCurrency(c.balance)}</td>
+                  {!readOnly && (
                   <td className="p-3 text-right">
                     <div className="flex gap-1 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-chart-entrada"
-                        title="Adicionar valor"
-                        onClick={() => { setCashModal({ id: c.id, type: "add" }); setCashAmount(""); }}
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-entrada" title="Adicionar valor" onClick={() => { setCashModal({ id: c.id, type: "add" }); setCashAmount(""); }}>
                         <ArrowUpCircle className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        title="Retirar valor"
-                        onClick={() => { setCashModal({ id: c.id, type: "withdraw" }); setCashAmount(""); }}
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Retirar valor" onClick={() => { setCashModal({ id: c.id, type: "withdraw" }); setCashAmount(""); }}>
                         <ArrowDownCircle className="h-4 w-4" />
                       </Button>
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>

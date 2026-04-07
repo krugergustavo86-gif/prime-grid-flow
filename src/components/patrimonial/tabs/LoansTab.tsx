@@ -18,6 +18,7 @@ interface Props {
   addLoan: (l: Omit<Loan, "id">) => void;
   updateLoan: (id: string, u: Partial<Loan>) => void;
   deleteLoan: (id: string) => void;
+  readOnly?: boolean;
 }
 
 const LOAN_TYPES: LoanType[] = ["Capital de Giro", "Financiamento", "Fin. Veículo", "Fin. Equipamento", "Consórcio Veículo", "Imóvel", "Terreno", "Pronamp", "Boletos a Pagar", "Outro"];
@@ -30,7 +31,7 @@ function isUrgent(dateStr?: string): boolean {
   return diff <= 7;
 }
 
-export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
+export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Loan | null>(null);
 
@@ -80,9 +81,11 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
       <div className="bg-card rounded-lg border">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold text-foreground">Contratos</h3>
-          <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Novo
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo
+            </Button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -95,7 +98,7 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
                 <th className="text-center p-3 font-medium text-muted-foreground">Progresso</th>
                 <th className="text-right p-3 font-medium text-muted-foreground">Vlr Parcela</th>
                 <th className="text-right p-3 font-medium text-muted-foreground">Saldo Devedor</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>
+                {!readOnly && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -123,6 +126,7 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
                     </td>
                     <td className="p-3 text-right tabular-nums">{formatCurrency(l.installmentValue)}</td>
                     <td className="p-3 text-right tabular-nums font-semibold text-destructive">{formatCurrency(balance)}</td>
+                    {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
@@ -139,6 +143,7 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
                         </AlertDialog>
                       </div>
                     </td>
+                    )}
                   </tr>
                 );
               })}
@@ -147,7 +152,7 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan }: Props) {
               <tr className="bg-muted/50 font-semibold">
                 <td className="p-3" colSpan={6}>Total Saldo Devedor</td>
                 <td className="p-3 text-right tabular-nums text-destructive">{formatCurrency(totalBalance)}</td>
-                <td></td>
+                {!readOnly && <td></td>}
               </tr>
             </tfoot>
           </table>
