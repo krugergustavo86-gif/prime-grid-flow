@@ -34,12 +34,15 @@ export function AppSidebar() {
       <SidebarContent>
         <div className={`px-4 py-6 ${collapsed ? "px-2" : ""}`}>
           {!collapsed && (
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">Prime Grid</h1>
-              <p className="text-xs text-sidebar-foreground/60">Financeiro</p>
+            <div className="flex items-center gap-2">
+              <img src={logoPrimegrid} alt="PrimeGrid" width={36} height={36} />
+              <div>
+                <h1 className="text-lg font-bold text-sidebar-foreground">Prime Grid</h1>
+                <p className="text-xs text-sidebar-foreground/60">Financeiro</p>
+              </div>
             </div>
           )}
-          {collapsed && <div className="text-center text-sidebar-foreground font-bold text-sm">PG</div>}
+          {collapsed && <img src={logoPrimegrid} alt="PrimeGrid" width={28} height={28} className="mx-auto" />}
         </div>
         <SidebarGroup>
           <SidebarGroupContent>
