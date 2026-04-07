@@ -35,6 +35,8 @@ function isUrgent(dateStr?: string): boolean {
 export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Loan | null>(null);
+  const [payModalLoan, setPayModalLoan] = useState<Loan | null>(null);
+  const [payValue, setPayValue] = useState("");
 
   const totalBalance = loans.reduce((s, l) => s + (l.totalInstallments - l.paidInstallments) * l.installmentValue, 0);
   const totalOpen = loans.reduce((s, l) => s + (l.totalInstallments - l.paidInstallments), 0);
@@ -53,6 +55,30 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
     }
     setEditing(null);
     setModalOpen(false);
+  };
+
+  const isBoleto = (l: Loan) => l.type === "Boletos a Pagar";
+
+  const handlePayClick = (l: Loan) => {
+    if (isBoleto(l)) {
+      setPayModalLoan(l);
+      setPayValue(l.installmentValue?.toString() || "");
+    } else {
+      updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
+      toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
+    }
+  };
+
+  const handlePayBoleto = () => {
+    if (!payModalLoan || !payValue) return;
+    const val = parseFloat(payValue) || 0;
+    updateLoan(payModalLoan.id, {
+      paidInstallments: payModalLoan.paidInstallments + 1,
+      installmentValue: val,
+    });
+    toast.success(`Boleto de ${formatCurrency(val)} registrado como pago`);
+    setPayModalLoan(null);
+    setPayValue("");
   };
 
   return (
