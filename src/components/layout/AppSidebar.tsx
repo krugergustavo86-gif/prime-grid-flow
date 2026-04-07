@@ -1,4 +1,5 @@
 import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut } from "lucide-react";
+import logoPrimegrid from "@/assets/logo-primegrid.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
