@@ -1,15 +1,17 @@
 import { useMemo } from "react";
 import { PatrimonyData } from "@/types";
 
-export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
+export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number) {
   return useMemo(() => {
     const totalAssets = data.assets.reduce((s, a) => s + a.valueMarket, 0);
     const totalReceivables = data.receivables.reduce((s, r) => s + r.value, 0);
     const totalCash = data.cashEntries.reduce((s, c) => s + c.balance, 0);
-    const cashAvailableOnly = data.cashEntries
+    const totalDoubtful = data.doubtfulCredits.reduce((s, d) => s + d.value, 0);
+
+    // Use caixaAtual from transactions module when available, otherwise fall back to cash_entries
+    const cashAvailable = caixaAtual ?? data.cashEntries
       .filter(c => c.description.toLowerCase().includes("saldo em conta"))
       .reduce((s, c) => s + c.balance, 0);
-    const totalDoubtful = data.doubtfulCredits.reduce((s, d) => s + d.value, 0);
 
     const totalLoanBalance = data.loans.reduce((s, l) => {
       const open = l.totalInstallments - l.paidInstallments;
@@ -20,7 +22,8 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
       .filter(p => p.status !== "Pago")
       .reduce((s, p) => s + p.value, 0);
 
-    const grossPatrimony = totalAssets + totalReceivables + totalCash;
+    // Include caixaAtual in gross patrimony when provided
+    const grossPatrimony = totalAssets + totalReceivables + (caixaAtual !== undefined ? caixaAtual : totalCash);
     const totalAPagar = totalLoanBalance + totalPayables;
     const netPatrimony = grossPatrimony - totalAPagar;
     const perPartner = numSocios > 0 ? netPatrimony / numSocios : netPatrimony;
@@ -31,7 +34,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
       netPatrimony,
       perPartner,
       totalAPagar,
-      cashAvailable: cashAvailableOnly,
+      cashAvailable,
       totalReceivables,
       totalDoubtful,
       totalAssets,
@@ -39,5 +42,5 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
       totalPayables,
       debtRate,
     };
-  }, [data, numSocios]);
+  }, [data, numSocios, caixaAtual]);
 }
