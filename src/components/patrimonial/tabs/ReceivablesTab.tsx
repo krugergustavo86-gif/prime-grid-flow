@@ -266,28 +266,29 @@ export function ReceivablesTab(props: Props) {
         </div>
       </div>
 
-      {/* Payment Modal */}
+      {/* Payment / Add Value Modal */}
       <Dialog open={!!paymentModal} onOpenChange={(o) => !o && setPaymentModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Registrar Pagamento</DialogTitle>
+            <DialogTitle>{paymentModal?.mode === "add" ? "Adicionar Valor" : "Registrar Pagamento"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm font-medium">{paymentModal?.description}</p>
+            <p className="text-sm font-medium">{paymentModal?.receivable.description}</p>
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Valor total: {formatCurrency(paymentModal?.value ?? 0)}</span>
-              <span>Já pago: {formatCurrency(paymentModal?.paidValue ?? 0)}</span>
+              <span>Valor total: {formatCurrency(paymentModal?.receivable.value ?? 0)}</span>
+              <span>Já pago: {formatCurrency(paymentModal?.receivable.paidValue ?? 0)}</span>
             </div>
-            <div className="text-sm font-medium text-primary">
-              Restante: {formatCurrency((paymentModal?.value ?? 0) - (paymentModal?.paidValue ?? 0))}
-            </div>
+            {paymentModal?.mode === "pay" && (
+              <div className="text-sm font-medium text-primary">
+                Restante: {formatCurrency((paymentModal?.receivable.value ?? 0) - (paymentModal?.receivable.paidValue ?? 0))}
+              </div>
+            )}
             <div>
-              <Label>Valor do pagamento (R$)</Label>
+              <Label>{paymentModal?.mode === "add" ? "Valor a adicionar (R$)" : "Valor do pagamento (R$)"}</Label>
               <Input
                 type="number"
                 min="0"
                 step="0.01"
-                max={(paymentModal?.value ?? 0) - (paymentModal?.paidValue ?? 0)}
                 value={paymentAmount}
                 onChange={e => setPaymentAmount(e.target.value)}
                 autoFocus
@@ -296,7 +297,9 @@ export function ReceivablesTab(props: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentModal(null)}>Cancelar</Button>
-            <Button onClick={handlePayment}>Registrar</Button>
+            <Button onClick={handlePaymentOrAdd}>
+              {paymentModal?.mode === "add" ? "Adicionar" : "Registrar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
