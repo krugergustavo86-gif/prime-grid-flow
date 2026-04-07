@@ -44,7 +44,7 @@ export function ReceivablesTab(props: Props) {
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
   const [cashAmount, setCashAmount] = useState("");
-  const [paymentModal, setPaymentModal] = useState<Receivable | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
 
   const totalReceivables = receivables.reduce((s, r) => s + r.value, 0);
