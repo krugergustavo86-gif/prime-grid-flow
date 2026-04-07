@@ -162,17 +162,16 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
                                 disabled={l.paidInstallments >= l.totalInstallments}
-                                onClick={() => {
-                                  updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
-                                  toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
-                                }}
+                                onClick={() => handlePayClick(l)}
                               >
                                 <CheckCircle className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Pagar parcela</TooltipContent>
+                            <TooltipContent>{isBoleto(l) ? "Pagar boleto (valor manual)" : "Pagar parcela"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                           </Tooltip>
                         </TooltipProvider>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
