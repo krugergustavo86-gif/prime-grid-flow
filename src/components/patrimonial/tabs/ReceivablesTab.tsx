@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -44,7 +44,7 @@ export function ReceivablesTab(props: Props) {
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
   const [cashAmount, setCashAmount] = useState("");
-  const [paymentModal, setPaymentModal] = useState<Receivable | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
 
   const totalReceivables = receivables.reduce((s, r) => s + r.value, 0);
@@ -65,18 +65,22 @@ export function ReceivablesTab(props: Props) {
     setModalOpen(false);
   };
 
-  const handlePayment = () => {
+  const handlePaymentOrAdd = () => {
     if (!paymentModal || !paymentAmount) return;
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) { toast.error("Informe um valor válido"); return; }
-    const newPaid = paymentModal.paidValue + amount;
-    if (newPaid > paymentModal.value) { toast.error("Valor pago excede o valor total"); return; }
-    const updates: Partial<Receivable> = { paidValue: newPaid };
-    if (newPaid >= paymentModal.value) {
-      updates.status = "Recebido";
+    const r = paymentModal.receivable;
+    if (paymentModal.mode === "pay") {
+      const newPaid = r.paidValue + amount;
+      if (newPaid > r.value) { toast.error("Valor pago excede o valor total"); return; }
+      const updates: Partial<Receivable> = { paidValue: newPaid };
+      if (newPaid >= r.value) updates.status = "Recebido";
+      props.updateReceivable(r.id, updates);
+      toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
+    } else {
+      props.updateReceivable(r.id, { value: r.value + amount });
+      toast.success(`${formatCurrency(amount)} adicionado à dívida`);
     }
-    props.updateReceivable(paymentModal.id, updates);
-    toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
     setPaymentModal(null);
     setPaymentAmount("");
   };
@@ -148,10 +152,13 @@ export function ReceivablesTab(props: Props) {
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
                         {r.status !== "Recebido" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => { setPaymentModal(r); setPaymentAmount(""); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => { setPaymentModal({ receivable: r, mode: "pay" }); setPaymentAmount(""); }}>
                             <DollarSign className="h-3.5 w-3.5" />
                           </Button>
                         )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-blue-medium" title="Adicionar valor à dívida" onClick={() => { setPaymentModal({ receivable: r, mode: "add" }); setPaymentAmount(""); }}>
+                          <ArrowUpCircle className="h-3.5 w-3.5" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(r); setModalOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -160,8 +167,8 @@ export function ReceivablesTab(props: Props) {
                             <CheckCircle className="h-3.5 w-3.5" />
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-blue-medium" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
-                            <ArrowUpCircle className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
+                            <Undo2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <AlertDialog>
@@ -259,28 +266,29 @@ export function ReceivablesTab(props: Props) {
         </div>
       </div>
 
-      {/* Payment Modal */}
+      {/* Payment / Add Value Modal */}
       <Dialog open={!!paymentModal} onOpenChange={(o) => !o && setPaymentModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Registrar Pagamento</DialogTitle>
+            <DialogTitle>{paymentModal?.mode === "add" ? "Adicionar Valor" : "Registrar Pagamento"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm font-medium">{paymentModal?.description}</p>
+            <p className="text-sm font-medium">{paymentModal?.receivable.description}</p>
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Valor total: {formatCurrency(paymentModal?.value ?? 0)}</span>
-              <span>Já pago: {formatCurrency(paymentModal?.paidValue ?? 0)}</span>
+              <span>Valor total: {formatCurrency(paymentModal?.receivable.value ?? 0)}</span>
+              <span>Já pago: {formatCurrency(paymentModal?.receivable.paidValue ?? 0)}</span>
             </div>
-            <div className="text-sm font-medium text-primary">
-              Restante: {formatCurrency((paymentModal?.value ?? 0) - (paymentModal?.paidValue ?? 0))}
-            </div>
+            {paymentModal?.mode === "pay" && (
+              <div className="text-sm font-medium text-primary">
+                Restante: {formatCurrency((paymentModal?.receivable.value ?? 0) - (paymentModal?.receivable.paidValue ?? 0))}
+              </div>
+            )}
             <div>
-              <Label>Valor do pagamento (R$)</Label>
+              <Label>{paymentModal?.mode === "add" ? "Valor a adicionar (R$)" : "Valor do pagamento (R$)"}</Label>
               <Input
                 type="number"
                 min="0"
                 step="0.01"
-                max={(paymentModal?.value ?? 0) - (paymentModal?.paidValue ?? 0)}
                 value={paymentAmount}
                 onChange={e => setPaymentAmount(e.target.value)}
                 autoFocus
@@ -289,7 +297,9 @@ export function ReceivablesTab(props: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentModal(null)}>Cancelar</Button>
-            <Button onClick={handlePayment}>Registrar</Button>
+            <Button onClick={handlePaymentOrAdd}>
+              {paymentModal?.mode === "add" ? "Adicionar" : "Registrar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
