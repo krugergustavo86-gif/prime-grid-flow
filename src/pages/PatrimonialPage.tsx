@@ -1,6 +1,7 @@
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
@@ -11,13 +12,15 @@ import { AssetsTab } from "@/components/patrimonial/tabs/AssetsTab";
 import { PayablesTab } from "@/components/patrimonial/tabs/PayablesTab";
 
 export default function PatrimonialPage() {
-  const { config } = useTransactions();
+  const { transactions, config } = useTransactions();
+  const { caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
   const { isAdmin } = useAuth();
   const readOnly = !isAdmin;
   const patrimony = usePatrimony();
   const kpis = usePatrimonyKPIs(
     { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
-    config.numSocios
+    config.numSocios,
+    caixaAtual
   );
 
   return (
