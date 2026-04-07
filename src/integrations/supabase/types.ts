@@ -252,6 +252,7 @@ export type Database = {
           id: string
           notes: string | null
           responsible: string
+          scheduled_date: string | null
           status: string
           value: number
         }
@@ -262,6 +263,7 @@ export type Database = {
           id?: string
           notes?: string | null
           responsible?: string
+          scheduled_date?: string | null
           status?: string
           value: number
         }
@@ -272,6 +274,7 @@ export type Database = {
           id?: string
           notes?: string | null
           responsible?: string
+          scheduled_date?: string | null
           status?: string
           value?: number
         }

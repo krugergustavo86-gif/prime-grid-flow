@@ -92,6 +92,7 @@ export interface Payable {
   description: string;
   value: number;
   dueDate?: string;
+  scheduledDate?: string;
   responsible: string;
   status: PayableStatus;
   notes?: string;

@@ -1,0 +1,1 @@
+ALTER TABLE public.payables ADD COLUMN scheduled_date date;
