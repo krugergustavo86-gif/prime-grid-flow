@@ -18,7 +18,7 @@ export function AppSidebar() {
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos },
     { title: "Resumo Anual", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia },
     { title: "Patrimonial", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia },
-    { title: "Controle NF", url: "/nf", icon: FileText, visible: isAdmin || isNfControl },
+    { title: "Controle NF", url: "/nf", icon: FileText, visible: isAdmin || isGerencia || isNfControl },
     { title: "Usuários", url: "/usuarios", icon: Users, visible: isAdmin },
     { title: "Configurações", url: "/configuracoes", icon: Settings, visible: isAdmin },
   ].filter(i => i.visible);
