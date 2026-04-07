@@ -35,6 +35,8 @@ function isUrgent(dateStr?: string): boolean {
 export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Loan | null>(null);
+  const [payModalLoan, setPayModalLoan] = useState<Loan | null>(null);
+  const [payValue, setPayValue] = useState("");
 
   const totalBalance = loans.reduce((s, l) => s + (l.totalInstallments - l.paidInstallments) * l.installmentValue, 0);
   const totalOpen = loans.reduce((s, l) => s + (l.totalInstallments - l.paidInstallments), 0);
@@ -53,6 +55,30 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
     }
     setEditing(null);
     setModalOpen(false);
+  };
+
+  const isBoleto = (l: Loan) => l.type === "Boletos a Pagar";
+
+  const handlePayClick = (l: Loan) => {
+    if (isBoleto(l)) {
+      setPayModalLoan(l);
+      setPayValue(l.installmentValue?.toString() || "");
+    } else {
+      updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
+      toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
+    }
+  };
+
+  const handlePayBoleto = () => {
+    if (!payModalLoan || !payValue) return;
+    const val = parseFloat(payValue) || 0;
+    updateLoan(payModalLoan.id, {
+      paidInstallments: payModalLoan.paidInstallments + 1,
+      installmentValue: val,
+    });
+    toast.success(`Boleto de ${formatCurrency(val)} registrado como pago`);
+    setPayModalLoan(null);
+    setPayValue("");
   };
 
   return (
@@ -136,17 +162,14 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
                                 disabled={l.paidInstallments >= l.totalInstallments}
-                                onClick={() => {
-                                  updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
-                                  toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
-                                }}
+                                onClick={() => handlePayClick(l)}
                               >
                                 <CheckCircle className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Pagar parcela</TooltipContent>
+                            <TooltipContent>{isBoleto(l) ? "Pagar boleto (valor manual)" : "Pagar parcela"}</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
@@ -178,6 +201,22 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
           </table>
         </div>
       </div>
+
+      {/* Boleto payment dialog */}
+      <Dialog open={!!payModalLoan} onOpenChange={o => { if (!o) { setPayModalLoan(null); setPayValue(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Pagar Boleto</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{payModalLoan?.contract}</p>
+          <div>
+            <Label>Valor Pago (R$) *</Label>
+            <Input type="number" value={payValue} onChange={e => setPayValue(e.target.value)} autoFocus />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPayModalLoan(null); setPayValue(""); }}>Cancelar</Button>
+            <Button onClick={handlePayBoleto} disabled={!payValue}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <LoanModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} />
     </div>
