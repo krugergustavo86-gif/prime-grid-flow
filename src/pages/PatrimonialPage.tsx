@@ -48,6 +48,7 @@ export default function PatrimonialPage() {
               receivables={patrimony.receivables}
               doubtfulCredits={patrimony.doubtfulCredits}
               cashEntries={patrimony.cashEntries}
+              caixaAtual={caixaAtual}
               addReceivable={patrimony.addReceivable}
               updateReceivable={patrimony.updateReceivable}
               deleteReceivable={patrimony.deleteReceivable}
