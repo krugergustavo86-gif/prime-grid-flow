@@ -18,6 +18,7 @@ interface Props {
   addAsset: (a: Omit<Asset, "id">) => void;
   updateAsset: (id: string, u: Partial<Asset>) => void;
   deleteAsset: (id: string) => void;
+  readOnly?: boolean;
 }
 
 const GROUPS: { key: AssetGroup; label: string; icon: React.ElementType }[] = [
@@ -33,7 +34,7 @@ const CHART_COLORS = [
   "hsl(0, 55%, 41%)", "hsl(35, 80%, 50%)",
 ];
 
-export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset }: Props) {
+export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [defaultGroup, setDefaultGroup] = useState<AssetGroup>("Veículos");
@@ -99,11 +100,13 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset }: Props)
                 </div>
               </AccordionTrigger>
               <AccordionContent>
+                {!readOnly && (
                 <div className="mb-2">
                   <Button size="sm" variant="outline" onClick={() => { setDefaultGroup(group.key); setEditing(null); setModalOpen(true); }}>
                     <Plus className="h-4 w-4 mr-1" /> Adicionar
                   </Button>
                 </div>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -112,7 +115,7 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset }: Props)
                         {isVehicle && <th className="text-left p-2 font-medium text-muted-foreground">Placa</th>}
                         {isVehicle && <th className="text-right p-2 font-medium text-muted-foreground">FIPE</th>}
                         <th className="text-right p-2 font-medium text-muted-foreground">Mercado</th>
-                        <th className="text-right p-2 font-medium text-muted-foreground">Ações</th>
+                        {!readOnly && <th className="text-right p-2 font-medium text-muted-foreground">Ações</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -122,6 +125,7 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset }: Props)
                           {isVehicle && <td className="p-2 text-muted-foreground">{a.plate || "—"}</td>}
                           {isVehicle && <td className="p-2 text-right tabular-nums text-muted-foreground">{a.valueFipe != null ? formatCurrency(a.valueFipe) : "—"}</td>}
                           <td className="p-2 text-right tabular-nums font-medium">{formatCurrency(a.valueMarket)}</td>
+                          {!readOnly && (
                           <td className="p-2 text-right">
                             <div className="flex gap-1 justify-end">
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditing(a); setDefaultGroup(a.group); setModalOpen(true); }}>
@@ -138,6 +142,7 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset }: Props)
                               </AlertDialog>
                             </div>
                           </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

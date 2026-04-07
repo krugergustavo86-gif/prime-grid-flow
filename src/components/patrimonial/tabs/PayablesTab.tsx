@@ -17,6 +17,7 @@ interface Props {
   addPayable: (p: Omit<Payable, "id">) => void;
   updatePayable: (id: string, u: Partial<Payable>) => void;
   deletePayable: (id: string) => void;
+  readOnly?: boolean;
 }
 
 const STATUSES: PayableStatus[] = ["A vencer", "Vencido", "Agendado", "Pago"];
@@ -31,7 +32,7 @@ function statusBadge(status: string) {
   return <Badge variant="outline" className={colors[status] || ""}>{status}</Badge>;
 }
 
-export function PayablesTab({ payables, addPayable, updatePayable, deletePayable }: Props) {
+export function PayablesTab({ payables, addPayable, updatePayable, deletePayable, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Payable | null>(null);
 
@@ -55,9 +56,11 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
       <div className="bg-card rounded-lg border">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold text-foreground">Contas a Pagar</h3>
-          <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
-            <Plus className="h-4 w-4 mr-1" /> Nova
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Nova
+            </Button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -67,7 +70,7 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
                 <th className="text-right p-3 font-medium text-muted-foreground">Valor</th>
                 <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Responsável</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>
+                {!readOnly && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -80,6 +83,7 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
                   <td className="p-3 text-right tabular-nums font-medium">{formatCurrency(p.value)}</td>
                   <td className="p-3 hidden md:table-cell text-muted-foreground">{p.responsible}</td>
                   <td className="p-3">{statusBadge(p.status)}</td>
+                  {!readOnly && (
                   <td className="p-3 text-right">
                     <div className="flex gap-1 justify-end">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(p); setModalOpen(true); }}>
@@ -101,6 +105,7 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
                       </AlertDialog>
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>

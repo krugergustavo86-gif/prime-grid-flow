@@ -1,6 +1,7 @@
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +12,8 @@ import { PayablesTab } from "@/components/patrimonial/tabs/PayablesTab";
 
 export default function PatrimonialPage() {
   const { config } = useTransactions();
+  const { isAdmin } = useAuth();
+  const readOnly = !isAdmin;
   const patrimony = usePatrimony();
   const kpis = usePatrimonyKPIs(
     { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
@@ -49,6 +52,7 @@ export default function PatrimonialPage() {
               updateDoubtfulCredit={patrimony.updateDoubtfulCredit}
               deleteDoubtfulCredit={patrimony.deleteDoubtfulCredit}
               updateCashEntry={patrimony.updateCashEntry}
+              readOnly={readOnly}
             />
           </TabsContent>
           <TabsContent value="loans">
@@ -57,6 +61,7 @@ export default function PatrimonialPage() {
               addLoan={patrimony.addLoan}
               updateLoan={patrimony.updateLoan}
               deleteLoan={patrimony.deleteLoan}
+              readOnly={readOnly}
             />
           </TabsContent>
           <TabsContent value="assets">
@@ -65,6 +70,7 @@ export default function PatrimonialPage() {
               addAsset={patrimony.addAsset}
               updateAsset={patrimony.updateAsset}
               deleteAsset={patrimony.deleteAsset}
+              readOnly={readOnly}
             />
           </TabsContent>
           <TabsContent value="payables">
@@ -73,6 +79,7 @@ export default function PatrimonialPage() {
               addPayable={patrimony.addPayable}
               updatePayable={patrimony.updatePayable}
               deletePayable={patrimony.deletePayable}
+              readOnly={readOnly}
             />
           </TabsContent>
         </Tabs>
