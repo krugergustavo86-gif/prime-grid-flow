@@ -31,7 +31,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number) {
       netPatrimony,
       perPartner,
       totalAPagar,
-      cashAvailable: totalCash,
+      cashAvailable: cashAvailableOnly,
       totalReceivables,
       totalDoubtful,
       totalAssets,
