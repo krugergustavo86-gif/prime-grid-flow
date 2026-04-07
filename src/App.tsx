@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import DashboardPage from "./pages/DashboardPage";
 import LancamentosPage from "./pages/LancamentosPage";
 import ResumoPage from "./pages/ResumoPage";
+import PatrimonialPage from "./pages/PatrimonialPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/lancamentos" element={<LancamentosPage />} />
                 <Route path="/resumo" element={<ResumoPage />} />
+                <Route path="/patrimonial" element={<PatrimonialPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

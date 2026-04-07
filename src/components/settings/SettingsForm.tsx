@@ -6,15 +6,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Download, Upload, Trash2 } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 interface SettingsFormProps {
@@ -28,6 +21,7 @@ interface SettingsFormProps {
 export function SettingsForm({ config, onConfigChange, onExport, onImport, onClear }: SettingsFormProps) {
   const [saldo, setSaldo] = useState(config.saldoAnterior.toFixed(2).replace(".", ","));
   const [ano, setAno] = useState(String(config.ano));
+  const [socios, setSocios] = useState(String(config.numSocios));
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSaldoBlur = () => {
@@ -40,6 +34,12 @@ export function SettingsForm({ config, onConfigChange, onExport, onImport, onCle
     const value = parseInt(ano) || 2026;
     onConfigChange({ ...config, ano: value });
     toast.success("Ano de referência atualizado");
+  };
+
+  const handleSociosBlur = () => {
+    const value = parseInt(socios) || 4;
+    onConfigChange({ ...config, numSocios: value });
+    toast.success("Número de sócios atualizado");
   };
 
   const handleExport = () => {
@@ -62,25 +62,22 @@ export function SettingsForm({ config, onConfigChange, onExport, onImport, onCle
   return (
     <div className="max-w-lg space-y-8 animate-fade-in">
       <div className="bg-card rounded-lg border p-6 space-y-4">
-        <h3 className="font-semibold text-foreground">Configurações Gerais</h3>
+        <h3 className="font-semibold text-foreground">Módulo de Caixa</h3>
         <div>
           <Label>Saldo restante de {config.ano - 1} (R$)</Label>
-          <Input
-            className="mt-1 tabular-nums"
-            value={saldo}
-            onChange={(e) => setSaldo(e.target.value)}
-            onBlur={handleSaldoBlur}
-          />
+          <Input className="mt-1 tabular-nums" value={saldo} onChange={(e) => setSaldo(e.target.value)} onBlur={handleSaldoBlur} />
         </div>
         <div>
           <Label>Ano de referência</Label>
-          <Input
-            className="mt-1"
-            type="number"
-            value={ano}
-            onChange={(e) => setAno(e.target.value)}
-            onBlur={handleAnoBlur}
-          />
+          <Input className="mt-1" type="number" value={ano} onChange={(e) => setAno(e.target.value)} onBlur={handleAnoBlur} />
+        </div>
+      </div>
+
+      <div className="bg-card rounded-lg border p-6 space-y-4">
+        <h3 className="font-semibold text-foreground">Módulo Patrimonial</h3>
+        <div>
+          <Label>Número de sócios</Label>
+          <Input className="mt-1" type="number" value={socios} onChange={(e) => setSocios(e.target.value)} onBlur={handleSociosBlur} />
         </div>
       </div>
 
@@ -105,9 +102,7 @@ export function SettingsForm({ config, onConfigChange, onExport, onImport, onCle
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Limpar todos os dados?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta ação irá excluir todos os lançamentos e restaurar as configurações padrão. Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
+                <AlertDialogDescription>Esta ação irá excluir todos os lançamentos e dados patrimoniais, restaurando ao padrão. Esta ação não pode ser desfeita.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>

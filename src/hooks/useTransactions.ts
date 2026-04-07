@@ -1,20 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Transaction, AppConfig } from "@/types";
-import { createSeedData, DEFAULT_CONFIG, LOCKED_MONTHS, LOCKED_BALANCES } from "@/utils/seed";
+import { createSeedData, DEFAULT_CONFIG, LOCKED_MONTHS } from "@/utils/seed";
 import { getMonthFromDate } from "@/utils/formatters";
 import { generateId } from "@/utils/seed";
 
 const TRANSACTIONS_KEY = "primegrid_transactions";
 const CONFIG_KEY = "primegrid_config";
+const PATRIMONY_KEY = "primegrid_patrimony";
 
 function loadTransactions(ano: number): Transaction[] {
   const stored = localStorage.getItem(TRANSACTIONS_KEY);
   if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return createSeedData(ano);
-    }
+    try { return JSON.parse(stored); } catch { return createSeedData(ano); }
   }
   const seed = createSeedData(ano);
   localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(seed));
@@ -25,10 +22,9 @@ function loadConfig(): AppConfig {
   const stored = localStorage.getItem(CONFIG_KEY);
   if (stored) {
     try {
-      return JSON.parse(stored);
-    } catch {
-      return DEFAULT_CONFIG;
-    }
+      const parsed = JSON.parse(stored);
+      return { ...DEFAULT_CONFIG, ...parsed };
+    } catch { return DEFAULT_CONFIG; }
   }
   localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
   return DEFAULT_CONFIG;
@@ -61,9 +57,7 @@ export function useTransactions() {
     const txns = transactions.map(t => {
       if (t.id !== id) return t;
       const updated = { ...t, ...updates };
-      if (updates.date) {
-        updated.month = getMonthFromDate(updates.date);
-      }
+      if (updates.date) updated.month = getMonthFromDate(updates.date);
       return updated;
     });
     saveTransactions(txns);
@@ -85,6 +79,7 @@ export function useTransactions() {
   const clearAllData = useCallback(() => {
     localStorage.removeItem(TRANSACTIONS_KEY);
     localStorage.removeItem(CONFIG_KEY);
+    localStorage.removeItem(PATRIMONY_KEY);
     const newConfig = DEFAULT_CONFIG;
     const seed = createSeedData(newConfig.ano);
     setConfigState(newConfig);
@@ -94,7 +89,9 @@ export function useTransactions() {
   }, []);
 
   const exportData = useCallback(() => {
-    const data = { config, transactions };
+    const patrimonyStr = localStorage.getItem(PATRIMONY_KEY);
+    const patrimony = patrimonyStr ? JSON.parse(patrimonyStr) : null;
+    const data = { config, transactions, patrimony };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -112,30 +109,24 @@ export function useTransactions() {
           const data = JSON.parse(e.target?.result as string);
           if (data.transactions && data.config) {
             saveTransactions(data.transactions);
-            setConfig(data.config);
+            setConfig({ ...DEFAULT_CONFIG, ...data.config });
+            if (data.patrimony) {
+              localStorage.setItem(PATRIMONY_KEY, JSON.stringify(data.patrimony));
+            }
             resolve(true);
           } else {
             resolve(false);
           }
-        } catch {
-          resolve(false);
-        }
+        } catch { resolve(false); }
       };
       reader.readAsText(file);
     });
   }, [saveTransactions, setConfig]);
 
   return {
-    transactions,
-    config,
-    setConfig,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    getTransactionsByMonth,
-    isMonthLocked,
-    clearAllData,
-    exportData,
-    importData,
+    transactions, config, setConfig,
+    addTransaction, updateTransaction, deleteTransaction,
+    getTransactionsByMonth, isMonthLocked,
+    clearAllData, exportData, importData,
   };
 }
