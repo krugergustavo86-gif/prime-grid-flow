@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -41,9 +41,12 @@ export function ReceivablesTab(props: Props) {
   const { receivables, doubtfulCredits, cashEntries } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
+  const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
+  const [cashAmount, setCashAmount] = useState("");
 
   const totalReceivables = receivables.reduce((s, r) => s + r.value, 0);
   const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
+  const totalCash = cashEntries.reduce((s, c) => s + c.balance, 0);
 
   const handleSave = (data: Omit<Receivable, "id">) => {
     if (editing) {
@@ -55,6 +58,20 @@ export function ReceivablesTab(props: Props) {
     }
     setEditing(null);
     setModalOpen(false);
+  };
+
+  const handleCashOperation = () => {
+    if (!cashModal || !cashAmount) return;
+    const amount = parseFloat(cashAmount);
+    if (isNaN(amount) || amount <= 0) { toast.error("Informe um valor válido"); return; }
+    const entry = cashEntries.find(c => c.id === cashModal.id);
+    if (!entry) return;
+    const newBalance = cashModal.type === "add" ? entry.balance + amount : entry.balance - amount;
+    if (newBalance < 0) { toast.error("Saldo insuficiente"); return; }
+    props.updateCashEntry(cashModal.id, { balance: newBalance });
+    toast.success(cashModal.type === "add" ? "Valor adicionado" : "Valor retirado");
+    setCashModal(null);
+    setCashAmount("");
   };
 
   return (
@@ -143,18 +160,93 @@ export function ReceivablesTab(props: Props) {
         </div>
       </div>
 
-      {/* Cash */}
-      <div className="bg-card rounded-lg border p-4">
-        <h3 className="font-semibold text-foreground mb-3">Caixa</h3>
-        {cashEntries.map((c) => (
-          <div key={c.id} className="flex items-center justify-between">
-            <span>{c.description} <span className="text-xs text-muted-foreground">({c.refDate})</span></span>
-            <span className="font-bold tabular-nums text-primary">{formatCurrency(c.balance)}</span>
-          </div>
-        ))}
+      {/* Cash & Investments */}
+      <div className="bg-card rounded-lg border">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-semibold text-foreground">Caixa e Investimentos</h3>
+          <span className="text-sm font-bold tabular-nums text-primary">{formatCurrency(totalCash)}</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left p-3 font-medium text-muted-foreground">Descrição</th>
+                <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Observações</th>
+                <th className="text-left p-3 font-medium text-muted-foreground hidden sm:table-cell">Ref.</th>
+                <th className="text-right p-3 font-medium text-muted-foreground">Saldo</th>
+                <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cashEntries.map((c) => (
+                <tr key={c.id} className="border-b hover:bg-muted/30">
+                  <td className="p-3 font-medium">{c.description}</td>
+                  <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{c.notes || "—"}</td>
+                  <td className="p-3 text-xs text-muted-foreground hidden sm:table-cell">{c.refDate}</td>
+                  <td className="p-3 text-right tabular-nums font-bold text-primary">{formatCurrency(c.balance)}</td>
+                  <td className="p-3 text-right">
+                    <div className="flex gap-1 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-chart-entrada"
+                        title="Adicionar valor"
+                        onClick={() => { setCashModal({ id: c.id, type: "add" }); setCashAmount(""); }}
+                      >
+                        <ArrowUpCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        title="Retirar valor"
+                        onClick={() => { setCashModal({ id: c.id, type: "withdraw" }); setCashAmount(""); }}
+                      >
+                        <ArrowDownCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Modal */}
+      {/* Cash Add/Withdraw Modal */}
+      <Dialog open={!!cashModal} onOpenChange={(o) => !o && setCashModal(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {cashModal?.type === "add" ? "Adicionar Valor" : "Retirar Valor"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {cashEntries.find(c => c.id === cashModal?.id)?.description}
+            </p>
+            <div>
+              <Label>Valor (R$)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={cashAmount}
+                onChange={e => setCashAmount(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCashModal(null)}>Cancelar</Button>
+            <Button onClick={handleCashOperation}>
+              {cashModal?.type === "add" ? "Adicionar" : "Retirar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receivable Modal */}
       <ReceivableModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} />
     </div>
   );
