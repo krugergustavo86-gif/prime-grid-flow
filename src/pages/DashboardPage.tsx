@@ -24,7 +24,8 @@ export default function DashboardPage() {
   const patrimony = usePatrimony();
   const kpis = usePatrimonyKPIs(
     { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
-    config.numSocios
+    config.numSocios,
+    caixaAtual
   );
 
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
