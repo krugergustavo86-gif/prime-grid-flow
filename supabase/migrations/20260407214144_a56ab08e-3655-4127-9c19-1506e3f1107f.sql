@@ -1,0 +1,1 @@
+ALTER TABLE public.receivables ADD COLUMN paid_value numeric NOT NULL DEFAULT 0;
