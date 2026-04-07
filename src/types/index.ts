@@ -48,6 +48,7 @@ export interface Receivable {
   id: string;
   description: string;
   value: number;
+  paidValue: number;
   dueDate?: string;
   type: ReceivableType;
   status: ReceivableStatus;

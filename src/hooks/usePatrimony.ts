@@ -9,7 +9,7 @@ function mapAsset(r: any): Asset {
   return { id: r.id, group: r.asset_group, description: r.description, plate: r.plate || undefined, valueFipe: r.value_fipe ? Number(r.value_fipe) : undefined, valueMarket: Number(r.value_market), notes: r.notes || undefined };
 }
 function mapReceivable(r: any): Receivable {
-  return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, type: r.type, status: r.status, responsible: r.responsible || undefined, notes: r.notes || undefined };
+  return { id: r.id, description: r.description, value: Number(r.value), paidValue: Number(r.paid_value ?? 0), dueDate: r.due_date || undefined, type: r.type, status: r.status, responsible: r.responsible || undefined, notes: r.notes || undefined };
 }
 function mapDoubtful(r: any): DoubtfulCredit {
   return { id: r.id, description: r.description, value: Number(r.value), responsible: r.responsible || undefined, notes: r.notes || undefined };
@@ -76,7 +76,7 @@ export function usePatrimony() {
 
   // Receivables
   const addReceivable = useCallback(async (r: Omit<Receivable, "id">) => {
-    const { data: row, error } = await supabase.from("receivables").insert({ description: r.description, value: r.value, due_date: r.dueDate, type: r.type, status: r.status, responsible: r.responsible, notes: r.notes }).select().single();
+    const { data: row, error } = await supabase.from("receivables").insert({ description: r.description, value: r.value, paid_value: r.paidValue ?? 0, due_date: r.dueDate, type: r.type, status: r.status, responsible: r.responsible, notes: r.notes }).select().single();
     if (error) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, receivables: [...prev.receivables, mapReceivable(row)] }));
   }, []);
@@ -85,6 +85,7 @@ export function usePatrimony() {
     const dbUpdates: any = {};
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.value !== undefined) dbUpdates.value = updates.value;
+    if (updates.paidValue !== undefined) dbUpdates.paid_value = updates.paidValue;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
     if (updates.type !== undefined) dbUpdates.type = updates.type;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
