@@ -172,8 +172,6 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
                             <TooltipContent>{isBoleto(l) ? "Pagar boleto (valor manual)" : "Pagar parcela"}</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                          </Tooltip>
-                        </TooltipProvider>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -203,6 +201,22 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
           </table>
         </div>
       </div>
+
+      {/* Boleto payment dialog */}
+      <Dialog open={!!payModalLoan} onOpenChange={o => { if (!o) { setPayModalLoan(null); setPayValue(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Pagar Boleto</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{payModalLoan?.contract}</p>
+          <div>
+            <Label>Valor Pago (R$) *</Label>
+            <Input type="number" value={payValue} onChange={e => setPayValue(e.target.value)} autoFocus />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPayModalLoan(null); setPayValue(""); }}>Cancelar</Button>
+            <Button onClick={handlePayBoleto} disabled={!payValue}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <LoanModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} />
     </div>
