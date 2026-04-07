@@ -16,11 +16,11 @@ export function TotalizadorCards({ saldoAnterior, acumuladoAno, caixaAtual, ano 
         </p>
         <p className="text-xl font-bold tabular-nums text-warning-foreground">{formatCurrency(saldoAnterior)}</p>
       </div>
-      <div className="bg-blue-100 rounded-lg p-5 text-center">
-        <p className="text-xs uppercase tracking-wider font-medium text-blue-800 mb-1">
+      <div className="bg-secondary rounded-lg p-5 text-center">
+        <p className="text-xs uppercase tracking-wider font-medium text-chart-blue-medium mb-1">
           Acumulado do Ano {ano}
         </p>
-        <p className={`text-xl font-bold tabular-nums ${acumuladoAno >= 0 ? "text-blue-800" : "text-chart-saida"}`}>
+        <p className={`text-xl font-bold tabular-nums ${acumuladoAno >= 0 ? "text-chart-blue-medium" : "text-chart-saida"}`}>
           {formatCurrency(acumuladoAno)}
         </p>
       </div>
