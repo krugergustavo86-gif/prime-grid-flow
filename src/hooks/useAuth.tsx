@@ -30,34 +30,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout - never stay loading forever
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("Auth loading timeout - forcing load complete");
+        setLoading(false);
+      }
+    }, 5000);
+
+    // Set up auth listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Fetch role using security definer function
-        const { data } = await supabase.rpc("get_user_role", { _user_id: session.user.id });
-        setRole(data as AppRole | null);
+        try {
+          const { data } = await supabase.rpc("get_user_role", { _user_id: session.user.id });
+          if (mounted) setRole(data as AppRole | null);
+        } catch (e) {
+          console.error("Failed to fetch role:", e);
+        }
       } else {
         setRole(null);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Then get initial session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        supabase.rpc("get_user_role", { _user_id: session.user.id }).then(({ data }) => {
-          setRole(data as AppRole | null);
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
+        try {
+          const { data } = await supabase.rpc("get_user_role", { _user_id: session.user.id });
+          if (mounted) setRole(data as AppRole | null);
+        } catch (e) {
+          console.error("Failed to fetch role:", e);
+        }
       }
+      if (mounted) setLoading(false);
+    }).catch(() => {
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
