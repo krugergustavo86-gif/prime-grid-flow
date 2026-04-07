@@ -1,4 +1,4 @@
-import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut, Users } from "lucide-react";
 import logoPrimegrid from "@/assets/logo-primegrid.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,7 @@ export function AppSidebar() {
     { title: "Resumo Anual", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia },
     { title: "Patrimonial", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia },
     { title: "Controle NF", url: "/nf", icon: FileText, visible: isAdmin || isNfControl },
+    { title: "Usuários", url: "/usuarios", icon: Users, visible: isAdmin },
     { title: "Configurações", url: "/configuracoes", icon: Settings, visible: isAdmin },
   ].filter(i => i.visible);
 

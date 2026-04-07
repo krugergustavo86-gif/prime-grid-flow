@@ -13,6 +13,7 @@ import ResumoPage from "./pages/ResumoPage";
 import PatrimonialPage from "./pages/PatrimonialPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NFControlPage from "./pages/NFControlPage";
+import UsersPage from "./pages/UsersPage";
 import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
@@ -76,6 +77,7 @@ function AppRoutes() {
             <Route path="/resumo" element={canAccessResumo ? <ResumoPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/patrimonial" element={canAccessPatrimonial ? <PatrimonialPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/nf" element={canAccessNF ? <NFControlPage /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/usuarios" element={isAdmin ? <UsersPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/configuracoes" element={canAccessConfig ? <ConfiguracoesPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFound />} />
