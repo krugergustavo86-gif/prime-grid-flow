@@ -59,7 +59,7 @@ function AppRoutes() {
   const canAccessResumo = isAdmin || isGerencia;
   const canAccessPatrimonial = isAdmin || isGerencia;
   const canAccessConfig = isAdmin;
-  const canAccessNF = isAdmin || isNfControl;
+  const canAccessNF = isAdmin || isGerencia || isNfControl;
 
   // Default route based on role
   const defaultRoute = isNfControl ? "/nf" : isLancamentos ? "/lancamentos" : "/";
