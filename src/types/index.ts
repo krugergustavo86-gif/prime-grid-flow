@@ -68,6 +68,7 @@ export interface CashEntry {
   description: string;
   balance: number;
   refDate: string;
+  notes?: string;
 }
 
 export type LoanType = "Capital de Giro" | "Financiamento" | "Fin. Veículo" | "Fin. Equipamento" | "Consórcio Veículo" | "Imóvel" | "Terreno" | "Pronamp" | "Boletos a Pagar" | "Outro";
