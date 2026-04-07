@@ -152,10 +152,13 @@ export function ReceivablesTab(props: Props) {
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
                         {r.status !== "Recebido" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => { setPaymentModal(r); setPaymentAmount(""); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => { setPaymentModal({ receivable: r, mode: "pay" }); setPaymentAmount(""); }}>
                             <DollarSign className="h-3.5 w-3.5" />
                           </Button>
                         )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-blue-medium" title="Adicionar valor à dívida" onClick={() => { setPaymentModal({ receivable: r, mode: "add" }); setPaymentAmount(""); }}>
+                          <ArrowUpCircle className="h-3.5 w-3.5" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(r); setModalOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
