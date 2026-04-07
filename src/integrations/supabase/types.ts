@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          ano: number
+          id: string
+          num_socios: number
+          saldo_anterior: number
+          updated_at: string
+        }
+        Insert: {
+          ano?: number
+          id?: string
+          num_socios?: number
+          saldo_anterior?: number
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          id?: string
+          num_socios?: number
+          saldo_anterior?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assets: {
+        Row: {
+          asset_group: string
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          plate: string | null
+          value_fipe: number | null
+          value_market: number
+        }
+        Insert: {
+          asset_group: string
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          plate?: string | null
+          value_fipe?: number | null
+          value_market?: number
+        }
+        Update: {
+          asset_group?: string
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          plate?: string | null
+          value_fipe?: number | null
+          value_market?: number
+        }
+        Relationships: []
+      }
+      cash_entries: {
+        Row: {
+          balance: number
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          ref_date: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          ref_date: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          ref_date?: string
+        }
+        Relationships: []
+      }
+      doubtful_credits: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          responsible: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          responsible?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          responsible?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       invoice_types: {
         Row: {
           created_at: string
@@ -93,6 +204,153 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      loans: {
+        Row: {
+          contract: string
+          created_at: string
+          id: string
+          installment_value: number
+          institution: string
+          next_payment: string | null
+          notes: string | null
+          paid_installments: number
+          total_installments: number
+          type: string
+        }
+        Insert: {
+          contract: string
+          created_at?: string
+          id?: string
+          installment_value?: number
+          institution?: string
+          next_payment?: string | null
+          notes?: string | null
+          paid_installments?: number
+          total_installments?: number
+          type: string
+        }
+        Update: {
+          contract?: string
+          created_at?: string
+          id?: string
+          installment_value?: number
+          institution?: string
+          next_payment?: string | null
+          notes?: string | null
+          paid_installments?: number
+          total_installments?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      payables: {
+        Row: {
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          responsible: string
+          status: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible?: string
+          status?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible?: string
+          status?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      receivables: {
+        Row: {
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          responsible: string | null
+          status: string
+          type: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible?: string | null
+          status?: string
+          type: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          responsible?: string | null
+          status?: string
+          type?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          locked: boolean
+          month: string
+          notes: string | null
+          type: string
+          value: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          locked?: boolean
+          month: string
+          notes?: string | null
+          type: string
+          value: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          locked?: boolean
+          month?: string
+          notes?: string | null
+          type?: string
+          value?: number
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
