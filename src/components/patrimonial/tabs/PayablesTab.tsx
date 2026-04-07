@@ -92,7 +92,7 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       {p.status !== "Pago" && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => { updatePayable(p.id, { status: "Pago" }); toast.success("Marcado como pago"); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => { setPayModalPayable(p); setPayValue(p.value.toString()); }}>
                           <CheckCircle className="h-3.5 w-3.5" />
                         </Button>
                       )}
