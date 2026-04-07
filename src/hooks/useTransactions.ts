@@ -6,33 +6,54 @@ import { getMonthFromDate } from "@/utils/formatters";
 import { toast } from "sonner";
 
 const DEFAULT_CONFIG: AppConfig = { saldoAnterior: 409000, ano: 2026, numSocios: 4 };
+const TRANSACTIONS_PAGE_SIZE = 1000;
 
 export function useTransactions() {
   const [config, setConfigState] = useState<AppConfig>(DEFAULT_CONFIG);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load data from Supabase
   useEffect(() => {
+    const fetchAllTransactions = async () => {
+      const rows: any[] = [];
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from("transactions")
+          .select("*")
+          .order("date", { ascending: true })
+          .range(from, from + TRANSACTIONS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+        if (!data?.length) break;
+
+        rows.push(...data);
+
+        if (data.length < TRANSACTIONS_PAGE_SIZE) break;
+        from += TRANSACTIONS_PAGE_SIZE;
+      }
+
+      return rows;
+    };
+
     const fetchData = async () => {
       try {
-        const [txRes, cfgRes] = await Promise.all([
-          supabase.from("transactions").select("*").order("date", { ascending: true }).limit(5000),
+        const [transactionRows, cfgRes] = await Promise.all([
+          fetchAllTransactions(),
           supabase.from("app_config").select("*").limit(1).maybeSingle(),
         ]);
 
-        if (txRes.data) {
-          setTransactions(txRes.data.map((r: any) => ({
-            id: r.id,
-            date: r.date,
-            description: r.description,
-            type: r.type as "Saída" | "Entrada",
-            category: r.category,
-            value: Number(r.value),
-            notes: r.notes || "",
-            month: r.month,
-          })));
-        }
+        setTransactions(transactionRows.map((r: any) => ({
+          id: r.id,
+          date: r.date,
+          description: r.description,
+          type: r.type as "Saída" | "Entrada",
+          category: r.category,
+          value: Number(r.value),
+          notes: r.notes || "",
+          month: r.month,
+        })));
 
         if (cfgRes.data) {
           setConfigState({
