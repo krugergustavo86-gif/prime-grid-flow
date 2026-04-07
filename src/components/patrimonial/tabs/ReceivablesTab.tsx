@@ -111,9 +111,13 @@ export function ReceivablesTab(props: Props) {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(r); setModalOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      {r.status !== "Recebido" && (
+                      {r.status !== "Recebido" ? (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => { props.updateReceivable(r.id, { status: "Recebido" }); toast.success("Marcado como recebido"); }}>
                           <CheckCircle className="h-3.5 w-3.5" />
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-blue-medium" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
+                          <ArrowUpCircle className="h-3.5 w-3.5" />
                         </Button>
                       )}
                       <AlertDialog>
