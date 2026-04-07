@@ -105,7 +105,13 @@ export function createPatrimonySeed(): PatrimonyData {
       { id: generateId(), description: "Geradores", value: 10000, responsible: "Alana", notes: "Acompanhar Alana" },
     ],
     cashEntries: [
-      { id: generateId(), description: "Caixa Prime Grid", balance: 303000.00, refDate: "Abr/2026" },
+      { id: generateId(), description: "Saldo em Conta", balance: 81372.16, refDate: "Abr/2026" },
+      { id: generateId(), description: "Aplicação Sicredi", balance: 3187.57, refDate: "Abr/2026", notes: "Aplicação financeira" },
+      { id: generateId(), description: "Tiago K 1,5%", balance: 41000.00, refDate: "Abr/2026", notes: "Juros: R$ 604,27/mês" },
+      { id: generateId(), description: "Rodrigo K 1,5%", balance: 40000.00, refDate: "Abr/2026", notes: "Juros: R$ 615,00/mês" },
+      { id: generateId(), description: "Saldo Empréstimo Ronaldinho", balance: 17220.00, refDate: "Abr/2026", notes: "48x R$ 615,00 — Pago: 20/48" },
+      { id: generateId(), description: "Terreno Anderson", balance: 49000.00, refDate: "Abr/2026", notes: "49x R$ 1.000,00" },
+      { id: generateId(), description: "Casa da Ferragem", balance: 55316.61, refDate: "Abr/2026", notes: "9x R$ 6.146,39" },
     ],
     loans: [
       { id: generateId(), contract: "Capital Giro AA", institution: "Sicoob", type: "Capital de Giro", nextPayment: "2026-04-04", totalInstallments: 61, paidInstallments: 31, installmentValue: 1100.00 },
