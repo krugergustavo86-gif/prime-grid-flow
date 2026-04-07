@@ -10,7 +10,7 @@ export function BottomNav() {
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos },
     { title: "Resumo", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia },
     { title: "Patrimônio", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia },
-    { title: "NF", url: "/nf", icon: FileText, visible: isAdmin || isNfControl },
+    { title: "NF", url: "/nf", icon: FileText, visible: isAdmin || isGerencia || isNfControl },
     { title: "Config", url: "/configuracoes", icon: Settings, visible: isAdmin },
   ].filter(i => i.visible);
 
