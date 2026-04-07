@@ -2,7 +2,6 @@ import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTransactions } from "@/hooks/useTransactions";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,7 +54,6 @@ export default function PatrimonialPage() {
               updateCashEntry={patrimony.updateCashEntry}
               readOnly={readOnly}
             />
-            />
           </TabsContent>
           <TabsContent value="loans">
             <LoansTab
@@ -64,7 +62,6 @@ export default function PatrimonialPage() {
               updateLoan={patrimony.updateLoan}
               deleteLoan={patrimony.deleteLoan}
               readOnly={readOnly}
-            />
             />
           </TabsContent>
           <TabsContent value="assets">
@@ -75,7 +72,6 @@ export default function PatrimonialPage() {
               deleteAsset={patrimony.deleteAsset}
               readOnly={readOnly}
             />
-            />
           </TabsContent>
           <TabsContent value="payables">
             <PayablesTab
@@ -84,7 +80,6 @@ export default function PatrimonialPage() {
               updatePayable={patrimony.updatePayable}
               deletePayable={patrimony.deletePayable}
               readOnly={readOnly}
-            />
             />
           </TabsContent>
         </Tabs>
