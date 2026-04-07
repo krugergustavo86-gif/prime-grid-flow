@@ -16,6 +16,7 @@ interface Props {
   receivables: Receivable[];
   doubtfulCredits: DoubtfulCredit[];
   cashEntries: CashEntry[];
+  caixaAtual?: number;
   addReceivable: (r: Omit<Receivable, "id">) => void;
   updateReceivable: (id: string, u: Partial<Receivable>) => void;
   deleteReceivable: (id: string) => void;
@@ -39,7 +40,7 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
-  const { receivables, doubtfulCredits, cashEntries, readOnly } = props;
+  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
@@ -51,7 +52,14 @@ export function ReceivablesTab(props: Props) {
   const totalPaid = receivables.reduce((s, r) => s + r.paidValue, 0);
   const totalRemaining = totalReceivables - totalPaid;
   const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
-  const totalCash = cashEntries.reduce((s, c) => s + c.balance, 0);
+  // Build effective cash entries: override "Saldo em Conta" with caixaAtual when available
+  const effectiveCashEntries = cashEntries.map(c => {
+    if (caixaAtual !== undefined && c.description.toLowerCase().includes("saldo em conta")) {
+      return { ...c, balance: caixaAtual };
+    }
+    return c;
+  });
+  const totalCash = effectiveCashEntries.reduce((s, c) => s + c.balance, 0);
 
   const handleSave = (data: Omit<Receivable, "id">) => {
     if (editing) {
@@ -241,7 +249,7 @@ export function ReceivablesTab(props: Props) {
               </tr>
             </thead>
             <tbody>
-              {cashEntries.map((c) => (
+              {effectiveCashEntries.map((c) => (
                 <tr key={c.id} className="border-b hover:bg-muted/30">
                   <td className="p-3 font-medium">{c.description}</td>
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{c.notes || "—"}</td>
