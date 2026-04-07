@@ -160,7 +160,7 @@ export function usePatrimony() {
 
   // Payables
   const addPayable = useCallback(async (p: Omit<Payable, "id">) => {
-    const { data: row, error } = await supabase.from("payables").insert({ description: p.description, value: p.value, due_date: p.dueDate, responsible: p.responsible, status: p.status, notes: p.notes }).select().single();
+    const { data: row, error } = await supabase.from("payables").insert({ description: p.description, value: p.value, due_date: p.dueDate, scheduled_date: p.scheduledDate, responsible: p.responsible, status: p.status, notes: p.notes }).select().single();
     if (error) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, payables: [...prev.payables, mapPayable(row)] }));
   }, []);
@@ -170,6 +170,7 @@ export function usePatrimony() {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.value !== undefined) dbUpdates.value = updates.value;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+    if (updates.scheduledDate !== undefined) dbUpdates.scheduled_date = updates.scheduledDate;
     if (updates.responsible !== undefined) dbUpdates.responsible = updates.responsible;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
