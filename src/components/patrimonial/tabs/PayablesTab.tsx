@@ -35,6 +35,8 @@ function statusBadge(status: string) {
 export function PayablesTab({ payables, addPayable, updatePayable, deletePayable, readOnly }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Payable | null>(null);
+  const [payModalPayable, setPayModalPayable] = useState<Payable | null>(null);
+  const [payValue, setPayValue] = useState("");
 
   const activePays = payables.filter(p => p.status !== "Pago");
   const total = activePays.reduce((s, p) => s + p.value, 0);
@@ -90,7 +92,7 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       {p.status !== "Pago" && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => { updatePayable(p.id, { status: "Pago" }); toast.success("Marcado como pago"); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-success" onClick={() => { setPayModalPayable(p); setPayValue(p.value.toString()); }}>
                           <CheckCircle className="h-3.5 w-3.5" />
                         </Button>
                       )}
@@ -121,6 +123,41 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
       </div>
 
       <PayableModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} />
+
+      <Dialog open={!!payModalPayable} onOpenChange={o => !o && setPayModalPayable(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Registrar Pagamento</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Conta: <span className="font-medium text-foreground">{payModalPayable?.description}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Valor pendente: <span className="font-medium text-foreground">{formatCurrency(payModalPayable?.value || 0)}</span>
+            </p>
+            <div>
+              <Label>Valor pago (R$)</Label>
+              <Input type="number" value={payValue} onChange={e => setPayValue(e.target.value)} min="0" step="0.01" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayModalPayable(null)}>Cancelar</Button>
+            <Button onClick={() => {
+              if (!payModalPayable) return;
+              const paid = parseFloat(payValue) || 0;
+              if (paid <= 0) { toast.error("Informe um valor válido"); return; }
+              if (paid >= payModalPayable.value) {
+                updatePayable(payModalPayable.id, { status: "Pago", value: 0 });
+                toast.success("Conta quitada");
+              } else {
+                const remaining = payModalPayable.value - paid;
+                updatePayable(payModalPayable.id, { value: remaining });
+                toast.success(`Pagamento de ${formatCurrency(paid)} registrado. Restante: ${formatCurrency(remaining)}`);
+              }
+              setPayModalPayable(null);
+            }}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
