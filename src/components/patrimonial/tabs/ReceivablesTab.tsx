@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -167,8 +167,8 @@ export function ReceivablesTab(props: Props) {
                             <CheckCircle className="h-3.5 w-3.5" />
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-chart-blue-medium" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
-                            <ArrowUpCircle className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
+                            <Undo2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <AlertDialog>
