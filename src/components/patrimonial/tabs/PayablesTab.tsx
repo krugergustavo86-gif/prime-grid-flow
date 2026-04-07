@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Payable, PayableStatus } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format, parse, isValid } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Plus, Pencil, Trash2, CheckCircle, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -53,6 +58,12 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
     setModalOpen(false);
   };
 
+  const handleRowClick = (p: Payable) => {
+    if (readOnly) return;
+    setEditing(p);
+    setModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-lg border">
@@ -77,16 +88,27 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
             </thead>
             <tbody>
               {payables.map((p) => (
-                <tr key={p.id} className={`border-b hover:bg-muted/30 ${p.status === "Pago" ? "opacity-50" : ""}`}>
+                <tr
+                  key={p.id}
+                  className={cn(
+                    "border-b hover:bg-muted/30 transition-colors",
+                    p.status === "Pago" && "opacity-50",
+                    !readOnly && "cursor-pointer"
+                  )}
+                  onClick={() => handleRowClick(p)}
+                >
                   <td className="p-3">
-                    {p.description}
-                    {p.dueDate && <span className="text-xs text-muted-foreground ml-2">({p.dueDate})</span>}
+                    <div>{p.description}</div>
+                    {p.dueDate && <span className="text-xs text-muted-foreground">Venc: {p.dueDate}</span>}
+                    {p.scheduledDate && (
+                      <span className="text-xs text-warning-foreground ml-2">📅 Agendado: {p.scheduledDate}</span>
+                    )}
                   </td>
                   <td className="p-3 text-right tabular-nums font-medium">{formatCurrency(p.value)}</td>
                   <td className="p-3 hidden md:table-cell text-muted-foreground">{p.responsible}</td>
                   <td className="p-3">{statusBadge(p.status)}</td>
                   {!readOnly && (
-                  <td className="p-3 text-right">
+                  <td className="p-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(p); setModalOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -163,14 +185,15 @@ export function PayablesTab({ payables, addPayable, updatePayable, deletePayable
 }
 
 function PayableModal({ open, onClose, onSave, initial }: { open: boolean; onClose: () => void; onSave: (d: Omit<Payable, "id">) => void; initial: Payable | null }) {
-  const [description, setDescription] = useState(initial?.description || "");
-  const [value, setValue] = useState(initial?.value?.toString() || "");
-  const [dueDate, setDueDate] = useState(initial?.dueDate || "");
-  const [responsible, setResponsible] = useState(initial?.responsible || "");
-  const [status, setStatus] = useState<PayableStatus>(initial?.status || "A vencer");
-  const [notes, setNotes] = useState(initial?.notes || "");
+  const [description, setDescription] = useState("");
+  const [value, setValue] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [responsible, setResponsible] = useState("");
+  const [status, setStatus] = useState<PayableStatus>("A vencer");
+  const [notes, setNotes] = useState("");
 
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setDescription(initial?.description || "");
       setValue(initial?.value?.toString() || "");
@@ -178,14 +201,21 @@ function PayableModal({ open, onClose, onSave, initial }: { open: boolean; onClo
       setResponsible(initial?.responsible || "");
       setStatus(initial?.status || "A vencer");
       setNotes(initial?.notes || "");
+      if (initial?.scheduledDate) {
+        const parsed = parse(initial.scheduledDate, "yyyy-MM-dd", new Date());
+        setScheduledDate(isValid(parsed) ? parsed : undefined);
+      } else {
+        setScheduledDate(undefined);
+      }
     }
-  });
+  }, [open, initial]);
 
   const handleSubmit = () => {
     if (!description || !value || !responsible) { toast.error("Preencha os campos obrigatórios"); return; }
     onSave({
       description, value: parseFloat(value) || 0,
       dueDate: dueDate || undefined,
+      scheduledDate: scheduledDate ? format(scheduledDate, "yyyy-MM-dd") : undefined,
       responsible, status,
       notes: notes || undefined,
     });
@@ -203,6 +233,35 @@ function PayableModal({ open, onClose, onSave, initial }: { open: boolean; onClo
           <div><Label>Status</Label>
             <Select value={status} onValueChange={v => setStatus(v as PayableStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
           </div>
+          {status === "Agendado" && (
+            <div>
+              <Label>Data de Pagamento Prevista</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !scheduledDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {scheduledDate ? format(scheduledDate, "dd/MM/yyyy") : "Selecionar data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={scheduledDate}
+                    onSelect={setScheduledDate}
+                    initialFocus
+                    locale={ptBR}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
         </div>
         <DialogFooter>
