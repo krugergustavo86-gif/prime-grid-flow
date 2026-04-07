@@ -21,7 +21,7 @@ function mapLoan(r: any): Loan {
   return { id: r.id, contract: r.contract, institution: r.institution, type: r.type, nextPayment: r.next_payment || undefined, totalInstallments: r.total_installments, paidInstallments: r.paid_installments, installmentValue: Number(r.installment_value), notes: r.notes || undefined };
 }
 function mapPayable(r: any): Payable {
-  return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, responsible: r.responsible, status: r.status, notes: r.notes || undefined };
+  return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, scheduledDate: r.scheduled_date || undefined, responsible: r.responsible, status: r.status, notes: r.notes || undefined };
 }
 
 export function usePatrimony() {
