@@ -17,7 +17,7 @@ export function useTransactions() {
     const fetchData = async () => {
       try {
         const [txRes, cfgRes] = await Promise.all([
-          supabase.from("transactions").select("*").order("date", { ascending: true }),
+          supabase.from("transactions").select("*").order("date", { ascending: true }).limit(5000),
           supabase.from("app_config").select("*").limit(1).maybeSingle(),
         ]);
 
