@@ -14,16 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invoice_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          client_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          issue_date: string
+          month: string
+          notes: string | null
+          number: string
+          tax_rate: number
+          type_id: string | null
+          type_name: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_date?: string
+          month: string
+          notes?: string | null
+          number: string
+          tax_rate?: number
+          type_id?: string | null
+          type_name: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_date?: string
+          month?: string
+          notes?: string | null
+          number?: string
+          tax_rate?: number
+          type_id?: string | null
+          type_name?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "gerencia" | "lancamentos" | "nf_control"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +257,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "gerencia", "lancamentos", "nf_control"],
+    },
   },
 } as const
