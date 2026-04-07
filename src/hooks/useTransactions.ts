@@ -1,72 +1,146 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Transaction, AppConfig } from "@/types";
-import { createSeedData, DEFAULT_CONFIG, LOCKED_MONTHS } from "@/utils/seed";
+import { supabase } from "@/integrations/supabase/client";
+import { LOCKED_MONTHS } from "@/utils/seed";
 import { getMonthFromDate } from "@/utils/formatters";
-import { generateId } from "@/utils/seed";
+import { toast } from "sonner";
 
-const TRANSACTIONS_KEY = "primegrid_transactions";
-const CONFIG_KEY = "primegrid_config";
-const PATRIMONY_KEY = "primegrid_patrimony";
-
-function loadTransactions(ano: number): Transaction[] {
-  const stored = localStorage.getItem(TRANSACTIONS_KEY);
-  if (stored) {
-    try { return JSON.parse(stored); } catch { return createSeedData(ano); }
-  }
-  const seed = createSeedData(ano);
-  localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(seed));
-  return seed;
-}
-
-function loadConfig(): AppConfig {
-  const stored = localStorage.getItem(CONFIG_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      return { ...DEFAULT_CONFIG, ...parsed };
-    } catch { return DEFAULT_CONFIG; }
-  }
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
-  return DEFAULT_CONFIG;
-}
+const DEFAULT_CONFIG: AppConfig = { saldoAnterior: 409000, ano: 2026, numSocios: 4 };
 
 export function useTransactions() {
-  const [config, setConfigState] = useState<AppConfig>(() => loadConfig());
-  const [transactions, setTransactionsState] = useState<Transaction[]>(() => loadTransactions(config.ano));
+  const [config, setConfigState] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const saveTransactions = useCallback((txns: Transaction[]) => {
-    setTransactionsState(txns);
-    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(txns));
+  // Load data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [txRes, cfgRes] = await Promise.all([
+          supabase.from("transactions").select("*").order("date", { ascending: true }),
+          supabase.from("app_config").select("*").limit(1).maybeSingle(),
+        ]);
+
+        if (txRes.data) {
+          setTransactions(txRes.data.map((r: any) => ({
+            id: r.id,
+            date: r.date,
+            description: r.description,
+            type: r.type as "Saída" | "Entrada",
+            category: r.category,
+            value: Number(r.value),
+            notes: r.notes || "",
+            month: r.month,
+          })));
+        }
+
+        if (cfgRes.data) {
+          setConfigState({
+            saldoAnterior: Number(cfgRes.data.saldo_anterior),
+            ano: cfgRes.data.ano,
+            numSocios: cfgRes.data.num_socios,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const setConfig = useCallback((newConfig: AppConfig) => {
+  const setConfig = useCallback(async (newConfig: AppConfig) => {
     setConfigState(newConfig);
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+    const { error } = await supabase
+      .from("app_config")
+      .update({
+        saldo_anterior: newConfig.saldoAnterior,
+        ano: newConfig.ano,
+        num_socios: newConfig.numSocios,
+        updated_at: new Date().toISOString(),
+      })
+      .not("id", "is", null); // update the single row
+    if (error) {
+      console.error("Failed to update config:", error);
+      toast.error("Erro ao salvar configuração");
+    }
   }, []);
 
-  const addTransaction = useCallback((tx: Omit<Transaction, "id" | "month">) => {
+  const addTransaction = useCallback(async (tx: Omit<Transaction, "id" | "month">) => {
     const month = getMonthFromDate(tx.date);
     const monthNum = month.split("/")[0];
     if (LOCKED_MONTHS.includes(monthNum)) return false;
-    const newTx: Transaction = { ...tx, id: generateId(), month };
-    saveTransactions([...transactions, newTx]);
-    return true;
-  }, [transactions, saveTransactions]);
 
-  const updateTransaction = useCallback((id: string, updates: Partial<Omit<Transaction, "id" | "month">>) => {
-    const txns = transactions.map(t => {
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert({
+        date: tx.date,
+        description: tx.description,
+        type: tx.type,
+        category: tx.category,
+        value: tx.value,
+        notes: tx.notes || "",
+        month,
+        locked: false,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Failed to add transaction:", error);
+      toast.error("Erro ao salvar lançamento");
+      return false;
+    }
+
+    if (data) {
+      const newTx: Transaction = {
+        id: data.id,
+        date: data.date,
+        description: data.description,
+        type: data.type as "Saída" | "Entrada",
+        category: data.category,
+        value: Number(data.value),
+        notes: data.notes || "",
+        month: data.month,
+      };
+      setTransactions(prev => [...prev, newTx]);
+    }
+    return true;
+  }, []);
+
+  const updateTransaction = useCallback(async (id: string, updates: Partial<Omit<Transaction, "id" | "month">>) => {
+    const dbUpdates: any = { ...updates };
+    if (updates.date) {
+      dbUpdates.month = getMonthFromDate(updates.date);
+    }
+
+    const { error } = await supabase.from("transactions").update(dbUpdates).eq("id", id);
+    if (error) {
+      console.error("Failed to update transaction:", error);
+      toast.error("Erro ao atualizar lançamento");
+      return false;
+    }
+
+    setTransactions(prev => prev.map(t => {
       if (t.id !== id) return t;
       const updated = { ...t, ...updates };
       if (updates.date) updated.month = getMonthFromDate(updates.date);
       return updated;
-    });
-    saveTransactions(txns);
+    }));
     return true;
-  }, [transactions, saveTransactions]);
+  }, []);
 
-  const deleteTransaction = useCallback((id: string) => {
-    saveTransactions(transactions.filter(t => t.id !== id));
-  }, [transactions, saveTransactions]);
+  const deleteTransaction = useCallback(async (id: string) => {
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
+    if (error) {
+      console.error("Failed to delete transaction:", error);
+      toast.error("Erro ao excluir lançamento");
+      return;
+    }
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   const getTransactionsByMonth = useCallback((monthNum: string) => {
     return transactions.filter(t => t.month.startsWith(monthNum + "/"));
@@ -76,22 +150,13 @@ export function useTransactions() {
     return LOCKED_MONTHS.includes(monthNum);
   }, []);
 
-  const clearAllData = useCallback(() => {
-    localStorage.removeItem(TRANSACTIONS_KEY);
-    localStorage.removeItem(CONFIG_KEY);
-    localStorage.removeItem(PATRIMONY_KEY);
-    const newConfig = DEFAULT_CONFIG;
-    const seed = createSeedData(newConfig.ano);
-    setConfigState(newConfig);
-    setTransactionsState(seed);
-    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(seed));
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+  const clearAllData = useCallback(async () => {
+    // This is a destructive operation - delete all unlocked transactions
+    toast.error("Função desabilitada no modo banco de dados");
   }, []);
 
   const exportData = useCallback(() => {
-    const patrimonyStr = localStorage.getItem(PATRIMONY_KEY);
-    const patrimony = patrimonyStr ? JSON.parse(patrimonyStr) : null;
-    const data = { config, transactions, patrimony };
+    const data = { config, transactions };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -101,18 +166,45 @@ export function useTransactions() {
     URL.revokeObjectURL(url);
   }, [config, transactions]);
 
-  const importData = useCallback((file: File): Promise<boolean> => {
+  const importData = useCallback(async (file: File): Promise<boolean> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const data = JSON.parse(e.target?.result as string);
           if (data.transactions && data.config) {
-            saveTransactions(data.transactions);
-            setConfig({ ...DEFAULT_CONFIG, ...data.config });
-            if (data.patrimony) {
-              localStorage.setItem(PATRIMONY_KEY, JSON.stringify(data.patrimony));
+            // Insert new transactions
+            const txns = data.transactions.map((tx: any) => ({
+              date: tx.date,
+              description: tx.description,
+              type: tx.type,
+              category: tx.category,
+              value: tx.value,
+              notes: tx.notes || "",
+              month: tx.month,
+              locked: tx.locked || false,
+            }));
+
+            // Delete existing and re-insert
+            await supabase.from("transactions").delete().not("id", "is", null);
+            
+            // Insert in batches of 50
+            for (let i = 0; i < txns.length; i += 50) {
+              const batch = txns.slice(i, i + 50);
+              await supabase.from("transactions").insert(batch);
             }
+
+            // Update config
+            if (data.config) {
+              await supabase.from("app_config").update({
+                saldo_anterior: data.config.saldoAnterior ?? data.config.saldo_anterior ?? 409000,
+                ano: data.config.ano ?? 2026,
+                num_socios: data.config.numSocios ?? data.config.num_socios ?? 4,
+              }).not("id", "is", null);
+            }
+
+            // Reload
+            window.location.reload();
             resolve(true);
           } else {
             resolve(false);
@@ -121,10 +213,10 @@ export function useTransactions() {
       };
       reader.readAsText(file);
     });
-  }, [saveTransactions, setConfig]);
+  }, []);
 
   return {
-    transactions, config, setConfig,
+    transactions, config, setConfig, loading,
     addTransaction, updateTransaction, deleteTransaction,
     getTransactionsByMonth, isMonthLocked,
     clearAllData, exportData, importData,
