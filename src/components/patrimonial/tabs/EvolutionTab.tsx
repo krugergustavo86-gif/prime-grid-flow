@@ -47,6 +47,8 @@ interface Snapshot {
 interface EvolutionTabProps {
   readOnly: boolean;
   numSocios: number;
+  autoNetPatrimony?: number;
+  autoTotalDebt?: number;
 }
 
 const MONTHS_ORDER = [
@@ -74,7 +76,7 @@ function formatMonth(month: string) {
 
 const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
-export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
+export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalDebt }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -144,6 +146,38 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   }, []);
 
   useEffect(() => { fetchSnapshots(); }, [fetchSnapshots]);
+
+  useEffect(() => {
+    if (autoNetPatrimony === undefined || loading) return;
+    const now = new Date();
+    const currentMonth = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+    const netPerPartner = numSocios > 0 ? (autoNetPatrimony ?? 0) / numSocios : 0;
+    const debt = autoTotalDebt ?? 0;
+
+    const existing = snapshots.find(s => s.month === currentMonth);
+    const needsUpdate = !existing ||
+      Math.abs(existing.gross_patrimony - (autoNetPatrimony ?? 0)) > 0.01 ||
+      Math.abs(existing.total_debt - debt) > 0.01;
+
+    if (!needsUpdate) return;
+
+    const payload = {
+      month: currentMonth,
+      gross_patrimony: autoNetPatrimony ?? 0,
+      total_debt: debt,
+      net_equity_per_partner: netPerPartner,
+      notes: "Atualizado automaticamente",
+    };
+
+    (async () => {
+      if (existing) {
+        await supabase.from("patrimony_snapshots").update(payload).eq("id", existing.id);
+      } else {
+        await supabase.from("patrimony_snapshots").insert(payload);
+      }
+      fetchSnapshots();
+    })();
+  }, [autoNetPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
 
   const openNew = () => {
     setEditId(null);
