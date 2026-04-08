@@ -424,7 +424,7 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
               />
             </div>
             <div>
-              <Label>Dívida Total (R$) *</Label>
+              <Label>Dívida Total (R$)</Label>
               <Input
                 type="number"
                 placeholder="0"
