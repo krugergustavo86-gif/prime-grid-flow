@@ -116,7 +116,6 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
       month: s.month,
       gross_patrimony: String(s.gross_patrimony),
       total_debt: String(s.total_debt),
-      net_equity_per_partner: String(s.net_equity_per_partner),
       notes: s.notes || "",
     });
     setModalOpen(true);
@@ -434,12 +433,12 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
               />
             </div>
             <div>
-              <Label>Patrimônio Líquido por Sócio (R$) *</Label>
+              <Label>Líquido/Sócio (calculado: {numSocios} sócios)</Label>
               <Input
-                type="number"
-                placeholder="0"
-                value={form.net_equity_per_partner}
-                onChange={(e) => setForm({ ...form, net_equity_per_partner: e.target.value })}
+                type="text"
+                value={formatCurrency(autoNetPerPartner)}
+                disabled
+                className="bg-muted"
               />
             </div>
             <div>
