@@ -255,6 +255,22 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Report Download */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadReport}
+          disabled={generatingReport}
+        >
+          {generatingReport ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4 mr-1" />
+          )}
+          {generatingReport ? "Gerando..." : "Baixar Relatório Mensal"}
+        </Button>
+      </div>
       {/* KPI Summary */}
       {latest && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
