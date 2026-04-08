@@ -53,6 +53,7 @@ export function useTransactions() {
           value: Number(r.value),
           notes: r.notes || "",
           month: r.month,
+          created_at: r.created_at,
         })));
 
         if (cfgRes.data) {
@@ -125,6 +126,7 @@ export function useTransactions() {
         value: Number(data.value),
         notes: data.notes || "",
         month: data.month,
+        created_at: data.created_at,
       };
       setTransactions(prev => [...prev, newTx]);
     }

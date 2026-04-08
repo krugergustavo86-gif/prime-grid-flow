@@ -38,7 +38,11 @@ export function TransactionTable({ transactions, locked, onEdit, onDelete }: Tra
   const filtered = transactions
     .filter(t => filter === "all" || t.type === filter)
     .filter(t => t.description.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a, b) => {
+      const dateCmp = b.date.localeCompare(a.date);
+      if (dateCmp !== 0) return dateCmp;
+      return (b.created_at || "").localeCompare(a.created_at || "");
+    });
 
   const pageSize = 50;
   const totalPages = Math.ceil(filtered.length / pageSize);

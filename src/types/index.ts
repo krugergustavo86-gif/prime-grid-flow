@@ -7,6 +7,7 @@ export interface Transaction {
   value: number;
   notes?: string;
   month: string; // "MM/YYYY"
+  created_at?: string; // ISO timestamp
 }
 
 export interface AppConfig {
