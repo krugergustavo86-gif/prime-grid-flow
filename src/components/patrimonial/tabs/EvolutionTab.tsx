@@ -310,7 +310,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground mb-1">Patrimônio Líquido</p>
+              <p className="text-xs text-muted-foreground mb-1">Patrimônio Bruto</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(latest.gross_patrimony)}</p>
               {hasTrend && (
                 <div className={`flex items-center gap-1 text-xs mt-1 ${grossTrend >= 0 ? "text-chart-entrada" : "text-destructive"}`}>
@@ -352,7 +352,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Líquido vs Dívida</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Bruto vs Dívida Total</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -362,7 +362,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} className="fill-muted-foreground" />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Patrimônio Líquido" stroke="hsl(var(--chart-entrada))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Patrimônio Bruto" stroke="hsl(var(--chart-entrada))" strokeWidth={2} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="Dívida Total" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -370,7 +370,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Líquido por Sócio</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Crescimento Líquido por Sócio</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -418,7 +418,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
                   <thead>
                     <tr className="border-b bg-muted/30">
                       <th className="text-left p-3 font-medium text-muted-foreground">Mês</th>
-                      <th className="text-right p-3 font-medium text-muted-foreground">Patrimônio Líquido</th>
+                      <th className="text-right p-3 font-medium text-muted-foreground">Patrimônio Bruto</th>
                       <th className="text-right p-3 font-medium text-muted-foreground">Dívida Total</th>
                       <th className="text-right p-3 font-medium text-muted-foreground">Líquido/Sócio</th>
                       <th className="text-left p-3 font-medium text-muted-foreground">Obs.</th>
@@ -506,7 +506,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
               />
             </div>
             <div>
-              <Label>Patrimônio Líquido (R$) *</Label>
+              <Label>Patrimônio Bruto (R$) *</Label>
               <Input
                 type="number"
                 placeholder="0"
