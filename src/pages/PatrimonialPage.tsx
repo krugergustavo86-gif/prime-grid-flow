@@ -105,7 +105,12 @@ export default function PatrimonialPage() {
             />
           </TabsContent>
           <TabsContent value="evolution">
-            <EvolutionTab readOnly={readOnly} numSocios={config.numSocios} />
+            <EvolutionTab
+              readOnly={readOnly}
+              numSocios={config.numSocios}
+              autoNetPatrimony={kpis.netPatrimony}
+              autoTotalDebt={kpis.totalAPagar}
+            />
           </TabsContent>
         </Tabs>
       </div>
