@@ -269,7 +269,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
 
   const chartData = snapshots.map((s) => ({
     month: formatMonth(s.month),
-    "Patrimônio Líquido": s.gross_patrimony,
+    "Patrimônio Bruto": s.gross_patrimony,
     "Dívida Total": s.total_debt,
     "Líquido/Sócio": s.net_equity_per_partner,
   }));
