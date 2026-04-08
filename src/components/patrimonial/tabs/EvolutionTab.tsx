@@ -202,7 +202,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
 
   const handleSave = async () => {
     if (!form.month || !form.gross_patrimony) {
-      toast.error("Preencha o mês e o patrimônio bruto/líquido");
+      toast.error("Preencha o mês e o patrimônio bruto");
       return;
     }
 
