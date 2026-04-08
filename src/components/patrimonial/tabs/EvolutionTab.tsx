@@ -122,9 +122,13 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
     setModalOpen(true);
   };
 
+  const grossNum = Number(form.gross_patrimony) || 0;
+  const debtNum = Number(form.total_debt) || 0;
+  const autoNetPerPartner = numSocios > 0 ? (grossNum - debtNum) / numSocios : 0;
+
   const handleSave = async () => {
-    if (!form.month || !form.gross_patrimony || !form.total_debt || !form.net_equity_per_partner) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!form.month || !form.gross_patrimony) {
+      toast.error("Preencha o mês e o patrimônio bruto/líquido");
       return;
     }
 
@@ -136,9 +140,9 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
 
     const payload = {
       month: form.month,
-      gross_patrimony: Number(form.gross_patrimony),
-      total_debt: Number(form.total_debt),
-      net_equity_per_partner: Number(form.net_equity_per_partner),
+      gross_patrimony: grossNum,
+      total_debt: debtNum,
+      net_equity_per_partner: autoNetPerPartner,
       notes: form.notes || null,
     };
 
