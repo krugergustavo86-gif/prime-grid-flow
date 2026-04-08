@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -5,6 +6,8 @@ import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
+import { Loan } from "@/types";
+import { getMonthFromDate } from "@/utils/formatters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceivablesTab } from "@/components/patrimonial/tabs/ReceivablesTab";
 import { LoansTab } from "@/components/patrimonial/tabs/LoansTab";
@@ -12,10 +15,22 @@ import { AssetsTab } from "@/components/patrimonial/tabs/AssetsTab";
 import { PayablesTab } from "@/components/patrimonial/tabs/PayablesTab";
 
 export default function PatrimonialPage() {
-  const { transactions, config } = useTransactions();
+  const { transactions, config, addTransaction } = useTransactions();
   const { caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
   const { isAdmin } = useAuth();
   const readOnly = !isAdmin;
+
+  const handlePayInstallment = useCallback(async (loan: Loan, paidValue: number) => {
+    const today = new Date().toISOString().split("T")[0];
+    await addTransaction({
+      date: today,
+      description: `Parcela ${loan.paidInstallments + 1}/${loan.totalInstallments} - ${loan.contract}`,
+      type: "Saída",
+      category: "Empréstimos/Financiamentos",
+      value: paidValue,
+      notes: `Lançamento automático - ${loan.institution || loan.type}`,
+    });
+  }, [addTransaction]);
   const patrimony = usePatrimony();
   const kpis = usePatrimonyKPIs(
     { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
@@ -66,6 +81,7 @@ export default function PatrimonialPage() {
               updateLoan={patrimony.updateLoan}
               deleteLoan={patrimony.deleteLoan}
               readOnly={readOnly}
+              onPayInstallment={handlePayInstallment}
             />
           </TabsContent>
           <TabsContent value="assets">

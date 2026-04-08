@@ -20,6 +20,7 @@ interface Props {
   updateLoan: (id: string, u: Partial<Loan>) => void;
   deleteLoan: (id: string) => void;
   readOnly?: boolean;
+  onPayInstallment?: (loan: Loan, paidValue: number) => void;
 }
 
 const LOAN_TYPES: LoanType[] = ["Capital de Giro", "Financiamento", "Fin. Veículo", "Fin. Equipamento", "Consórcio Veículo", "Imóvel", "Terreno", "Pronamp", "Boletos a Pagar", "Outro"];
@@ -32,7 +33,7 @@ function isUrgent(dateStr?: string): boolean {
   return diff <= 7;
 }
 
-export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: Props) {
+export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly, onPayInstallment }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Loan | null>(null);
   const [payModalLoan, setPayModalLoan] = useState<Loan | null>(null);
@@ -59,12 +60,24 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
 
   const isBoleto = (l: Loan) => l.type === "Boletos a Pagar";
 
+  const advanceNextPayment = (dateStr?: string): string | undefined => {
+    if (!dateStr) return undefined;
+    const d = new Date(dateStr + "T12:00:00");
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().split("T")[0];
+  };
+
   const handlePayClick = (l: Loan) => {
     if (isBoleto(l)) {
       setPayModalLoan(l);
       setPayValue(l.installmentValue?.toString() || "");
     } else {
-      updateLoan(l.id, { paidInstallments: l.paidInstallments + 1 });
+      const newNextPayment = advanceNextPayment(l.nextPayment);
+      updateLoan(l.id, {
+        paidInstallments: l.paidInstallments + 1,
+        nextPayment: newNextPayment,
+      });
+      onPayInstallment?.(l, l.installmentValue);
       toast.success(`Parcela ${l.paidInstallments + 1}/${l.totalInstallments} marcada como paga`);
     }
   };
@@ -72,9 +85,11 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly }: P
   const handlePayBoleto = () => {
     if (!payModalLoan || !payValue) return;
     const val = parseFloat(payValue) || 0;
+    const newNextPayment = advanceNextPayment(payModalLoan.nextPayment);
     updateLoan(payModalLoan.id, {
       paidInstallments: payModalLoan.paidInstallments + 1,
       installmentValue: val,
+      nextPayment: newNextPayment,
     });
     toast.success(`Boleto de ${formatCurrency(val)} registrado como pago`);
     setPayModalLoan(null);

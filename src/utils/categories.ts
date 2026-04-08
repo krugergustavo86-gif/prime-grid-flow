@@ -15,6 +15,7 @@ export const CATEGORIAS_SAIDA = [
   "Geradores",
   "Centro Comercial",
   "Caminhões Padrões/Redes",
+  "Empréstimos/Financiamentos",
 ] as const;
 
 export const CATEGORIAS_ENTRADA = [
