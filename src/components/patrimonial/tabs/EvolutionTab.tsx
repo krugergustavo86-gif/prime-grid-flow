@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, FileDown, Loader2 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -81,6 +81,47 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  const handleDownloadReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/generate-report`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erro ao gerar relatório");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const now = new Date();
+      const month = `${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+      a.download = `relatorio-${month}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Relatório gerado com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao gerar relatório");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const fetchSnapshots = useCallback(async () => {
     const { data, error } = await supabase
@@ -214,6 +255,22 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Report Download */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadReport}
+          disabled={generatingReport}
+        >
+          {generatingReport ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4 mr-1" />
+          )}
+          {generatingReport ? "Gerando..." : "Baixar Relatório Mensal"}
+        </Button>
+      </div>
       {/* KPI Summary */}
       {latest && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
