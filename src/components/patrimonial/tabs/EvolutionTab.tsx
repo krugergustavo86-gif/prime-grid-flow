@@ -47,7 +47,7 @@ interface Snapshot {
 interface EvolutionTabProps {
   readOnly: boolean;
   numSocios: number;
-  autoNetPatrimony?: number;
+  autoGrossPatrimony?: number;
   autoTotalDebt?: number;
 }
 
