@@ -276,7 +276,7 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground mb-1">Patrimônio Bruto</p>
+              <p className="text-xs text-muted-foreground mb-1">Patrimônio Líquido</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(latest.gross_patrimony)}</p>
               {hasTrend && (
                 <div className={`flex items-center gap-1 text-xs mt-1 ${grossTrend >= 0 ? "text-chart-entrada" : "text-destructive"}`}>
