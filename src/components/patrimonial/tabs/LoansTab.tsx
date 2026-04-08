@@ -88,9 +88,9 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly, onP
     const newNextPayment = advanceNextPayment(payModalLoan.nextPayment);
     updateLoan(payModalLoan.id, {
       paidInstallments: payModalLoan.paidInstallments + 1,
-      installmentValue: val,
       nextPayment: newNextPayment,
     });
+    onPayInstallment?.(payModalLoan, val);
     toast.success(`Boleto de ${formatCurrency(val)} registrado como pago`);
     setPayModalLoan(null);
     setPayValue("");
