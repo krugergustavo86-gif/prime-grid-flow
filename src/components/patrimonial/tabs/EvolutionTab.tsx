@@ -148,22 +148,22 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   useEffect(() => { fetchSnapshots(); }, [fetchSnapshots]);
 
   useEffect(() => {
-    if (autoNetPatrimony === undefined || loading) return;
+    if (autoGrossPatrimony === undefined || loading) return;
     const now = new Date();
     const currentMonth = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
-    const netPerPartner = numSocios > 0 ? (autoNetPatrimony ?? 0) / numSocios : 0;
     const debt = autoTotalDebt ?? 0;
+    const netPerPartner = numSocios > 0 ? (autoGrossPatrimony - debt) / numSocios : 0;
 
     const existing = snapshots.find(s => s.month === currentMonth);
     const needsUpdate = !existing ||
-      Math.abs(existing.gross_patrimony - (autoNetPatrimony ?? 0)) > 0.01 ||
+      Math.abs(existing.gross_patrimony - autoGrossPatrimony) > 0.01 ||
       Math.abs(existing.total_debt - debt) > 0.01;
 
     if (!needsUpdate) return;
 
     const payload = {
       month: currentMonth,
-      gross_patrimony: autoNetPatrimony ?? 0,
+      gross_patrimony: autoGrossPatrimony,
       total_debt: debt,
       net_equity_per_partner: netPerPartner,
       notes: "Atualizado automaticamente",
@@ -177,7 +177,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       }
       fetchSnapshots();
     })();
-  }, [autoNetPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
+  }, [autoGrossPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
 
   const openNew = () => {
     setEditId(null);
