@@ -72,7 +72,7 @@ function formatMonth(month: string) {
   return `${MONTH_LABELS[m] || m}/${y}`;
 }
 
-const emptyForm = { month: "", gross_patrimony: "", total_debt: "", net_equity_per_partner: "", notes: "" };
+const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
 export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -116,15 +116,18 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
       month: s.month,
       gross_patrimony: String(s.gross_patrimony),
       total_debt: String(s.total_debt),
-      net_equity_per_partner: String(s.net_equity_per_partner),
       notes: s.notes || "",
     });
     setModalOpen(true);
   };
 
+  const grossNum = Number(form.gross_patrimony) || 0;
+  const debtNum = Number(form.total_debt) || 0;
+  const autoNetPerPartner = numSocios > 0 ? (grossNum - debtNum) / numSocios : 0;
+
   const handleSave = async () => {
-    if (!form.month || !form.gross_patrimony || !form.total_debt || !form.net_equity_per_partner) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!form.month || !form.gross_patrimony) {
+      toast.error("Preencha o mês e o patrimônio bruto/líquido");
       return;
     }
 
@@ -136,9 +139,9 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
 
     const payload = {
       month: form.month,
-      gross_patrimony: Number(form.gross_patrimony),
-      total_debt: Number(form.total_debt),
-      net_equity_per_partner: Number(form.net_equity_per_partner),
+      gross_patrimony: grossNum,
+      total_debt: debtNum,
+      net_equity_per_partner: autoNetPerPartner,
       notes: form.notes || null,
     };
 
@@ -421,7 +424,7 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
               />
             </div>
             <div>
-              <Label>Dívida Total (R$) *</Label>
+              <Label>Dívida Total (R$)</Label>
               <Input
                 type="number"
                 placeholder="0"
@@ -430,12 +433,12 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
               />
             </div>
             <div>
-              <Label>Patrimônio Líquido por Sócio (R$) *</Label>
+              <Label>Líquido/Sócio (calculado: {numSocios} sócios)</Label>
               <Input
-                type="number"
-                placeholder="0"
-                value={form.net_equity_per_partner}
-                onChange={(e) => setForm({ ...form, net_equity_per_partner: e.target.value })}
+                type="text"
+                value={formatCurrency(autoNetPerPartner)}
+                disabled
+                className="bg-muted"
               />
             </div>
             <div>
