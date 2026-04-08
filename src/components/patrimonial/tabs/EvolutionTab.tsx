@@ -72,7 +72,7 @@ function formatMonth(month: string) {
   return `${MONTH_LABELS[m] || m}/${y}`;
 }
 
-const emptyForm = { month: "", gross_patrimony: "", total_debt: "", net_equity_per_partner: "", notes: "" };
+const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
 export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
