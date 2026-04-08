@@ -76,7 +76,7 @@ function formatMonth(month: string) {
 
 const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
-export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
+export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalDebt }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
