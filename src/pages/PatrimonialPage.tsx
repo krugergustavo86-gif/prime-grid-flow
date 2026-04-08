@@ -108,7 +108,7 @@ export default function PatrimonialPage() {
             <EvolutionTab
               readOnly={readOnly}
               numSocios={config.numSocios}
-              autoNetPatrimony={kpis.netPatrimony}
+              autoGrossPatrimony={kpis.grossPatrimony}
               autoTotalDebt={kpis.totalAPagar}
             />
           </TabsContent>

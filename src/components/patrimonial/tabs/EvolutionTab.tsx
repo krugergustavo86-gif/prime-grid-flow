@@ -47,7 +47,7 @@ interface Snapshot {
 interface EvolutionTabProps {
   readOnly: boolean;
   numSocios: number;
-  autoNetPatrimony?: number;
+  autoGrossPatrimony?: number;
   autoTotalDebt?: number;
 }
 
@@ -76,7 +76,7 @@ function formatMonth(month: string) {
 
 const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
-export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalDebt }: EvolutionTabProps) {
+export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTotalDebt }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -148,22 +148,22 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
   useEffect(() => { fetchSnapshots(); }, [fetchSnapshots]);
 
   useEffect(() => {
-    if (autoNetPatrimony === undefined || loading) return;
+    if (autoGrossPatrimony === undefined || loading) return;
     const now = new Date();
     const currentMonth = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
-    const netPerPartner = numSocios > 0 ? (autoNetPatrimony ?? 0) / numSocios : 0;
     const debt = autoTotalDebt ?? 0;
+    const netPerPartner = numSocios > 0 ? (autoGrossPatrimony - debt) / numSocios : 0;
 
     const existing = snapshots.find(s => s.month === currentMonth);
     const needsUpdate = !existing ||
-      Math.abs(existing.gross_patrimony - (autoNetPatrimony ?? 0)) > 0.01 ||
+      Math.abs(existing.gross_patrimony - autoGrossPatrimony) > 0.01 ||
       Math.abs(existing.total_debt - debt) > 0.01;
 
     if (!needsUpdate) return;
 
     const payload = {
       month: currentMonth,
-      gross_patrimony: autoNetPatrimony ?? 0,
+      gross_patrimony: autoGrossPatrimony,
       total_debt: debt,
       net_equity_per_partner: netPerPartner,
       notes: "Atualizado automaticamente",
@@ -177,7 +177,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
       }
       fetchSnapshots();
     })();
-  }, [autoNetPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
+  }, [autoGrossPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
 
   const openNew = () => {
     setEditId(null);
@@ -202,7 +202,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
 
   const handleSave = async () => {
     if (!form.month || !form.gross_patrimony) {
-      toast.error("Preencha o mês e o patrimônio bruto/líquido");
+      toast.error("Preencha o mês e o patrimônio bruto");
       return;
     }
 
@@ -269,7 +269,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
 
   const chartData = snapshots.map((s) => ({
     month: formatMonth(s.month),
-    "Patrimônio Líquido": s.gross_patrimony,
+    "Patrimônio Bruto": s.gross_patrimony,
     "Dívida Total": s.total_debt,
     "Líquido/Sócio": s.net_equity_per_partner,
   }));
@@ -310,7 +310,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground mb-1">Patrimônio Líquido</p>
+              <p className="text-xs text-muted-foreground mb-1">Patrimônio Bruto</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(latest.gross_patrimony)}</p>
               {hasTrend && (
                 <div className={`flex items-center gap-1 text-xs mt-1 ${grossTrend >= 0 ? "text-chart-entrada" : "text-destructive"}`}>
@@ -352,7 +352,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Líquido vs Dívida</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Bruto vs Dívida Total</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -362,7 +362,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} className="fill-muted-foreground" />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Patrimônio Líquido" stroke="hsl(var(--chart-entrada))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Patrimônio Bruto" stroke="hsl(var(--chart-entrada))" strokeWidth={2} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="Dívida Total" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -370,7 +370,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Patrimônio Líquido por Sócio</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Crescimento Líquido por Sócio</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -418,7 +418,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
                   <thead>
                     <tr className="border-b bg-muted/30">
                       <th className="text-left p-3 font-medium text-muted-foreground">Mês</th>
-                      <th className="text-right p-3 font-medium text-muted-foreground">Patrimônio Líquido</th>
+                      <th className="text-right p-3 font-medium text-muted-foreground">Patrimônio Bruto</th>
                       <th className="text-right p-3 font-medium text-muted-foreground">Dívida Total</th>
                       <th className="text-right p-3 font-medium text-muted-foreground">Líquido/Sócio</th>
                       <th className="text-left p-3 font-medium text-muted-foreground">Obs.</th>
@@ -506,7 +506,7 @@ export function EvolutionTab({ readOnly, numSocios, autoNetPatrimony, autoTotalD
               />
             </div>
             <div>
-              <Label>Patrimônio Líquido (R$) *</Label>
+              <Label>Patrimônio Bruto (R$) *</Label>
               <Input
                 type="number"
                 placeholder="0"
