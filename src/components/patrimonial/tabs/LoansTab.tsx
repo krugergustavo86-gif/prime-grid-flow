@@ -90,7 +90,7 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly, onP
       paidInstallments: payModalLoan.paidInstallments + 1,
       nextPayment: newNextPayment,
     });
-    onPayInstallment?.(payModalLoan, val);
+    // Boletos NÃO geram lançamento automático no caixa
     toast.success(`Boleto de ${formatCurrency(val)} registrado como pago`);
     setPayModalLoan(null);
     setPayValue("");
