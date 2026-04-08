@@ -81,6 +81,47 @@ export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  const handleDownloadReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/generate-report`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erro ao gerar relatório");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const now = new Date();
+      const month = `${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+      a.download = `relatorio-${month}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Relatório gerado com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao gerar relatório");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const fetchSnapshots = useCallback(async () => {
     const { data, error } = await supabase
