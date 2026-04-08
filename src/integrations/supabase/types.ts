@@ -244,6 +244,39 @@ export type Database = {
         }
         Relationships: []
       }
+      patrimony_snapshots: {
+        Row: {
+          created_at: string
+          gross_patrimony: number
+          id: string
+          month: string
+          net_equity_per_partner: number
+          notes: string | null
+          total_debt: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gross_patrimony?: number
+          id?: string
+          month: string
+          net_equity_per_partner?: number
+          notes?: string | null
+          total_debt?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gross_patrimony?: number
+          id?: string
+          month?: string
+          net_equity_per_partner?: number
+          notes?: string | null
+          total_debt?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payables: {
         Row: {
           created_at: string

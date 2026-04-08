@@ -13,6 +13,7 @@ import { ReceivablesTab } from "@/components/patrimonial/tabs/ReceivablesTab";
 import { LoansTab } from "@/components/patrimonial/tabs/LoansTab";
 import { AssetsTab } from "@/components/patrimonial/tabs/AssetsTab";
 import { PayablesTab } from "@/components/patrimonial/tabs/PayablesTab";
+import { EvolutionTab } from "@/components/patrimonial/tabs/EvolutionTab";
 
 export default function PatrimonialPage() {
   const { transactions, config, addTransaction } = useTransactions();
@@ -52,11 +53,12 @@ export default function PatrimonialPage() {
         />
 
         <Tabs defaultValue="receivables">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="receivables">📥 Recebíveis</TabsTrigger>
             <TabsTrigger value="loans">🏦 Empréstimos</TabsTrigger>
             <TabsTrigger value="assets">🏗 Patrimônio</TabsTrigger>
             <TabsTrigger value="payables">💳 Contas</TabsTrigger>
+            <TabsTrigger value="evolution">📈 Evolução</TabsTrigger>
           </TabsList>
           <TabsContent value="receivables">
             <ReceivablesTab
@@ -101,6 +103,9 @@ export default function PatrimonialPage() {
               deletePayable={patrimony.deletePayable}
               readOnly={readOnly}
             />
+          </TabsContent>
+          <TabsContent value="evolution">
+            <EvolutionTab readOnly={readOnly} numSocios={config.numSocios} />
           </TabsContent>
         </Tabs>
       </div>
