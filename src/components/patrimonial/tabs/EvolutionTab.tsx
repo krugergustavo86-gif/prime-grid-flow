@@ -47,6 +47,8 @@ interface Snapshot {
 interface EvolutionTabProps {
   readOnly: boolean;
   numSocios: number;
+  autoNetPatrimony?: number;
+  autoTotalDebt?: number;
 }
 
 const MONTHS_ORDER = [
