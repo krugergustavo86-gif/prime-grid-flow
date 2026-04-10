@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loan, LoanType } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
