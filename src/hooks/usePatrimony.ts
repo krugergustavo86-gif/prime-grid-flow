@@ -18,7 +18,7 @@ function mapCash(r: any): CashEntry {
   return { id: r.id, description: r.description, balance: Number(r.balance), refDate: r.ref_date, notes: r.notes || undefined };
 }
 function mapLoan(r: any): Loan {
-  return { id: r.id, contract: r.contract, institution: r.institution, type: r.type, nextPayment: r.next_payment || undefined, totalInstallments: r.total_installments, paidInstallments: r.paid_installments, installmentValue: Number(r.installment_value), notes: r.notes || undefined };
+  return { id: r.id, contract: r.contract, institution: r.institution, type: r.type, nextPayment: r.next_payment || undefined, totalInstallments: r.total_installments, paidInstallments: r.paid_installments, installmentValue: Number(r.installment_value), notes: r.notes || undefined, autoDebit: r.auto_debit || false, debitDay: r.debit_day || undefined, debitStartDate: r.debit_start_date || undefined, debitEndDate: r.debit_end_date || undefined, bankAccount: r.bank_account || undefined, debitCategory: r.debit_category || undefined };
 }
 function mapPayable(r: any): Payable {
   return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, scheduledDate: r.scheduled_date || undefined, responsible: r.responsible, status: r.status, notes: r.notes || undefined };
@@ -135,7 +135,7 @@ export function usePatrimony() {
 
   // Loans
   const addLoan = useCallback(async (l: Omit<Loan, "id">) => {
-    const { data: row, error } = await supabase.from("loans").insert({ contract: l.contract, institution: l.institution, type: l.type, next_payment: l.nextPayment, total_installments: l.totalInstallments, paid_installments: l.paidInstallments, installment_value: l.installmentValue, notes: l.notes }).select().single();
+    const { data: row, error } = await supabase.from("loans").insert({ contract: l.contract, institution: l.institution, type: l.type, next_payment: l.nextPayment, total_installments: l.totalInstallments, paid_installments: l.paidInstallments, installment_value: l.installmentValue, notes: l.notes, auto_debit: l.autoDebit || false, debit_day: l.debitDay, debit_start_date: l.debitStartDate, debit_end_date: l.debitEndDate, bank_account: l.bankAccount, debit_category: l.debitCategory }).select().single();
     if (error) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, loans: [...prev.loans, mapLoan(row)] }));
   }, []);
@@ -150,6 +150,12 @@ export function usePatrimony() {
     if (updates.paidInstallments !== undefined) dbUpdates.paid_installments = updates.paidInstallments;
     if (updates.installmentValue !== undefined) dbUpdates.installment_value = updates.installmentValue;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.autoDebit !== undefined) dbUpdates.auto_debit = updates.autoDebit;
+    if (updates.debitDay !== undefined) dbUpdates.debit_day = updates.debitDay;
+    if (updates.debitStartDate !== undefined) dbUpdates.debit_start_date = updates.debitStartDate;
+    if (updates.debitEndDate !== undefined) dbUpdates.debit_end_date = updates.debitEndDate;
+    if (updates.bankAccount !== undefined) dbUpdates.bank_account = updates.bankAccount;
+    if (updates.debitCategory !== undefined) dbUpdates.debit_category = updates.debitCategory;
     await supabase.from("loans").update(dbUpdates).eq("id", id);
     setData(prev => ({ ...prev, loans: prev.loans.map(l => l.id === id ? { ...l, ...updates } : l) }));
   }, []);
