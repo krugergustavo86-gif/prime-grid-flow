@@ -7,6 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { useAutoDebitCatchUp } from "@/hooks/useAutoDebitCatchUp";
 import DashboardPage from "./pages/DashboardPage";
 import LancamentosPage from "./pages/LancamentosPage";
 import ResumoPage from "./pages/ResumoPage";
@@ -23,6 +24,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl } = useAuth();
+  useAutoDebitCatchUp();
 
   if (loading) {
     return (

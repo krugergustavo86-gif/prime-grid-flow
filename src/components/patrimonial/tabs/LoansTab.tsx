@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loan, LoanType } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -247,6 +248,12 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
   const [paidInstallments, setPaidInstallments] = useState(initial?.paidInstallments?.toString() || "0");
   const [installmentValue, setInstallmentValue] = useState(initial?.installmentValue?.toString() || "");
   const [notes, setNotes] = useState(initial?.notes || "");
+  const [autoDebit, setAutoDebit] = useState(initial?.autoDebit || false);
+  const [debitDay, setDebitDay] = useState(initial?.debitDay?.toString() || "");
+  const [debitStartDate, setDebitStartDate] = useState(initial?.debitStartDate || "");
+  const [debitEndDate, setDebitEndDate] = useState(initial?.debitEndDate || "");
+  const [bankAccount, setBankAccount] = useState(initial?.bankAccount || "");
+  const [debitCategory, setDebitCategory] = useState(initial?.debitCategory || "Empréstimos/Financiamentos");
 
   useState(() => {
     if (open) {
@@ -258,11 +265,18 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
       setPaidInstallments(initial?.paidInstallments?.toString() || "0");
       setInstallmentValue(initial?.installmentValue?.toString() || "");
       setNotes(initial?.notes || "");
+      setAutoDebit(initial?.autoDebit || false);
+      setDebitDay(initial?.debitDay?.toString() || "");
+      setDebitStartDate(initial?.debitStartDate || "");
+      setDebitEndDate(initial?.debitEndDate || "");
+      setBankAccount(initial?.bankAccount || "");
+      setDebitCategory(initial?.debitCategory || "Empréstimos/Financiamentos");
     }
   });
 
   const handleSubmit = () => {
     if (!contract || !installmentValue || !totalInstallments) { toast.error("Preencha os campos obrigatórios"); return; }
+    if (autoDebit && !debitDay) { toast.error("Informe o dia do débito"); return; }
     onSave({
       contract, institution, type,
       nextPayment: nextPayment || undefined,
@@ -270,8 +284,21 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
       paidInstallments: parseInt(paidInstallments) || 0,
       installmentValue: parseFloat(installmentValue) || 0,
       notes: notes || undefined,
+      autoDebit,
+      debitDay: autoDebit ? parseInt(debitDay) || undefined : undefined,
+      debitStartDate: autoDebit && debitStartDate ? debitStartDate : undefined,
+      debitEndDate: autoDebit && debitEndDate ? debitEndDate : undefined,
+      bankAccount: autoDebit && bankAccount ? bankAccount : undefined,
+      debitCategory: autoDebit ? debitCategory : undefined,
     });
   };
+
+  const CATEGORIAS_SAIDA = [
+    "Materiais", "Custos Fixos", "Custo Operacional/Cartões", "Combustível",
+    "Impostos/Contabilidade", "Reserva/Décimos/Férias", "Manutenções", "Investimentos",
+    "Salários", "Perdas", "Marketing", "Solar Kits", "Comissões/Vendedores",
+    "Geradores", "Centro Comercial", "Caminhões Padrões/Redes", "Empréstimos/Financiamentos",
+  ];
 
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
@@ -290,6 +317,36 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
           </div>
           <div><Label>Valor da Parcela (R$) *</Label><Input type="number" value={installmentValue} onChange={e => setInstallmentValue(e.target.value)} /></div>
           <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
+
+          {/* Auto-debit section */}
+          <div className="border-t pt-3 mt-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Checkbox checked={autoDebit} onCheckedChange={(v) => setAutoDebit(!!v)} id="auto-debit" />
+              <Label htmlFor="auto-debit" className="cursor-pointer font-semibold">Débito em conta automático</Label>
+            </div>
+            {autoDebit && (
+              <div className="space-y-3 pl-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Dia do débito (1-31) *</Label>
+                    <Input type="number" min={1} max={31} value={debitDay} onChange={e => setDebitDay(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Categoria do lançamento</Label>
+                    <Select value={debitCategory} onValueChange={setDebitCategory}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{CATEGORIAS_SAIDA.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div><Label>Conta bancária de origem</Label><Input placeholder="Ex: Banco do Brasil, Itaú..." value={bankAccount} onChange={e => setBankAccount(e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Data de início</Label><Input type="date" value={debitStartDate} onChange={e => setDebitStartDate(e.target.value)} /></div>
+                  <div><Label>Data de término</Label><Input type="date" value={debitEndDate} onChange={e => setDebitEndDate(e.target.value)} /></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>

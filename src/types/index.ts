@@ -85,6 +85,25 @@ export interface Loan {
   paidInstallments: number;
   installmentValue: number;
   notes?: string;
+  autoDebit?: boolean;
+  debitDay?: number;
+  debitStartDate?: string;
+  debitEndDate?: string;
+  bankAccount?: string;
+  debitCategory?: string;
+}
+
+export interface AutoTransaction {
+  id: string;
+  loanId: string;
+  transactionId?: string;
+  generatedDate: string;
+  month: string;
+  value: number;
+  description: string;
+  reversed: boolean;
+  createdAt: string;
+  loanContract?: string; // joined
 }
 
 export type PayableStatus = "A vencer" | "Vencido" | "Agendado" | "Pago";
