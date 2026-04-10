@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useMonthSummary } from "@/hooks/useMonthSummary";
+import { useAutoTransactions } from "@/hooks/useAutoTransactions";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { MonthSelector } from "@/components/lancamentos/MonthSelector";
@@ -8,7 +9,9 @@ import { MonthSummaryCards } from "@/components/lancamentos/MonthSummaryCards";
 import { DonutCharts } from "@/components/lancamentos/DonutCharts";
 import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
+import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Transaction } from "@/types";
@@ -23,6 +26,7 @@ export default function LancamentosPage() {
   const { transactions, config, addTransaction, updateTransaction, deleteTransaction, isMonthLocked, getTransactionsByMonth } = useTransactions();
   const monthTxns = getTransactionsByMonth(selectedMonth);
   const { entradas, saidas, balanco, isLocked } = useMonthSummary(transactions, selectedMonth);
+  const { autoTxns, loading: autoLoading, reverseAutoTransaction } = useAutoTransactions();
 
   const readOnly = isGerencia || (!canManageLancamentos);
 
@@ -61,10 +65,28 @@ export default function LancamentosPage() {
     <div className="flex flex-col h-full">
       <Header title="Lançamentos" />
       <div className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 space-y-4">
-        <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
-        <MonthSummaryCards entradas={entradas} saidas={saidas} balanco={balanco} />
-        <DonutCharts transactions={monthTxns} />
-        <TransactionTable transactions={monthTxns} locked={isLocked || readOnly} onEdit={handleEdit} onDelete={handleDelete} />
+        <Tabs defaultValue="lancamentos">
+          <TabsList>
+            <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
+            <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="lancamentos" className="space-y-4 mt-4">
+            <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
+            <MonthSummaryCards entradas={entradas} saidas={saidas} balanco={balanco} />
+            <DonutCharts transactions={monthTxns} />
+            <TransactionTable transactions={monthTxns} locked={isLocked || readOnly} onEdit={handleEdit} onDelete={handleDelete} />
+          </TabsContent>
+
+          <TabsContent value="automaticos" className="mt-4">
+            <AutoTransactionsTab
+              autoTxns={autoTxns}
+              loading={autoLoading}
+              onReverse={reverseAutoTransaction}
+              readOnly={readOnly}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {!readOnly && (
