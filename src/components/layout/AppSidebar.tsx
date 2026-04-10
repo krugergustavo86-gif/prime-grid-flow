@@ -38,7 +38,7 @@ export function AppSidebar() {
             <div className="flex items-center gap-2">
               <img src={logoPrimegrid} alt="PrimeGrid" width={36} height={36} />
               <div>
-                <h1 className="text-lg font-bold text-sidebar-foreground">Prime Grid</h1>
+                <h1 className="text-lg font-bold text-sidebar-foreground">PrimeGrid</h1>
                 <p className="text-xs text-sidebar-foreground/60">Financeiro</p>
               </div>
             </div>
