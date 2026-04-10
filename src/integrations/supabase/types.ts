@@ -71,6 +71,57 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_transactions: {
+        Row: {
+          created_at: string
+          description: string
+          generated_date: string
+          id: string
+          loan_id: string
+          month: string
+          reversed: boolean
+          transaction_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          generated_date: string
+          id?: string
+          loan_id: string
+          month: string
+          reversed?: boolean
+          transaction_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          generated_date?: string
+          id?: string
+          loan_id?: string
+          month?: string
+          reversed?: boolean
+          transaction_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_transactions_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_transactions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_entries: {
         Row: {
           balance: number
@@ -207,8 +258,14 @@ export type Database = {
       }
       loans: {
         Row: {
+          auto_debit: boolean
+          bank_account: string | null
           contract: string
           created_at: string
+          debit_category: string | null
+          debit_day: number | null
+          debit_end_date: string | null
+          debit_start_date: string | null
           id: string
           installment_value: number
           institution: string
@@ -219,8 +276,14 @@ export type Database = {
           type: string
         }
         Insert: {
+          auto_debit?: boolean
+          bank_account?: string | null
           contract: string
           created_at?: string
+          debit_category?: string | null
+          debit_day?: number | null
+          debit_end_date?: string | null
+          debit_start_date?: string | null
           id?: string
           installment_value?: number
           institution?: string
@@ -231,8 +294,14 @@ export type Database = {
           type: string
         }
         Update: {
+          auto_debit?: boolean
+          bank_account?: string | null
           contract?: string
           created_at?: string
+          debit_category?: string | null
+          debit_day?: number | null
+          debit_end_date?: string | null
+          debit_start_date?: string | null
           id?: string
           installment_value?: number
           institution?: string
