@@ -85,7 +85,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-[10px] text-center text-muted-foreground">
-          Prime Grid Energia Ltda — CNPJ 39.430.957/0001-03
+          PrimeGrid Energia Ltda — CNPJ 39.430.957/0001-03
         </p>
       </div>
     </div>
