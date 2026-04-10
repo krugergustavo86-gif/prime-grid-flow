@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loan, LoanType } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
@@ -255,7 +255,7 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
   const [bankAccount, setBankAccount] = useState(initial?.bankAccount || "");
   const [debitCategory, setDebitCategory] = useState(initial?.debitCategory || "Empréstimos/Financiamentos");
 
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setContract(initial?.contract || "");
       setInstitution(initial?.institution || "");
@@ -272,7 +272,7 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
       setBankAccount(initial?.bankAccount || "");
       setDebitCategory(initial?.debitCategory || "Empréstimos/Financiamentos");
     }
-  });
+  }, [open, initial]);
 
   const handleSubmit = () => {
     if (!contract || !installmentValue || !totalInstallments) { toast.error("Preencha os campos obrigatórios"); return; }
