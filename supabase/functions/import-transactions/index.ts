@@ -1,8 +1,11 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const ALLOWED_ROLES = new Set(["admin", "lancamentos"]);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,7 +15,44 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || serviceRoleKey
+
+    const authHeader = req.headers.get('Authorization')
+
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const anonClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user: caller } } = await anonClient.auth.getUser()
+
+    if (!caller) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey)
+    const { data: roleRow } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', caller.id)
+      .maybeSingle()
+
+    if (!roleRow?.role || !ALLOWED_ROLES.has(roleRow.role)) {
+      return new Response(JSON.stringify({ error: 'Sem permissão para importar lançamentos' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const supabase = adminClient
 
     const { transactions } = await req.json()
     
