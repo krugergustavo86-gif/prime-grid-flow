@@ -106,6 +106,25 @@ export default function NFControlPage() {
     fetchData();
   };
 
+  const handleOpenAttachment = async (rawValue: string) => {
+    if (/^https?:\/\//i.test(rawValue)) {
+      const match = rawValue.match(/\/object\/public\/invoices\/(.+)$/);
+      if (!match) {
+        window.open(rawValue, "_blank", "noopener,noreferrer");
+        return;
+      }
+      rawValue = decodeURIComponent(match[1]);
+    }
+    const { data, error } = await supabase.storage
+      .from("invoices")
+      .createSignedUrl(rawValue, 60);
+    if (error || !data?.signedUrl) {
+      toast.error("Não foi possível abrir o anexo");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   const handleAddType = async (name: string) => {
     const { error } = await supabase.from("invoice_types").insert({ name });
     if (error) { toast.error("Erro: " + error.message); return; }
