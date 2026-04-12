@@ -75,6 +75,19 @@ export function useTransactions() {
 
   const setConfig = useCallback(async (newConfig: AppConfig) => {
     setConfigState(newConfig);
+
+    const { data: current, error: fetchError } = await supabase
+      .from("app_config")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (fetchError || !current?.id) {
+      console.error("Failed to load app_config row:", fetchError);
+      toast.error("Erro ao salvar configuração");
+      return;
+    }
+
     const { error } = await supabase
       .from("app_config")
       .update({
@@ -83,7 +96,7 @@ export function useTransactions() {
         num_socios: newConfig.numSocios,
         updated_at: new Date().toISOString(),
       })
-      .not("id", "is", null); // update the single row
+      .eq("id", current.id);
     if (error) {
       console.error("Failed to update config:", error);
       toast.error("Erro ao salvar configuração");
