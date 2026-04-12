@@ -221,8 +221,10 @@ export function useTransactions() {
               locked: tx.locked || false,
             }));
 
+            const ZERO_UUID = "00000000-0000-0000-0000-000000000000";
+
             // Delete existing and re-insert
-            await supabase.from("transactions").delete().not("id", "is", null);
+            await supabase.from("transactions").delete().neq("id", ZERO_UUID);
             
             // Insert in batches of 50
             for (let i = 0; i < txns.length; i += 50) {
@@ -232,11 +234,19 @@ export function useTransactions() {
 
             // Update config
             if (data.config) {
-              await supabase.from("app_config").update({
-                saldo_anterior: data.config.saldoAnterior ?? data.config.saldo_anterior ?? 409000,
-                ano: data.config.ano ?? 2026,
-                num_socios: data.config.numSocios ?? data.config.num_socios ?? 4,
-              }).not("id", "is", null);
+              const { data: cfgRow } = await supabase
+                .from("app_config")
+                .select("id")
+                .limit(1)
+                .maybeSingle();
+
+              if (cfgRow?.id) {
+                await supabase.from("app_config").update({
+                  saldo_anterior: data.config.saldoAnterior ?? data.config.saldo_anterior ?? 409000,
+                  ano: data.config.ano ?? 2026,
+                  num_socios: data.config.numSocios ?? data.config.num_socios ?? 4,
+                }).eq("id", cfgRow.id);
+              }
             }
 
             // Reload
