@@ -13,8 +13,8 @@ import {
 interface SettingsFormProps {
   config: AppConfig;
   onConfigChange: (config: AppConfig) => void;
-  onExport: () => void;
-  onImport: (file: File) => Promise<boolean>;
+  onExport?: () => void;
+  onImport?: (file: File) => Promise<boolean>;
   onClear: () => void;
 }
 
