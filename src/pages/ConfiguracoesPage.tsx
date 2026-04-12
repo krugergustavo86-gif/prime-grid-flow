@@ -16,7 +16,7 @@ export default function ConfiguracoesPage() {
       <div className="flex flex-col h-full">
         <Header title="Configurações" />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Carregando configurações...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
