@@ -23,6 +23,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function resolveRole(userId: string): Promise<AppRole | null> {
+  const { data, error } = await supabase.rpc("get_user_role", { _user_id: userId });
+  if (error) {
+    console.error("Failed to resolve role:", error);
+    return null;
+  }
+  return (data as AppRole | null) ?? null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -32,35 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const finishLoading = () => {
-      if (mounted) setLoading(false);
-    };
-
-    const resolveRole = async (userId: string): Promise<AppRole | null> => {
-      const { data: directRole, error: directError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (directError) {
-        console.error("Failed to fetch role from table:", directError);
-      }
-
-      if (directRole?.role) {
-        return directRole.role as AppRole;
-      }
-
-      const { data: rpcRole, error: rpcError } = await supabase.rpc("get_user_role", { _user_id: userId });
-
-      if (rpcError) {
-        throw rpcError;
-      }
-
-      return (rpcRole as AppRole | null) ?? null;
-    };
-
     const syncAuthState = async (nextSession: Session | null) => {
       if (!mounted) return;
 
@@ -69,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!nextSession?.user) {
         setRole(null);
-        finishLoading();
+        setLoading(false);
         return;
       }
 
@@ -80,16 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Failed to fetch role:", error);
         if (mounted) setRole(null);
       } finally {
-        finishLoading();
+        if (mounted) setLoading(false);
       }
     };
-
-    const timeout = setTimeout(() => {
-      if (mounted) {
-        console.warn("Auth loading timeout - forcing load complete");
-        setLoading(false);
-      }
-    }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       void syncAuthState(nextSession);
@@ -99,13 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data: { session: nextSession } }) => {
         void syncAuthState(nextSession);
       })
-      .catch(() => {
-        finishLoading();
+      .catch((error) => {
+        console.error("Failed to get session:", error);
+        if (mounted) setLoading(false);
       });
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
