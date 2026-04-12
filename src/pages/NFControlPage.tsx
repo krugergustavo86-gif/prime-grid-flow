@@ -223,9 +223,9 @@ export default function NFControlPage() {
                       <td className="p-3 hidden md:table-cell text-muted-foreground">{new Date(inv.issue_date + "T12:00:00").toLocaleDateString("pt-BR")}</td>
                       <td className="p-3 hidden md:table-cell">
                         {inv.attachment_url ? (
-                          <a href={inv.attachment_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+                          <button type="button" onClick={() => handleOpenAttachment(inv.attachment_url!)} className="text-primary hover:underline flex items-center gap-1 text-xs">
                             <ExternalLink className="h-3 w-3" /> {inv.attachment_name || "Arquivo"}
-                          </a>
+                          </button>
                         ) : <span className="text-muted-foreground text-xs">—</span>}
                       </td>
                       {canManageNF && (
