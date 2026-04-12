@@ -106,6 +106,25 @@ export default function NFControlPage() {
     fetchData();
   };
 
+  const handleOpenAttachment = async (rawValue: string) => {
+    if (/^https?:\/\//i.test(rawValue)) {
+      const match = rawValue.match(/\/object\/public\/invoices\/(.+)$/);
+      if (!match) {
+        window.open(rawValue, "_blank", "noopener,noreferrer");
+        return;
+      }
+      rawValue = decodeURIComponent(match[1]);
+    }
+    const { data, error } = await supabase.storage
+      .from("invoices")
+      .createSignedUrl(rawValue, 60);
+    if (error || !data?.signedUrl) {
+      toast.error("Não foi possível abrir o anexo");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   const handleAddType = async (name: string) => {
     const { error } = await supabase.from("invoice_types").insert({ name });
     if (error) { toast.error("Erro: " + error.message); return; }
@@ -204,9 +223,9 @@ export default function NFControlPage() {
                       <td className="p-3 hidden md:table-cell text-muted-foreground">{new Date(inv.issue_date + "T12:00:00").toLocaleDateString("pt-BR")}</td>
                       <td className="p-3 hidden md:table-cell">
                         {inv.attachment_url ? (
-                          <a href={inv.attachment_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+                          <button type="button" onClick={() => handleOpenAttachment(inv.attachment_url!)} className="text-primary hover:underline flex items-center gap-1 text-xs">
                             <ExternalLink className="h-3 w-3" /> {inv.attachment_name || "Arquivo"}
-                          </a>
+                          </button>
                         ) : <span className="text-muted-foreground text-xs">—</span>}
                       </td>
                       {canManageNF && (
@@ -294,8 +313,7 @@ function InvoiceModal({ open, onClose, onSave, initial, types }: {
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("invoices").upload(path, file);
     if (error) { toast.error("Erro no upload: " + error.message); setUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("invoices").getPublicUrl(path);
-    setAttachmentUrl(publicUrl);
+    setAttachmentUrl(path);
     setAttachmentName(file.name);
     setUploading(false);
     toast.success("Arquivo anexado");
