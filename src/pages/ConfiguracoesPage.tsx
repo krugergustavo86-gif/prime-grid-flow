@@ -2,6 +2,7 @@ import { useAppConfig } from "@/hooks/useAppConfig";
 import { Header } from "@/components/layout/Header";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { config, setConfig, loading } = useAppConfig();
