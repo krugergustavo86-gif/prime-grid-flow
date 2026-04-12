@@ -14,11 +14,17 @@ export function useTransactions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    const MAX_PAGES = 100;
+
     const fetchAllTransactions = async () => {
       const rows: any[] = [];
-      let from = 0;
+      let page = 0;
 
-      while (true) {
+      while (page < MAX_PAGES) {
+        if (cancelled) return [];
+
+        const from = page * TRANSACTIONS_PAGE_SIZE;
         const { data, error } = await supabase
           .from("transactions")
           .select("*")
@@ -31,7 +37,7 @@ export function useTransactions() {
         rows.push(...data);
 
         if (data.length < TRANSACTIONS_PAGE_SIZE) break;
-        from += TRANSACTIONS_PAGE_SIZE;
+        page++;
       }
 
       return rows;
@@ -43,6 +49,8 @@ export function useTransactions() {
           fetchAllTransactions(),
           supabase.from("app_config").select("*").limit(1).maybeSingle(),
         ]);
+
+        if (cancelled) return;
 
         setTransactions(transactionRows.map((r: any) => ({
           id: r.id,
@@ -64,13 +72,17 @@ export function useTransactions() {
           });
         }
       } catch (err) {
-        console.error("Failed to load data:", err);
+        if (!cancelled) console.error("Failed to load data:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const setConfig = useCallback(async (newConfig: AppConfig) => {
