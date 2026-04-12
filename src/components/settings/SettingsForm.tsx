@@ -86,15 +86,19 @@ export function SettingsForm({ config, onConfigChange, onExport, onImport, onCle
       <div className="bg-card rounded-lg border p-6 space-y-4">
         <h3 className="font-semibold text-foreground">Dados</h3>
         <div className="flex flex-col gap-3">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" /> Exportar dados (JSON)
-          </Button>
-          <div>
-            <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-            <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-4 w-4 mr-2" /> Importar dados (JSON)
+          {onExport && (
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" /> Exportar dados (JSON)
             </Button>
-          </div>
+          )}
+          {onImport && (
+            <div>
+              <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+              <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-2" /> Importar dados (JSON)
+              </Button>
+            </div>
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
