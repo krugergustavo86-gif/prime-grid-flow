@@ -2,6 +2,7 @@ import { useAppConfig } from "@/hooks/useAppConfig";
 import { Header } from "@/components/layout/Header";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { config, setConfig, loading } = useAppConfig();
@@ -15,7 +16,7 @@ export default function ConfiguracoesPage() {
       <div className="flex flex-col h-full">
         <Header title="Configurações" />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Carregando configurações...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
