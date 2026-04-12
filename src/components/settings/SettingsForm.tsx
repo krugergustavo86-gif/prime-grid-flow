@@ -43,13 +43,15 @@ export function SettingsForm({ config, onConfigChange, onExport, onImport, onCle
   };
 
   const handleExport = () => {
-    onExport();
-    toast.success("Dados exportados com sucesso");
+    if (onExport) {
+      onExport();
+      toast.success("Dados exportados com sucesso");
+    }
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !onImport) return;
     const success = await onImport(file);
     if (success) {
       toast.success("Dados importados com sucesso");
