@@ -313,8 +313,7 @@ function InvoiceModal({ open, onClose, onSave, initial, types }: {
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("invoices").upload(path, file);
     if (error) { toast.error("Erro no upload: " + error.message); setUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("invoices").getPublicUrl(path);
-    setAttachmentUrl(publicUrl);
+    setAttachmentUrl(path);
     setAttachmentName(file.name);
     setUploading(false);
     toast.success("Arquivo anexado");
