@@ -1,5 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.49.1/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const ALLOWED_ROLES = new Set(["admin"]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -9,6 +15,44 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || serviceKey;
+
+    const authHeader = req.headers.get("Authorization");
+    const cronSecretHeader = req.headers.get("x-cron-secret");
+    const cronSecretEnv = Deno.env.get("CRON_SECRET");
+    const isCronCall = !!cronSecretEnv && cronSecretHeader === cronSecretEnv;
+
+    if (!isCronCall) {
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Não autorizado" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const anonClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user: caller } } = await anonClient.auth.getUser();
+      if (!caller) {
+        return new Response(
+          JSON.stringify({ error: "Não autorizado" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const adminCheckClient = createClient(supabaseUrl, serviceKey);
+      const { data: roleRow } = await adminCheckClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", caller.id)
+        .maybeSingle();
+      if (!roleRow?.role || !ALLOWED_ROLES.has(roleRow.role)) {
+        return new Response(
+          JSON.stringify({ error: "Acesso restrito ao administrador" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Accept optional "catchup" mode with a lookback window
