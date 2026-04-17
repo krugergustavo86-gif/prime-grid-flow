@@ -184,7 +184,7 @@ export default function NFControlPage() {
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="font-semibold text-foreground">Notas Fiscais</h3>
             <div className="flex gap-2">
-              {canManageNF && (
+              {canManage && (
                 <>
                   <Button size="sm" variant="outline" onClick={() => setTypeModalOpen(true)}>
                     <PlusCircle className="h-4 w-4 mr-1" /> Tipo
@@ -215,7 +215,7 @@ export default function NFControlPage() {
                     <th className="text-right p-3 font-medium text-muted-foreground">Valor</th>
                     <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Data</th>
                     <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Anexo</th>
-                    {canManageNF && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
+                    {canManage && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -233,7 +233,7 @@ export default function NFControlPage() {
                           </button>
                         ) : <span className="text-muted-foreground text-xs">—</span>}
                       </td>
-                      {canManageNF && (
+                      {canManage && (
                         <td className="p-3 text-right">
                           <div className="flex gap-1 justify-end">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(inv); setModalOpen(true); }}>
