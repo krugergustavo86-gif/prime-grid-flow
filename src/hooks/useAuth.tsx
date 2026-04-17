@@ -42,14 +42,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let requestId = 0;
 
     const syncAuthState = async (nextSession: Session | null) => {
+      const currentRequestId = ++requestId;
+
       if (!mounted) return;
+
+      console.log("[useAuth] syncAuthState: session changed", {
+        hasSession: Boolean(nextSession),
+        userId: nextSession?.user?.id ?? null,
+      });
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+      setLoading(true);
 
       if (!nextSession?.user) {
+        console.log("[useAuth] syncAuthState: no session, clearing role");
         setRole(null);
         setLoading(false);
         return;
@@ -57,12 +67,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const nextRole = await resolveRole(nextSession.user.id);
-        if (mounted) setRole(nextRole);
+
+        if (!mounted || currentRequestId !== requestId) {
+          console.log("[useAuth] syncAuthState: ignoring stale role resolution", {
+            currentRequestId,
+            latestRequestId: requestId,
+            nextRole,
+          });
+          return;
+        }
+
+        console.log("[useAuth] syncAuthState: resolved role", nextRole);
+        setRole(nextRole);
+        setLoading(false);
       } catch (error) {
-        console.error("Failed to fetch role:", error);
-        if (mounted) setRole(null);
-      } finally {
-        if (mounted) setLoading(false);
+        console.error("[useAuth] syncAuthState: failed to fetch role", error);
+
+        if (!mounted || currentRequestId !== requestId) {
+          return;
+        }
+
+        setRole(null);
+        setLoading(false);
       }
     };
 
@@ -81,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      requestId += 1;
       subscription.unsubscribe();
     };
   }, []);
