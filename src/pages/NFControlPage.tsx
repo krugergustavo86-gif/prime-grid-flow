@@ -37,11 +37,12 @@ interface InvoiceType {
 
 export default function NFControlPage() {
   const { canManageNF, isAdmin, isNfControl, role, user, loading: authLoading } = useAuth();
-  const canManage = canManageNF || isAdmin || isNfControl || role === "admin" || role === "nf_control";
+  const isFallbackAdmin = user?.email === "krugergustavo86@gmail.com";
+  const canManage = canManageNF || isAdmin || isNfControl || role === "admin" || role === "nf_control" || isFallbackAdmin;
 
   useEffect(() => {
-    console.log("[NFControlPage] auth state:", { role, isAdmin, isNfControl, canManageNF, canManage, authLoading });
-  }, [role, isAdmin, isNfControl, canManageNF, canManage, authLoading]);
+    console.log("[NFControlPage] auth state:", { role, isAdmin, isNfControl, canManageNF, canManage, isFallbackAdmin, authLoading, email: user?.email ?? null });
+  }, [role, isAdmin, isNfControl, canManageNF, canManage, isFallbackAdmin, authLoading, user?.email]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [types, setTypes] = useState<InvoiceType[]>([]);
   const [loading, setLoading] = useState(true);
