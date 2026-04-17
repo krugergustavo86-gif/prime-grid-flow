@@ -24,11 +24,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 async function resolveRole(userId: string): Promise<AppRole | null> {
+  console.log("[useAuth] resolveRole: fetching role for user", userId);
   const { data, error } = await supabase.rpc("get_user_role", { _user_id: userId });
   if (error) {
-    console.error("Failed to resolve role:", error);
+    console.error("[useAuth] resolveRole: RPC error", error);
     return null;
   }
+  console.log("[useAuth] resolveRole: RPC returned", data);
   return (data as AppRole | null) ?? null;
 }
 
