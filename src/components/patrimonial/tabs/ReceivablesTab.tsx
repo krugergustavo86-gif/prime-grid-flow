@@ -185,10 +185,8 @@ export function ReceivablesTab(props: Props) {
             <tfoot>
               <tr className="bg-muted/50 font-semibold">
                 <td className="p-3">Total</td>
-                <td className="p-3 text-right tabular-nums">{formatCurrency(totalReceivables)}</td>
-                <td className="p-3 text-right tabular-nums text-success">{formatCurrency(totalPaid)}</td>
-                <td className="p-3 text-right tabular-nums hidden md:table-cell">{formatCurrency(totalRemaining)}</td>
-                <td colSpan={3}></td>
+                <td className="p-3 text-right tabular-nums text-primary">{formatCurrency(totalRemaining)}</td>
+                <td colSpan={readOnly ? 2 : 3}></td>
               </tr>
             </tfoot>
           </table>
