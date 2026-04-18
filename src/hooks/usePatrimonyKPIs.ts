@@ -4,7 +4,8 @@ import { PatrimonyData } from "@/types";
 export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number) {
   return useMemo(() => {
     const totalAssets = data.assets.reduce((s, a) => s + a.valueMarket, 0);
-    const totalReceivables = data.receivables.reduce((s, r) => s + r.value, 0);
+    // Usar saldo devedor (valor original - pagamentos) em vez do valor bruto
+    const totalReceivables = data.receivables.reduce((s, r) => s + Math.max(0, r.value - (r.paidValue ?? 0)), 0);
     const totalCash = data.cashEntries.reduce((s, c) => s + c.balance, 0);
     const totalDoubtful = data.doubtfulCredits.reduce((s, d) => s + d.value, 0);
 

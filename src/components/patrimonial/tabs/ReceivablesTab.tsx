@@ -48,9 +48,7 @@ export function ReceivablesTab(props: Props) {
   const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
 
-  const totalReceivables = receivables.reduce((s, r) => s + r.value, 0);
-  const totalPaid = receivables.reduce((s, r) => s + r.paidValue, 0);
-  const totalRemaining = totalReceivables - totalPaid;
+  const totalRemaining = receivables.reduce((s, r) => s + Math.max(0, r.value - r.paidValue), 0);
   const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
   // Build effective cash entries: override "Saldo em Conta" with caixaAtual when available
   const effectiveCashEntries = cashEntries.map(c => {
@@ -78,16 +76,17 @@ export function ReceivablesTab(props: Props) {
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) { toast.error("Informe um valor válido"); return; }
     const r = paymentModal.receivable;
+    const remaining = r.value - r.paidValue;
     if (paymentModal.mode === "pay") {
+      if (amount > remaining) { toast.error("Valor excede o saldo devedor"); return; }
       const newPaid = r.paidValue + amount;
-      if (newPaid > r.value) { toast.error("Valor pago excede o valor total"); return; }
       const updates: Partial<Receivable> = { paidValue: newPaid };
       if (newPaid >= r.value) updates.status = "Recebido";
       props.updateReceivable(r.id, updates);
       toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
     } else {
       props.updateReceivable(r.id, { value: r.value + amount });
-      toast.success(`${formatCurrency(amount)} adicionado à dívida`);
+      toast.success(`${formatCurrency(amount)} adicionado ao saldo devedor`);
     }
     setPaymentModal(null);
     setPaymentAmount("");
@@ -115,9 +114,7 @@ export function ReceivablesTab(props: Props) {
           <div>
             <h3 className="font-semibold text-foreground">Recebíveis</h3>
             <div className="flex gap-4 text-xs text-muted-foreground mt-1">
-              <span>Total: {formatCurrency(totalReceivables)}</span>
-              <span className="text-success">Pago: {formatCurrency(totalPaid)}</span>
-              <span className="text-primary font-medium">Restante: {formatCurrency(totalRemaining)}</span>
+              <span className="text-primary font-medium">Saldo Devedor Total: {formatCurrency(totalRemaining)}</span>
             </div>
           </div>
           {!readOnly && (
@@ -131,9 +128,7 @@ export function ReceivablesTab(props: Props) {
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 font-medium text-muted-foreground">Descrição</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Valor Total</th>
-                <th className="text-right p-3 font-medium text-muted-foreground">Pago</th>
-                <th className="text-right p-3 font-medium text-muted-foreground hidden md:table-cell">Restante</th>
+                <th className="text-right p-3 font-medium text-muted-foreground">Saldo Devedor</th>
                 <th className="text-left p-3 font-medium text-muted-foreground hidden md:table-cell">Tipo</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
                 {!readOnly && <th className="text-right p-3 font-medium text-muted-foreground">Ações</th>}
@@ -141,19 +136,11 @@ export function ReceivablesTab(props: Props) {
             </thead>
             <tbody>
               {receivables.map((r) => {
-                const remaining = r.value - r.paidValue;
-                const pct = r.value > 0 ? Math.round((r.paidValue / r.value) * 100) : 0;
+                const remaining = Math.max(0, r.value - r.paidValue);
                 return (
                   <tr key={r.id} className="border-b hover:bg-muted/30">
                     <td className="p-3">{r.description}</td>
-                    <td className="p-3 text-right tabular-nums font-medium">{formatCurrency(r.value)}</td>
-                    <td className="p-3 text-right tabular-nums">
-                      <div className="flex flex-col items-end">
-                        <span className="text-success font-medium">{formatCurrency(r.paidValue)}</span>
-                        {r.paidValue > 0 && <span className="text-xs text-muted-foreground">{pct}%</span>}
-                      </div>
-                    </td>
-                    <td className="p-3 text-right tabular-nums font-medium hidden md:table-cell">{formatCurrency(remaining)}</td>
+                    <td className="p-3 text-right tabular-nums font-medium text-primary">{formatCurrency(remaining)}</td>
                     <td className="p-3 hidden md:table-cell">{r.type}</td>
                     <td className="p-3">{statusBadge(r.status)}</td>
                     {!readOnly && (
