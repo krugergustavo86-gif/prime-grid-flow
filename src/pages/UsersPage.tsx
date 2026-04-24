@@ -24,6 +24,7 @@ const ROLE_OPTIONS = [
   { value: "gerencia", label: "Gerência", desc: "Visualiza tudo" },
   { value: "lancamentos", label: "Lançamentos", desc: "Entradas e saídas" },
   { value: "nf_control", label: "Controle NF", desc: "Notas fiscais" },
+  { value: "lancador", label: "Lançador", desc: "Só os próprios lançamentos" },
 ];
 
 const roleBadgeColor: Record<string, string> = {
@@ -31,6 +32,7 @@ const roleBadgeColor: Record<string, string> = {
   gerencia: "bg-chart-entrada text-success-foreground",
   lancamentos: "bg-chart-blue-medium text-primary-foreground",
   nf_control: "bg-warning text-warning-foreground",
+  lancador: "bg-muted text-foreground",
 };
 
 async function callManageUsers(action: string, params: Record<string, string> = {}) {
