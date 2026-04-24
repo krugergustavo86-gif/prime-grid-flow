@@ -12,6 +12,7 @@ const roleLabels: Record<string, string> = {
   gerencia: "Gerência",
   lancamentos: "Lançamentos",
   nf_control: "NF",
+  lancador: "Lançador",
 };
 
 export function Header({ title }: HeaderProps) {
