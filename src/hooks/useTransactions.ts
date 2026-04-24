@@ -62,6 +62,7 @@ export function useTransactions() {
           notes: r.notes || "",
           month: r.month,
           created_at: r.created_at,
+          created_by: r.created_by ?? null,
         })));
 
         if (cfgRes.data) {
