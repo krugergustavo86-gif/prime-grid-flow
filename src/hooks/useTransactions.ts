@@ -156,6 +156,7 @@ export function useTransactions() {
         notes: data.notes || "",
         month: data.month,
         created_at: data.created_at,
+        created_by: data.created_by ?? null,
       };
       setTransactions(prev => [...prev, newTx]);
     }
