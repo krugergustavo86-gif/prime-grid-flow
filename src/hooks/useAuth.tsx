@@ -14,6 +14,7 @@ interface AuthContextType {
   isGerencia: boolean;
   isLancamentos: boolean;
   isNfControl: boolean;
+  isLancador: boolean;
   canEdit: boolean; // admin only
   canViewAll: boolean; // admin + gerencia
   canManageLancamentos: boolean; // admin + lancamentos
