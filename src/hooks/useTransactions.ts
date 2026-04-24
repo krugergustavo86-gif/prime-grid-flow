@@ -120,6 +120,8 @@ export function useTransactions() {
     const monthNum = month.split("/")[0];
     if (LOCKED_MONTHS.includes(monthNum)) return false;
 
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("transactions")
       .insert({
@@ -131,6 +133,7 @@ export function useTransactions() {
         notes: tx.notes || "",
         month,
         locked: false,
+        created_by: user?.id ?? null,
       })
       .select()
       .single();
