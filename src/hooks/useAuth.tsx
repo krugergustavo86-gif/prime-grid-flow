@@ -120,14 +120,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   };
 
-  const isAdmin = role === "admin";
+    const isAdmin = role === "admin";
   const isGerencia = role === "gerencia";
   const isLancamentos = role === "lancamentos";
   const isNfControl = role === "nf_control";
+  const isLancador = role === "lancador";
 
   const value: AuthContextType = {
     session, user, role, loading,
-    isAdmin, isGerencia, isLancamentos, isNfControl,
+    isAdmin, isGerencia, isLancamentos, isNfControl, isLancador,
     canEdit: isAdmin,
     canViewAll: isAdmin || isGerencia,
     canManageLancamentos: isAdmin || isLancamentos,
