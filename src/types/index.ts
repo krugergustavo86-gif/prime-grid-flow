@@ -8,6 +8,7 @@ export interface Transaction {
   notes?: string;
   month: string; // "MM/YYYY"
   created_at?: string; // ISO timestamp
+  created_by?: string | null;
 }
 
 export interface AppConfig {
