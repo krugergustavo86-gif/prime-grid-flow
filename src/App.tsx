@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useAutoDebitCatchUp } from "@/hooks/useAutoDebitCatchUp";
 import DashboardPage from "./pages/DashboardPage";
 import LancamentosPage from "./pages/LancamentosPage";
+import LancadorPage from "./pages/LancadorPage";
 import ResumoPage from "./pages/ResumoPage";
 import PatrimonialPage from "./pages/PatrimonialPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
@@ -22,7 +23,7 @@ import { Loader2 } from "lucide-react";
 
 
 function AppRoutes() {
-  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl } = useAuth();
+  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador } = useAuth();
   useAutoDebitCatchUp();
 
   if (loading) {
@@ -51,6 +52,17 @@ function AppRoutes() {
           <p className="text-sm text-muted-foreground">Seu perfil ainda não foi configurado pelo administrador. Entre em contato com a gerência.</p>
         </div>
       </div>
+    );
+  }
+
+  // Lançador: dedicated minimal screen, no sidebar/bottomnav
+  if (isLancador) {
+    return (
+      <Routes>
+        <Route path="/lancador" element={<LancadorPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="*" element={<Navigate to="/lancador" replace />} />
+      </Routes>
     );
   }
 

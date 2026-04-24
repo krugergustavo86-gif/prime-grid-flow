@@ -28,6 +28,7 @@ export function AppSidebar() {
     gerencia: "Gerência",
     lancamentos: "Lançamentos",
     nf_control: "Controle NF",
+    lancador: "Lançador",
   };
 
   return (

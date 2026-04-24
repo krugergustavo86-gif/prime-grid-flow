@@ -62,6 +62,7 @@ export function useTransactions() {
           notes: r.notes || "",
           month: r.month,
           created_at: r.created_at,
+          created_by: r.created_by ?? null,
         })));
 
         if (cfgRes.data) {
@@ -120,6 +121,8 @@ export function useTransactions() {
     const monthNum = month.split("/")[0];
     if (LOCKED_MONTHS.includes(monthNum)) return false;
 
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("transactions")
       .insert({
@@ -131,6 +134,7 @@ export function useTransactions() {
         notes: tx.notes || "",
         month,
         locked: false,
+        created_by: user?.id ?? null,
       })
       .select()
       .single();
@@ -152,6 +156,7 @@ export function useTransactions() {
         notes: data.notes || "",
         month: data.month,
         created_at: data.created_at,
+        created_by: data.created_by ?? null,
       };
       setTransactions(prev => [...prev, newTx]);
     }
