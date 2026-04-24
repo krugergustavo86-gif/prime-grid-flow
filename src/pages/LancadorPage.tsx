@@ -45,8 +45,19 @@ export default function LancadorPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <Header title="Meus Lançamentos" />
+    <div className="flex flex-col min-h-screen w-full bg-background">
+      <header className="h-14 flex items-center gap-3 border-b bg-card px-4 shrink-0">
+        <h1 className="text-lg font-semibold text-foreground">Meus Lançamentos</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-muted-foreground hidden sm:inline">
+            {user?.email} · Lançador
+          </span>
+          <Button variant="ghost" size="sm" onClick={signOut}>
+            <LogOut className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
+          </Button>
+        </div>
+      </header>
       <div className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 space-y-4">
         <div className="bg-card rounded-lg border p-4">
           <p className="text-sm text-muted-foreground">
