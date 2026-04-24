@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useAutoDebitCatchUp } from "@/hooks/useAutoDebitCatchUp";
 import DashboardPage from "./pages/DashboardPage";
 import LancamentosPage from "./pages/LancamentosPage";
+import LancadorPage from "./pages/LancadorPage";
 import ResumoPage from "./pages/ResumoPage";
 import PatrimonialPage from "./pages/PatrimonialPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
