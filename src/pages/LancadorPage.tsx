@@ -14,7 +14,7 @@ import { formatCurrency, formatDateBR } from "@/utils/formatters";
 
 export default function LancadorPage() {
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
