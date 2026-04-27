@@ -29,6 +29,7 @@ export function AppSidebar() {
     lancamentos: "Lançamentos",
     nf_control: "Controle NF",
     lancador: "Lançador",
+    contabilidade: "Contabilidade",
   };
 
   return (
