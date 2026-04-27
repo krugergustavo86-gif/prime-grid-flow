@@ -15,8 +15,9 @@ interface AuthContextType {
   isLancamentos: boolean;
   isNfControl: boolean;
   isLancador: boolean;
+  isContabilidade: boolean;
   canEdit: boolean; // admin only
-  canViewAll: boolean; // admin + gerencia
+  canViewAll: boolean; // admin + gerencia + contabilidade (read-only)
   canManageLancamentos: boolean; // admin + lancamentos
   canManageNF: boolean; // admin + nf_control
   signOut: () => Promise<void>;
@@ -125,12 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isLancamentos = role === "lancamentos";
   const isNfControl = role === "nf_control";
   const isLancador = role === "lancador";
+  const isContabilidade = role === "contabilidade";
 
   const value: AuthContextType = {
     session, user, role, loading,
-    isAdmin, isGerencia, isLancamentos, isNfControl, isLancador,
+    isAdmin, isGerencia, isLancamentos, isNfControl, isLancador, isContabilidade,
     canEdit: isAdmin,
-    canViewAll: isAdmin || isGerencia,
+    canViewAll: isAdmin || isGerencia || isContabilidade,
     canManageLancamentos: isAdmin || isLancamentos,
     canManageNF: isAdmin || isNfControl,
     signOut,

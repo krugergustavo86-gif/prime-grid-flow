@@ -23,7 +23,7 @@ import { Loader2 } from "lucide-react";
 
 
 function AppRoutes() {
-  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador } = useAuth();
+  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador, isContabilidade } = useAuth();
   useAutoDebitCatchUp();
 
   if (loading) {
@@ -67,12 +67,12 @@ function AppRoutes() {
   }
 
   // Determine accessible routes based on role
-  const canAccessDashboard = isAdmin || isGerencia;
-  const canAccessLancamentos = isAdmin || isGerencia || isLancamentos;
-  const canAccessResumo = isAdmin || isGerencia;
-  const canAccessPatrimonial = isAdmin || isGerencia;
+  const canAccessDashboard = isAdmin || isGerencia || isContabilidade;
+  const canAccessLancamentos = isAdmin || isGerencia || isLancamentos || isContabilidade;
+  const canAccessResumo = isAdmin || isGerencia || isContabilidade;
+  const canAccessPatrimonial = isAdmin || isGerencia || isContabilidade;
   const canAccessConfig = isAdmin;
-  const canAccessNF = isAdmin || isGerencia || isNfControl;
+  const canAccessNF = isAdmin || isGerencia || isNfControl || isContabilidade;
 
   // Default route based on role
   const defaultRoute = isNfControl ? "/nf" : isLancamentos ? "/lancamentos" : "/";
