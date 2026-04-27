@@ -23,7 +23,7 @@ import { Loader2 } from "lucide-react";
 
 
 function AppRoutes() {
-  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador } = useAuth();
+  const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador, isContabilidade } = useAuth();
   useAutoDebitCatchUp();
 
   if (loading) {
