@@ -15,8 +15,9 @@ interface AuthContextType {
   isLancamentos: boolean;
   isNfControl: boolean;
   isLancador: boolean;
+  isContabilidade: boolean;
   canEdit: boolean; // admin only
-  canViewAll: boolean; // admin + gerencia
+  canViewAll: boolean; // admin + gerencia + contabilidade (read-only)
   canManageLancamentos: boolean; // admin + lancamentos
   canManageNF: boolean; // admin + nf_control
   signOut: () => Promise<void>;
