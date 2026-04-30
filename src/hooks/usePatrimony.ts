@@ -126,6 +126,7 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("receivables").insert({ description: r.description, value: r.value, paid_value: r.paidValue ?? 0, due_date: r.dueDate, type: r.type, status: r.status, responsible: r.responsible, notes: r.notes }).select().single();
     if (error || !row) { console.error("addReceivable error:", error); toast.error(`Erro ao salvar: ${error?.message ?? "desconhecido"}`); return false; }
     setData(prev => ({ ...prev, receivables: [mapReceivable(row), ...prev.receivables] }));
+    invalidatePatrimony();
     return true;
   }, []);
 
@@ -133,6 +134,7 @@ export function usePatrimony() {
     const { error } = await supabase.from("receivables").update(toSnake(updates) as never).eq("id", id);
     if (error) { console.error("updateReceivable error:", error); toast.error(`Erro ao atualizar: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.map(r => r.id === id ? { ...r, ...updates } : r) }));
+    invalidatePatrimony();
     return true;
   }, []);
 
@@ -140,6 +142,7 @@ export function usePatrimony() {
     const { error } = await supabase.from("receivables").delete().eq("id", id);
     if (error) { console.error("deleteReceivable error:", error); toast.error(`Erro ao excluir: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.filter(r => r.id !== id) }));
+    invalidatePatrimony();
     return true;
   }, []);
 
