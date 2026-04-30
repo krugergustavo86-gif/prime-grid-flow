@@ -10,6 +10,7 @@ export function useAppConfig() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchConfig = async () => {
       try {
         const { data, error } = await supabase
@@ -19,6 +20,7 @@ export function useAppConfig() {
           .maybeSingle();
 
         if (error) throw error;
+        if (cancelled) return;
 
         if (data) {
           setConfigState({
@@ -30,11 +32,12 @@ export function useAppConfig() {
       } catch (err) {
         console.error("Failed to load config:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchConfig();
+    return () => { cancelled = true; };
   }, []);
 
   const setConfig = useCallback(async (newConfig: AppConfig) => {

@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { useTransactions } from "@/hooks/useTransactions";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Transaction } from "@/types";
+import { LOCKED_MONTHS } from "@/utils/lockedMonths";
+import { getMonthFromDate } from "@/utils/formatters";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Receipt, LogOut } from "lucide-react";
@@ -9,39 +12,75 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Transaction } from "@/types";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
 
+function mapRow(r: {
+  id: string; date: string; description: string; type: string; category: string;
+  value: number | string; notes: string | null; month: string; created_at: string; created_by: string | null;
+}): Transaction {
+  return {
+    id: r.id, date: r.date, description: r.description,
+    type: r.type as "Saída" | "Entrada", category: r.category,
+    value: Number(r.value), notes: r.notes || "", month: r.month,
+    created_at: r.created_at, created_by: r.created_by,
+  };
+}
+
 export default function LancadorPage() {
-  const { transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { user, signOut } = useAuth();
+  const [myTxns, setMyTxns] = useState<Transaction[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const myTxns = transactions
-    .filter((tx) => tx.created_by === user?.id)
-    .slice()
-    .sort((a, b) => {
-      const cmp = b.date.localeCompare(a.date);
-      if (cmp !== 0) return cmp;
-      return (b.created_at || "").localeCompare(a.created_at || "");
-    });
+  const fetchMine = useCallback(async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("created_by", user.id)
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Failed to load my transactions:", error);
+      return;
+    }
+    setMyTxns((data || []).map(mapRow));
+  }, [user?.id]);
+
+  useEffect(() => { void fetchMine(); }, [fetchMine]);
 
   const handleSave = async (data: Omit<Transaction, "id" | "month">) => {
-    if (editTx) {
-      const ok = await updateTransaction(editTx.id, data);
-      if (ok) toast.success("Lançamento atualizado");
-    } else {
-      const ok = await addTransaction(data);
-      if (ok) toast.success("Lançamento salvo");
+    const month = getMonthFromDate(data.date);
+    const monthNum = month.split("/")[0];
+    if (LOCKED_MONTHS.includes(monthNum)) {
+      toast.error("Este mês está fechado");
+      return;
     }
+
+    if (editTx) {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ ...data, month })
+        .eq("id", editTx.id);
+      if (error) { toast.error("Erro ao atualizar"); return; }
+      toast.success("Lançamento atualizado");
+    } else {
+      const { error } = await supabase
+        .from("transactions")
+        .insert({ ...data, month, locked: false, created_by: user?.id ?? null });
+      if (error) { toast.error("Erro ao salvar"); return; }
+      toast.success("Lançamento salvo");
+    }
+    void fetchMine();
   };
 
   const handleDelete = async (id: string) => {
-    await deleteTransaction(id);
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
+    if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Lançamento excluído");
     setDeleteId(null);
+    void fetchMine();
   };
 
   return (

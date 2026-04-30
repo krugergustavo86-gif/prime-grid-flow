@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ interface Props {
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
+  onReceivablePayment?: (receivable: Receivable, amount: number) => void;
   readOnly?: boolean;
 }
 
@@ -40,9 +41,11 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
-  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
+  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly, onReceivablePayment } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
+  const [doubtfulModalOpen, setDoubtfulModalOpen] = useState(false);
+  const [editingDoubtful, setEditingDoubtful] = useState<DoubtfulCredit | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
   const [cashAmount, setCashAmount] = useState("");
   const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
@@ -83,6 +86,8 @@ export function ReceivablesTab(props: Props) {
       const updates: Partial<Receivable> = { paidValue: newPaid };
       if (newPaid >= r.value) updates.status = "Recebido";
       props.updateReceivable(r.id, updates);
+      // BUG 1 fix: register cash entry so patrimony reflects the receipt
+      onReceivablePayment?.(r, amount);
       toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
     } else {
       props.updateReceivable(r.id, { value: r.value + amount });
@@ -90,6 +95,18 @@ export function ReceivablesTab(props: Props) {
     }
     setPaymentModal(null);
     setPaymentAmount("");
+  };
+
+  const handleSaveDoubtful = (data: Omit<DoubtfulCredit, "id">) => {
+    if (editingDoubtful) {
+      props.updateDoubtfulCredit(editingDoubtful.id, data);
+      toast.success("Cobrança duvidosa atualizada");
+    } else {
+      props.addDoubtfulCredit(data);
+      toast.success("Cobrança duvidosa adicionada");
+    }
+    setEditingDoubtful(null);
+    setDoubtfulModalOpen(false);
   };
 
   const handleCashOperation = () => {
@@ -158,7 +175,12 @@ export function ReceivablesTab(props: Props) {
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         {r.status !== "Recebido" ? (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Marcar como recebido (total)" onClick={() => { props.updateReceivable(r.id, { status: "Recebido", paidValue: r.value }); toast.success("Marcado como recebido"); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Marcar como recebido (total)" onClick={() => {
+                            const remainingNow = Math.max(0, r.value - r.paidValue);
+                            props.updateReceivable(r.id, { status: "Recebido", paidValue: r.value });
+                            if (remainingNow > 0) onReceivablePayment?.(r, remainingNow);
+                            toast.success("Marcado como recebido");
+                          }}>
                             <CheckCircle className="h-3.5 w-3.5" />
                           </Button>
                         ) : (
@@ -195,18 +217,43 @@ export function ReceivablesTab(props: Props) {
 
       {/* Doubtful Credits */}
       <div className="bg-warning/30 rounded-lg border border-warning-foreground/20">
-        <div className="flex items-center gap-2 p-4 border-b border-warning-foreground/20">
-          <AlertTriangle className="h-4 w-4 text-warning-foreground" />
-          <h3 className="font-semibold text-warning-foreground">Crédito de Liquidação Duvidosa</h3>
+        <div className="flex items-center justify-between p-4 border-b border-warning-foreground/20">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+            <h3 className="font-semibold text-warning-foreground">Crédito de Liquidação Duvidosa</h3>
+          </div>
+          {!readOnly && (
+            <Button size="sm" variant="outline" onClick={() => { setEditingDoubtful(null); setDoubtfulModalOpen(true); }}>
+              <Plus className="h-4 w-4 mr-1" /> Novo
+            </Button>
+          )}
         </div>
         <div className="p-4 space-y-2">
           {doubtfulCredits.map((d) => (
-            <div key={d.id} className="flex items-center justify-between py-2 border-b border-warning-foreground/10 last:border-0">
-              <div>
+            <div key={d.id} className="flex items-center justify-between gap-2 py-2 border-b border-warning-foreground/10 last:border-0">
+              <div className="min-w-0 flex-1">
                 <span className="font-medium text-foreground">{d.description}</span>
                 {d.responsible && <span className="text-xs text-muted-foreground ml-2">({d.responsible})</span>}
               </div>
-              <span className="font-semibold tabular-nums text-warning-foreground">{formatCurrency(d.value)}</span>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="font-semibold tabular-nums text-warning-foreground">{formatCurrency(d.value)}</span>
+                {!readOnly && (
+                  <>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingDoubtful(d); setDoubtfulModalOpen(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Excluir cobrança duvidosa?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => { props.deleteDoubtfulCredit(d.id); toast.success("Cobrança excluída"); }}>Excluir</AlertDialogAction></AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+              </div>
             </div>
           ))}
           <div className="flex items-center justify-between pt-2 font-bold">
@@ -215,6 +262,8 @@ export function ReceivablesTab(props: Props) {
           </div>
         </div>
       </div>
+
+      <DoubtfulCreditModal open={doubtfulModalOpen} onClose={() => { setDoubtfulModalOpen(false); setEditingDoubtful(null); }} onSave={handleSaveDoubtful} initial={editingDoubtful} />
 
       {/* Cash & Investments */}
       <div className="bg-card rounded-lg border">
@@ -346,8 +395,7 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
   const [responsible, setResponsible] = useState(initial?.responsible || "");
   const [notes, setNotes] = useState(initial?.notes || "");
 
-  // Reset when modal opens
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setDescription(initial?.description || "");
       setValue(initial?.value?.toString() || "");
@@ -358,7 +406,7 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
       setResponsible(initial?.responsible || "");
       setNotes(initial?.notes || "");
     }
-  });
+  }, [open, initial]);
 
   const handleSubmit = () => {
     if (!description || !value) { toast.error("Preencha os campos obrigatórios"); return; }
@@ -382,6 +430,45 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
             <Select value={status} onValueChange={v => setStatus(v as ReceivableStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
           </div>
           <div><Label>Vencimento</Label><Input value={dueDate} onChange={e => setDueDate(e.target.value)} placeholder="DD/MM/AAAA" /></div>
+          <div><Label>Responsável</Label><Input value={responsible} onChange={e => setResponsible(e.target.value)} /></div>
+          <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DoubtfulCreditModal({ open, onClose, onSave, initial }: { open: boolean; onClose: () => void; onSave: (d: Omit<DoubtfulCredit, "id">) => void; initial: DoubtfulCredit | null }) {
+  const [description, setDescription] = useState("");
+  const [value, setValue] = useState("");
+  const [responsible, setResponsible] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setDescription(initial?.description || "");
+      setValue(initial?.value?.toString() || "");
+      setResponsible(initial?.responsible || "");
+      setNotes(initial?.notes || "");
+    }
+  }, [open, initial]);
+
+  const handleSubmit = () => {
+    if (!description || !value) { toast.error("Preencha os campos obrigatórios"); return; }
+    onSave({ description, value: parseFloat(value) || 0, responsible: responsible || undefined, notes: notes || undefined });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{initial ? "Editar" : "Nova"} Cobrança Duvidosa</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label>Descrição *</Label><Input value={description} onChange={e => setDescription(e.target.value)} /></div>
+          <div><Label>Valor (R$) *</Label><Input type="number" value={value} onChange={e => setValue(e.target.value)} /></div>
           <div><Label>Responsável</Label><Input value={responsible} onChange={e => setResponsible(e.target.value)} /></div>
           <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
         </div>

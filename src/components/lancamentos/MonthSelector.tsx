@@ -1,6 +1,6 @@
 import { Lock } from "lucide-react";
 import { MONTH_LABELS_SHORT } from "@/utils/formatters";
-import { LOCKED_MONTHS } from "@/utils/seed";
+import { LOCKED_MONTHS } from "@/utils/lockedMonths";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MonthSelectorProps {

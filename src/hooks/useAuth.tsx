@@ -16,23 +16,21 @@ interface AuthContextType {
   isNfControl: boolean;
   isLancador: boolean;
   isContabilidade: boolean;
-  canEdit: boolean; // admin only
-  canViewAll: boolean; // admin + gerencia + contabilidade (read-only)
-  canManageLancamentos: boolean; // admin + lancamentos
-  canManageNF: boolean; // admin + nf_control
+  canEdit: boolean;
+  canViewAll: boolean;
+  canManageLancamentos: boolean;
+  canManageNF: boolean;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 async function resolveRole(userId: string): Promise<AppRole | null> {
-  console.log("[useAuth] resolveRole: fetching role for user", userId);
   const { data, error } = await supabase.rpc("get_user_role", { _user_id: userId });
   if (error) {
-    console.error("[useAuth] resolveRole: RPC error", error);
+    console.error("[useAuth] resolveRole RPC error", error);
     return null;
   }
-  console.log("[useAuth] resolveRole: RPC returned", data);
   return (data as AppRole | null) ?? null;
 }
 
@@ -48,20 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const syncAuthState = async (nextSession: Session | null) => {
       const currentRequestId = ++requestId;
-
       if (!mounted) return;
-
-      console.log("[useAuth] syncAuthState: session changed", {
-        hasSession: Boolean(nextSession),
-        userId: nextSession?.user?.id ?? null,
-      });
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(true);
 
       if (!nextSession?.user) {
-        console.log("[useAuth] syncAuthState: no session, clearing role");
         setRole(null);
         setLoading(false);
         return;
@@ -69,26 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const nextRole = await resolveRole(nextSession.user.id);
-
-        if (!mounted || currentRequestId !== requestId) {
-          console.log("[useAuth] syncAuthState: ignoring stale role resolution", {
-            currentRequestId,
-            latestRequestId: requestId,
-            nextRole,
-          });
-          return;
-        }
-
-        console.log("[useAuth] syncAuthState: resolved role", nextRole);
+        if (!mounted || currentRequestId !== requestId) return;
         setRole(nextRole);
         setLoading(false);
       } catch (error) {
-        console.error("[useAuth] syncAuthState: failed to fetch role", error);
-
-        if (!mounted || currentRequestId !== requestId) {
-          return;
-        }
-
+        console.error("[useAuth] failed to fetch role", error);
+        if (!mounted || currentRequestId !== requestId) return;
         setRole(null);
         setLoading(false);
       }
@@ -99,9 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession()
-      .then(({ data: { session: nextSession } }) => {
-        void syncAuthState(nextSession);
-      })
+      .then(({ data: { session: nextSession } }) => { void syncAuthState(nextSession); })
       .catch((error) => {
         console.error("Failed to get session:", error);
         if (mounted) setLoading(false);
@@ -121,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   };
 
-    const isAdmin = role === "admin";
+  const isAdmin = role === "admin";
   const isGerencia = role === "gerencia";
   const isLancamentos = role === "lancamentos";
   const isNfControl = role === "nf_control";

@@ -73,6 +73,17 @@ export default function PatrimonialPage() {
               updateDoubtfulCredit={patrimony.updateDoubtfulCredit}
               deleteDoubtfulCredit={patrimony.deleteDoubtfulCredit}
               updateCashEntry={patrimony.updateCashEntry}
+              onReceivablePayment={async (r, amount) => {
+                const today = new Date().toISOString().split("T")[0];
+                await addTransaction({
+                  date: today,
+                  description: `Recebimento - ${r.description}`,
+                  type: "Entrada",
+                  category: "Recebimentos",
+                  value: amount,
+                  notes: `Baixa automática de recebível`,
+                });
+              }}
               readOnly={readOnly}
             />
           </TabsContent>
