@@ -104,17 +104,21 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("assets").insert({ asset_group: a.group, description: a.description, plate: a.plate, value_fipe: a.valueFipe, value_market: a.valueMarket, notes: a.notes }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, assets: [mapAsset(row), ...prev.assets] }));
+    invalidatePatrimony();
   }, []);
 
   const updateAsset = useCallback(async (id: string, updates: Partial<Asset>) => {
     const { error } = await supabase.from("assets").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, assets: prev.assets.map(a => a.id === id ? { ...a, ...updates } : a) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteAsset = useCallback(async (id: string) => {
-    await supabase.from("assets").delete().eq("id", id);
+    const { error } = await supabase.from("assets").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, assets: prev.assets.filter(a => a.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Receivables
