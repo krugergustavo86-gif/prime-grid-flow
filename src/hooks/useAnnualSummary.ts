@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Transaction, MonthSummary } from "@/types";
-import { LOCKED_MONTHS, LOCKED_BALANCES } from "@/utils/seed";
+import { LOCKED_MONTHS, LOCKED_BALANCES } from "@/utils/lockedMonths";
 import { MONTH_LABELS } from "@/utils/formatters";
 
 export function useAnnualSummary(transactions: Transaction[], saldoAnterior: number, ano: number) {
