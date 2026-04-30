@@ -7,10 +7,17 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
     const totalAssets = assets.reduce((s, a) => s + a.valueMarket, 0);
     // Usar saldo devedor (valor original - pagamentos) em vez do valor bruto
     const totalReceivables = receivables.reduce((s, r) => s + Math.max(0, r.value - (r.paidValue ?? 0)), 0);
-    const totalCash = cashEntries.reduce((s, c) => s + c.balance, 0);
     const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
 
-    // Use caixaAtual from transactions module when available, otherwise fall back to cash_entries
+    // Effective cash: substituir "Saldo em Conta" por caixaAtual (vindo de transactions) quando disponível,
+    // mas SOMAR todas as outras linhas (Rodrigo K, investimentos, etc.).
+    const totalCash = cashEntries.reduce((s, c) => {
+      if (caixaAtual !== undefined && c.description.toLowerCase().includes("saldo em conta")) {
+        return s + caixaAtual;
+      }
+      return s + c.balance;
+    }, 0);
+
     const cashAvailable = caixaAtual ?? cashEntries
       .filter(c => c.description.toLowerCase().includes("saldo em conta"))
       .reduce((s, c) => s + c.balance, 0);
@@ -24,8 +31,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       .filter(p => p.status !== "Pago")
       .reduce((s, p) => s + p.value, 0);
 
-    // Include caixaAtual in gross patrimony when provided
-    const grossPatrimony = totalAssets + totalReceivables + (caixaAtual !== undefined ? caixaAtual : totalCash);
+    const grossPatrimony = totalAssets + totalReceivables + totalCash;
     const totalAPagar = totalLoanBalance + totalPayables;
     const netPatrimony = grossPatrimony - totalAPagar;
     const perPartner = numSocios > 0 ? netPatrimony / numSocios : netPatrimony;
