@@ -7,12 +7,12 @@ import { onQueryInvalidated, queryClient } from "@/lib/queryClient";
 
 const EMPTY: PatrimonyData = { assets: [], receivables: [], doubtfulCredits: [], cashEntries: [], loans: [], payables: [] };
 
-type AssetRow = Database["public"]["Tables"]["assets"]["Row"];
-type ReceivableRow = Database["public"]["Tables"]["receivables"]["Row"];
-type DoubtfulRow = Database["public"]["Tables"]["doubtful_credits"]["Row"];
-type CashRow = Database["public"]["Tables"]["cash_entries"]["Row"];
-type LoanRow = Database["public"]["Tables"]["loans"]["Row"];
-type PayableRow = Database["public"]["Tables"]["payables"]["Row"];
+type AssetRow = Omit<Database["public"]["Tables"]["assets"]["Row"], "created_at">;
+type ReceivableRow = Omit<Database["public"]["Tables"]["receivables"]["Row"], "created_at">;
+type DoubtfulRow = Omit<Database["public"]["Tables"]["doubtful_credits"]["Row"], "created_at">;
+type CashRow = Omit<Database["public"]["Tables"]["cash_entries"]["Row"], "created_at">;
+type LoanRow = Omit<Database["public"]["Tables"]["loans"]["Row"], "created_at">;
+type PayableRow = Omit<Database["public"]["Tables"]["payables"]["Row"], "created_at">;
 
 // camelCase -> snake_case generic mapper for partial updates
 const CAMEL_TO_SNAKE: Record<string, string> = {
@@ -96,7 +96,7 @@ export function usePatrimony() {
     let cancelled = false;
     loadPatrimony(() => cancelled);
     const unsubscribe = onQueryInvalidated(["patrimony"], () => loadPatrimony());
-    return () => { cancelled = true; };
+    return () => { cancelled = true; unsubscribe(); };
   }, [loadPatrimony]);
 
   // Assets
