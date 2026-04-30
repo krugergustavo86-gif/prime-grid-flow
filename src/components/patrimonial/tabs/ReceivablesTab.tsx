@@ -17,9 +17,9 @@ interface Props {
   doubtfulCredits: DoubtfulCredit[];
   cashEntries: CashEntry[];
   caixaAtual?: number;
-  addReceivable: (r: Omit<Receivable, "id">) => void;
-  updateReceivable: (id: string, u: Partial<Receivable>) => void;
-  deleteReceivable: (id: string) => void;
+  addReceivable: (r: Omit<Receivable, "id">) => void | Promise<boolean | void>;
+  updateReceivable: (id: string, u: Partial<Receivable>) => void | Promise<boolean | void>;
+  deleteReceivable: (id: string) => void | Promise<boolean | void>;
   addDoubtfulCredit: (d: Omit<DoubtfulCredit, "id">) => void;
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
