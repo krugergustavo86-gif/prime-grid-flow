@@ -72,6 +72,7 @@ export default function PatrimonialPage() {
               addDoubtfulCredit={patrimony.addDoubtfulCredit}
               updateDoubtfulCredit={patrimony.updateDoubtfulCredit}
               deleteDoubtfulCredit={patrimony.deleteDoubtfulCredit}
+              deleteCashEntry={patrimony.deleteCashEntry}
               updateCashEntry={patrimony.updateCashEntry}
               onReceivablePayment={async (r, amount) => {
                 const today = new Date().toISOString().split("T")[0];
