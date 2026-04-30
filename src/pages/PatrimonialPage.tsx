@@ -33,11 +33,7 @@ export default function PatrimonialPage() {
     });
   }, [addTransaction]);
   const patrimony = usePatrimony();
-  const kpis = usePatrimonyKPIs(
-    { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
-    config.numSocios,
-    caixaAtual
-  );
+  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual);
 
   return (
     <div className="flex flex-col h-full">

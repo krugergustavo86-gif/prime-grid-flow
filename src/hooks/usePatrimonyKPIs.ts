@@ -2,24 +2,25 @@ import { useMemo } from "react";
 import { PatrimonyData } from "@/types";
 
 export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number) {
+  const { assets, receivables, doubtfulCredits, cashEntries, loans, payables } = data;
   return useMemo(() => {
-    const totalAssets = data.assets.reduce((s, a) => s + a.valueMarket, 0);
+    const totalAssets = assets.reduce((s, a) => s + a.valueMarket, 0);
     // Usar saldo devedor (valor original - pagamentos) em vez do valor bruto
-    const totalReceivables = data.receivables.reduce((s, r) => s + Math.max(0, r.value - (r.paidValue ?? 0)), 0);
-    const totalCash = data.cashEntries.reduce((s, c) => s + c.balance, 0);
-    const totalDoubtful = data.doubtfulCredits.reduce((s, d) => s + d.value, 0);
+    const totalReceivables = receivables.reduce((s, r) => s + Math.max(0, r.value - (r.paidValue ?? 0)), 0);
+    const totalCash = cashEntries.reduce((s, c) => s + c.balance, 0);
+    const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
 
     // Use caixaAtual from transactions module when available, otherwise fall back to cash_entries
-    const cashAvailable = caixaAtual ?? data.cashEntries
+    const cashAvailable = caixaAtual ?? cashEntries
       .filter(c => c.description.toLowerCase().includes("saldo em conta"))
       .reduce((s, c) => s + c.balance, 0);
 
-    const totalLoanBalance = data.loans.reduce((s, l) => {
+    const totalLoanBalance = loans.reduce((s, l) => {
       const open = l.totalInstallments - l.paidInstallments;
       return s + open * l.installmentValue;
     }, 0);
 
-    const totalPayables = data.payables
+    const totalPayables = payables
       .filter(p => p.status !== "Pago")
       .reduce((s, p) => s + p.value, 0);
 
@@ -43,5 +44,5 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       totalPayables,
       debtRate,
     };
-  }, [data, numSocios, caixaAtual]);
+  }, [assets, receivables, doubtfulCredits, cashEntries, loans, payables, numSocios, caixaAtual]);
 }
