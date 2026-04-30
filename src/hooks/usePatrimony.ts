@@ -3,6 +3,7 @@ import { PatrimonyData, Asset, Receivable, DoubtfulCredit, CashEntry, Loan, Paya
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { onQueryInvalidated, queryClient } from "@/lib/queryClient";
 
 const EMPTY: PatrimonyData = { assets: [], receivables: [], doubtfulCredits: [], cashEntries: [], loans: [], payables: [] };
 
@@ -62,33 +63,41 @@ function mapPayable(r: PayableRow): Payable {
   return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, scheduledDate: r.scheduled_date || undefined, responsible: r.responsible, status: r.status as Payable["status"], notes: r.notes || undefined };
 }
 
+function invalidatePatrimony() {
+  queryClient.invalidateQueries({ queryKey: ["patrimony"] });
+  queryClient.invalidateQueries({ queryKey: ["patrimonyKPIs"] });
+}
+
 export function usePatrimony() {
   const [data, setData] = useState<PatrimonyData>(EMPTY);
 
+  const loadPatrimony = useCallback(async (cancelled?: () => boolean) => {
+    const order = { ascending: false } as const;
+    const [a, r, d, c, l, p] = await Promise.all([
+      supabase.from("assets").select("id, asset_group, description, plate, value_fipe, value_market, notes").order("created_at", order),
+      supabase.from("receivables").select("id, description, value, paid_value, due_date, type, status, responsible, notes").order("created_at", order),
+      supabase.from("doubtful_credits").select("id, description, value, responsible, notes").order("created_at", order),
+      supabase.from("cash_entries").select("id, description, balance, ref_date, notes").order("created_at", order),
+      supabase.from("loans").select("id, contract, institution, type, next_payment, total_installments, paid_installments, installment_value, notes, auto_debit, debit_day, debit_start_date, debit_end_date, bank_account, debit_category").order("created_at", order),
+      supabase.from("payables").select("id, description, value, due_date, scheduled_date, responsible, status, notes").order("created_at", order),
+    ]);
+    if (cancelled?.()) return;
+    setData({
+      assets: (a.data || []).map(mapAsset),
+      receivables: (r.data || []).map(mapReceivable),
+      doubtfulCredits: (d.data || []).map(mapDoubtful),
+      cashEntries: (c.data || []).map(mapCash),
+      loans: (l.data || []).map(mapLoan),
+      payables: (p.data || []).map(mapPayable),
+    });
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const order = { ascending: false } as const;
-      const [a, r, d, c, l, p] = await Promise.all([
-        supabase.from("assets").select("*").order("created_at", order),
-        supabase.from("receivables").select("*").order("created_at", order),
-        supabase.from("doubtful_credits").select("*").order("created_at", order),
-        supabase.from("cash_entries").select("*").order("created_at", order),
-        supabase.from("loans").select("*").order("created_at", order),
-        supabase.from("payables").select("*").order("created_at", order),
-      ]);
-      if (cancelled) return;
-      setData({
-        assets: (a.data || []).map(mapAsset),
-        receivables: (r.data || []).map(mapReceivable),
-        doubtfulCredits: (d.data || []).map(mapDoubtful),
-        cashEntries: (c.data || []).map(mapCash),
-        loans: (l.data || []).map(mapLoan),
-        payables: (p.data || []).map(mapPayable),
-      });
-    })();
+    loadPatrimony(() => cancelled);
+    const unsubscribe = onQueryInvalidated(["patrimony"], () => loadPatrimony());
     return () => { cancelled = true; };
-  }, []);
+  }, [loadPatrimony]);
 
   // Assets
   const addAsset = useCallback(async (a: Omit<Asset, "id">) => {
