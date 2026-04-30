@@ -109,22 +109,25 @@ export function usePatrimony() {
   }, []);
 
   // Receivables
-  const addReceivable = useCallback(async (r: Omit<Receivable, "id">) => {
+  const addReceivable = useCallback(async (r: Omit<Receivable, "id">): Promise<boolean> => {
     const { data: row, error } = await supabase.from("receivables").insert({ description: r.description, value: r.value, paid_value: r.paidValue ?? 0, due_date: r.dueDate, type: r.type, status: r.status, responsible: r.responsible, notes: r.notes }).select().single();
-    if (error || !row) { toast.error("Erro ao salvar"); return; }
+    if (error || !row) { console.error("addReceivable error:", error); toast.error(`Erro ao salvar: ${error?.message ?? "desconhecido"}`); return false; }
     setData(prev => ({ ...prev, receivables: [mapReceivable(row), ...prev.receivables] }));
+    return true;
   }, []);
 
-  const updateReceivable = useCallback(async (id: string, updates: Partial<Receivable>) => {
+  const updateReceivable = useCallback(async (id: string, updates: Partial<Receivable>): Promise<boolean> => {
     const { error } = await supabase.from("receivables").update(toSnake(updates) as never).eq("id", id);
-    if (error) { toast.error("Erro ao atualizar"); return; }
+    if (error) { console.error("updateReceivable error:", error); toast.error(`Erro ao atualizar: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.map(r => r.id === id ? { ...r, ...updates } : r) }));
+    return true;
   }, []);
 
-  const deleteReceivable = useCallback(async (id: string) => {
+  const deleteReceivable = useCallback(async (id: string): Promise<boolean> => {
     const { error } = await supabase.from("receivables").delete().eq("id", id);
-    if (error) { toast.error("Erro ao excluir"); return; }
+    if (error) { console.error("deleteReceivable error:", error); toast.error(`Erro ao excluir: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.filter(r => r.id !== id) }));
+    return true;
   }, []);
 
   // Doubtful Credits
