@@ -24,6 +24,7 @@ interface Props {
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
+  onReceivablePayment?: (receivable: Receivable, amount: number) => void;
   readOnly?: boolean;
 }
 
@@ -40,9 +41,11 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
-  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
+  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly, onReceivablePayment } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
+  const [doubtfulModalOpen, setDoubtfulModalOpen] = useState(false);
+  const [editingDoubtful, setEditingDoubtful] = useState<DoubtfulCredit | null>(null);
   const [cashModal, setCashModal] = useState<{ id: string; type: "add" | "withdraw" } | null>(null);
   const [cashAmount, setCashAmount] = useState("");
   const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
@@ -83,6 +86,8 @@ export function ReceivablesTab(props: Props) {
       const updates: Partial<Receivable> = { paidValue: newPaid };
       if (newPaid >= r.value) updates.status = "Recebido";
       props.updateReceivable(r.id, updates);
+      // BUG 1 fix: register cash entry so patrimony reflects the receipt
+      onReceivablePayment?.(r, amount);
       toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
     } else {
       props.updateReceivable(r.id, { value: r.value + amount });
@@ -90,6 +95,18 @@ export function ReceivablesTab(props: Props) {
     }
     setPaymentModal(null);
     setPaymentAmount("");
+  };
+
+  const handleSaveDoubtful = (data: Omit<DoubtfulCredit, "id">) => {
+    if (editingDoubtful) {
+      props.updateDoubtfulCredit(editingDoubtful.id, data);
+      toast.success("Cobrança duvidosa atualizada");
+    } else {
+      props.addDoubtfulCredit(data);
+      toast.success("Cobrança duvidosa adicionada");
+    }
+    setEditingDoubtful(null);
+    setDoubtfulModalOpen(false);
   };
 
   const handleCashOperation = () => {
