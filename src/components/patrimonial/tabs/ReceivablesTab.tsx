@@ -395,8 +395,7 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
   const [responsible, setResponsible] = useState(initial?.responsible || "");
   const [notes, setNotes] = useState(initial?.notes || "");
 
-  // Reset when modal opens
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setDescription(initial?.description || "");
       setValue(initial?.value?.toString() || "");
@@ -407,7 +406,7 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
       setResponsible(initial?.responsible || "");
       setNotes(initial?.notes || "");
     }
-  });
+  }, [open, initial]);
 
   const handleSubmit = () => {
     if (!description || !value) { toast.error("Preencha os campos obrigatórios"); return; }
