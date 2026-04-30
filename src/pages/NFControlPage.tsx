@@ -36,13 +36,9 @@ interface InvoiceType {
 }
 
 export default function NFControlPage() {
-  const { canManageNF, isAdmin, isNfControl, role, user, loading: authLoading } = useAuth();
-  const isFallbackAdmin = user?.email === "krugergustavo86@gmail.com";
-  const canManage = canManageNF || isAdmin || isNfControl || role === "admin" || role === "nf_control" || isFallbackAdmin;
+  const { canManageNF, user } = useAuth();
+  const canManage = canManageNF;
 
-  useEffect(() => {
-    console.log("[NFControlPage] auth state:", { role, isAdmin, isNfControl, canManageNF, canManage, isFallbackAdmin, authLoading, email: user?.email ?? null });
-  }, [role, isAdmin, isNfControl, canManageNF, canManage, isFallbackAdmin, authLoading, user?.email]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [types, setTypes] = useState<InvoiceType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +64,7 @@ export default function NFControlPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const totalNF = invoices.reduce((s, i) => s + Number(i.value), 0);
-  const taxPreview = totalNF * 0.15;
+  const taxPreview = invoices.reduce((s, i) => s + Number(i.value) * (Number(i.tax_rate) / 100), 0);
 
   // Group by type
   const byType: Record<string, { count: number; total: number }> = {};
@@ -162,7 +158,7 @@ export default function NFControlPage() {
           <div className="bg-card rounded-lg border p-4">
             <div className="flex items-center gap-1 mb-1">
               <Calculator className="h-3.5 w-3.5 text-destructive" />
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Previsão Impostos (15%)</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Previsão Impostos</p>
             </div>
             <p className="text-xl font-bold tabular-nums text-destructive">{formatCurrency(taxPreview)}</p>
           </div>
