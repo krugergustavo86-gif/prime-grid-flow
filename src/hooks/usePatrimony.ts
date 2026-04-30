@@ -169,10 +169,28 @@ export function usePatrimony() {
   }, []);
 
   // Cash Entries
+  const addCashEntry = useCallback(async (c: Omit<CashEntry, "id">) => {
+    const { data: row, error } = await supabase.from("cash_entries").insert({ description: c.description, balance: c.balance, ref_date: c.refDate, notes: c.notes }).select().single();
+    if (error || !row) { toast.error(`Erro ao salvar: ${error?.message ?? "desconhecido"}`); return false; }
+    setData(prev => ({ ...prev, cashEntries: [mapCash(row), ...prev.cashEntries] }));
+    invalidatePatrimony();
+    return true;
+  }, []);
+
   const updateCashEntry = useCallback(async (id: string, updates: Partial<CashEntry>) => {
     const { error } = await supabase.from("cash_entries").update(toSnake(updates) as never).eq("id", id);
-    if (error) { toast.error("Erro ao atualizar"); return; }
+    if (error) { toast.error(`Erro ao atualizar: ${error.message}`); return false; }
     setData(prev => ({ ...prev, cashEntries: prev.cashEntries.map(c => c.id === id ? { ...c, ...updates } : c) }));
+    invalidatePatrimony();
+    return true;
+  }, []);
+
+  const deleteCashEntry = useCallback(async (id: string) => {
+    const { error } = await supabase.from("cash_entries").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return false; }
+    setData(prev => ({ ...prev, cashEntries: prev.cashEntries.filter(c => c.id !== id) }));
+    invalidatePatrimony();
+    return true;
   }, []);
 
   // Loans
