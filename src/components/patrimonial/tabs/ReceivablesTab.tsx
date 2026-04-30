@@ -62,13 +62,13 @@ export function ReceivablesTab(props: Props) {
   });
   const totalCash = effectiveCashEntries.reduce((s, c) => s + c.balance, 0);
 
-  const handleSave = (data: Omit<Receivable, "id">) => {
+  const handleSave = async (data: Omit<Receivable, "id">) => {
     if (editing) {
-      props.updateReceivable(editing.id, data);
-      toast.success("Recebível atualizado");
+      const ok = await props.updateReceivable(editing.id, data);
+      if (ok !== false) toast.success("Recebível atualizado");
     } else {
-      props.addReceivable(data);
-      toast.success("Recebível adicionado");
+      const ok = await props.addReceivable(data);
+      if (ok !== false) toast.success("Recebível adicionado");
     }
     setEditing(null);
     setModalOpen(false);
