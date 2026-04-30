@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -431,6 +431,45 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
             <Select value={status} onValueChange={v => setStatus(v as ReceivableStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
           </div>
           <div><Label>Vencimento</Label><Input value={dueDate} onChange={e => setDueDate(e.target.value)} placeholder="DD/MM/AAAA" /></div>
+          <div><Label>Responsável</Label><Input value={responsible} onChange={e => setResponsible(e.target.value)} /></div>
+          <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DoubtfulCreditModal({ open, onClose, onSave, initial }: { open: boolean; onClose: () => void; onSave: (d: Omit<DoubtfulCredit, "id">) => void; initial: DoubtfulCredit | null }) {
+  const [description, setDescription] = useState("");
+  const [value, setValue] = useState("");
+  const [responsible, setResponsible] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setDescription(initial?.description || "");
+      setValue(initial?.value?.toString() || "");
+      setResponsible(initial?.responsible || "");
+      setNotes(initial?.notes || "");
+    }
+  }, [open, initial]);
+
+  const handleSubmit = () => {
+    if (!description || !value) { toast.error("Preencha os campos obrigatórios"); return; }
+    onSave({ description, value: parseFloat(value) || 0, responsible: responsible || undefined, notes: notes || undefined });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{initial ? "Editar" : "Nova"} Cobrança Duvidosa</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label>Descrição *</Label><Input value={description} onChange={e => setDescription(e.target.value)} /></div>
+          <div><Label>Valor (R$) *</Label><Input type="number" value={value} onChange={e => setValue(e.target.value)} /></div>
           <div><Label>Responsável</Label><Input value={responsible} onChange={e => setResponsible(e.target.value)} /></div>
           <div><Label>Observações</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} /></div>
         </div>
