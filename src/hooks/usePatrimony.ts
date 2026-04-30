@@ -198,17 +198,21 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("loans").insert({ contract: l.contract, institution: l.institution, type: l.type, next_payment: l.nextPayment, total_installments: l.totalInstallments, paid_installments: l.paidInstallments, installment_value: l.installmentValue, notes: l.notes, auto_debit: l.autoDebit || false, debit_day: l.debitDay, debit_start_date: l.debitStartDate, debit_end_date: l.debitEndDate, bank_account: l.bankAccount, debit_category: l.debitCategory }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, loans: [mapLoan(row), ...prev.loans] }));
+    invalidatePatrimony();
   }, []);
 
   const updateLoan = useCallback(async (id: string, updates: Partial<Loan>) => {
     const { error } = await supabase.from("loans").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, loans: prev.loans.map(l => l.id === id ? { ...l, ...updates } : l) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteLoan = useCallback(async (id: string) => {
-    await supabase.from("loans").delete().eq("id", id);
+    const { error } = await supabase.from("loans").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, loans: prev.loans.filter(l => l.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Payables
