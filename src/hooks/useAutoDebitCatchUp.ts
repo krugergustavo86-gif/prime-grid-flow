@@ -6,11 +6,11 @@ import { toast } from "sonner";
  * On app load, calls the process-auto-debits edge function
  * with a 7-day lookback to catch up any missed auto-debits.
  */
-export function useAutoDebitCatchUp() {
+export function useAutoDebitCatchUp(enabled = true) {
   const ran = useRef(false);
 
   useEffect(() => {
-    if (ran.current) return;
+    if (!enabled || ran.current) return;
     ran.current = true;
 
     const catchUp = async () => {
@@ -35,5 +35,5 @@ export function useAutoDebitCatchUp() {
     };
 
     catchUp();
-  }, []);
+  }, [enabled]);
 }
