@@ -151,17 +151,21 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("doubtful_credits").insert({ description: d.description, value: d.value, responsible: d.responsible, notes: d.notes }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, doubtfulCredits: [mapDoubtful(row), ...prev.doubtfulCredits] }));
+    invalidatePatrimony();
   }, []);
 
   const updateDoubtfulCredit = useCallback(async (id: string, updates: Partial<DoubtfulCredit>) => {
     const { error } = await supabase.from("doubtful_credits").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, doubtfulCredits: prev.doubtfulCredits.map(d => d.id === id ? { ...d, ...updates } : d) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteDoubtfulCredit = useCallback(async (id: string) => {
-    await supabase.from("doubtful_credits").delete().eq("id", id);
+    const { error } = await supabase.from("doubtful_credits").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, doubtfulCredits: prev.doubtfulCredits.filter(d => d.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Cash Entries
