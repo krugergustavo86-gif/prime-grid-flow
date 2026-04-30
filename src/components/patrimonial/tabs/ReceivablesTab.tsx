@@ -23,6 +23,7 @@ interface Props {
   addDoubtfulCredit: (d: Omit<DoubtfulCredit, "id">) => void;
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
+  deleteCashEntry: (id: string) => void | Promise<boolean | void>;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
   onReceivablePayment?: (receivable: Receivable, amount: number) => void;
   readOnly?: boolean;
@@ -298,6 +299,17 @@ export function ReceivablesTab(props: Props) {
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Retirar valor" onClick={() => { setCashModal({ id: c.id, type: "withdraw" }); setCashAmount(""); }}>
                         <ArrowDownCircle className="h-4 w-4" />
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Excluir registro">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader><AlertDialogTitle>Excluir registro de caixa?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={async () => { const ok = await props.deleteCashEntry(c.id); if (ok !== false) toast.success("Registro excluído"); }}>Excluir</AlertDialogAction></AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </td>
                   )}

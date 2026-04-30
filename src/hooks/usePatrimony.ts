@@ -3,15 +3,16 @@ import { PatrimonyData, Asset, Receivable, DoubtfulCredit, CashEntry, Loan, Paya
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { onQueryInvalidated, queryClient } from "@/lib/queryClient";
 
 const EMPTY: PatrimonyData = { assets: [], receivables: [], doubtfulCredits: [], cashEntries: [], loans: [], payables: [] };
 
-type AssetRow = Database["public"]["Tables"]["assets"]["Row"];
-type ReceivableRow = Database["public"]["Tables"]["receivables"]["Row"];
-type DoubtfulRow = Database["public"]["Tables"]["doubtful_credits"]["Row"];
-type CashRow = Database["public"]["Tables"]["cash_entries"]["Row"];
-type LoanRow = Database["public"]["Tables"]["loans"]["Row"];
-type PayableRow = Database["public"]["Tables"]["payables"]["Row"];
+type AssetRow = Omit<Database["public"]["Tables"]["assets"]["Row"], "created_at">;
+type ReceivableRow = Omit<Database["public"]["Tables"]["receivables"]["Row"], "created_at">;
+type DoubtfulRow = Omit<Database["public"]["Tables"]["doubtful_credits"]["Row"], "created_at">;
+type CashRow = Omit<Database["public"]["Tables"]["cash_entries"]["Row"], "created_at">;
+type LoanRow = Omit<Database["public"]["Tables"]["loans"]["Row"], "created_at">;
+type PayableRow = Omit<Database["public"]["Tables"]["payables"]["Row"], "created_at">;
 
 // camelCase -> snake_case generic mapper for partial updates
 const CAMEL_TO_SNAKE: Record<string, string> = {
@@ -62,50 +63,62 @@ function mapPayable(r: PayableRow): Payable {
   return { id: r.id, description: r.description, value: Number(r.value), dueDate: r.due_date || undefined, scheduledDate: r.scheduled_date || undefined, responsible: r.responsible, status: r.status as Payable["status"], notes: r.notes || undefined };
 }
 
+function invalidatePatrimony() {
+  queryClient.invalidateQueries({ queryKey: ["patrimony"] });
+  queryClient.invalidateQueries({ queryKey: ["patrimonyKPIs"] });
+}
+
 export function usePatrimony() {
   const [data, setData] = useState<PatrimonyData>(EMPTY);
 
+  const loadPatrimony = useCallback(async (cancelled?: () => boolean) => {
+    const order = { ascending: false } as const;
+    const [a, r, d, c, l, p] = await Promise.all([
+      supabase.from("assets").select("id, asset_group, description, plate, value_fipe, value_market, notes").order("created_at", order),
+      supabase.from("receivables").select("id, description, value, paid_value, due_date, type, status, responsible, notes").order("created_at", order),
+      supabase.from("doubtful_credits").select("id, description, value, responsible, notes").order("created_at", order),
+      supabase.from("cash_entries").select("id, description, balance, ref_date, notes").order("created_at", order),
+      supabase.from("loans").select("id, contract, institution, type, next_payment, total_installments, paid_installments, installment_value, notes, auto_debit, debit_day, debit_start_date, debit_end_date, bank_account, debit_category").order("created_at", order),
+      supabase.from("payables").select("id, description, value, due_date, scheduled_date, responsible, status, notes").order("created_at", order),
+    ]);
+    if (cancelled?.()) return;
+    setData({
+      assets: (a.data || []).map(mapAsset),
+      receivables: (r.data || []).map(mapReceivable),
+      doubtfulCredits: (d.data || []).map(mapDoubtful),
+      cashEntries: (c.data || []).map(mapCash),
+      loans: (l.data || []).map(mapLoan),
+      payables: (p.data || []).map(mapPayable),
+    });
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const order = { ascending: false } as const;
-      const [a, r, d, c, l, p] = await Promise.all([
-        supabase.from("assets").select("*").order("created_at", order),
-        supabase.from("receivables").select("*").order("created_at", order),
-        supabase.from("doubtful_credits").select("*").order("created_at", order),
-        supabase.from("cash_entries").select("*").order("created_at", order),
-        supabase.from("loans").select("*").order("created_at", order),
-        supabase.from("payables").select("*").order("created_at", order),
-      ]);
-      if (cancelled) return;
-      setData({
-        assets: (a.data || []).map(mapAsset),
-        receivables: (r.data || []).map(mapReceivable),
-        doubtfulCredits: (d.data || []).map(mapDoubtful),
-        cashEntries: (c.data || []).map(mapCash),
-        loans: (l.data || []).map(mapLoan),
-        payables: (p.data || []).map(mapPayable),
-      });
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    loadPatrimony(() => cancelled);
+    const unsubscribe = onQueryInvalidated(["patrimony"], () => loadPatrimony());
+    return () => { cancelled = true; unsubscribe(); };
+  }, [loadPatrimony]);
 
   // Assets
   const addAsset = useCallback(async (a: Omit<Asset, "id">) => {
     const { data: row, error } = await supabase.from("assets").insert({ asset_group: a.group, description: a.description, plate: a.plate, value_fipe: a.valueFipe, value_market: a.valueMarket, notes: a.notes }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, assets: [mapAsset(row), ...prev.assets] }));
+    invalidatePatrimony();
   }, []);
 
   const updateAsset = useCallback(async (id: string, updates: Partial<Asset>) => {
     const { error } = await supabase.from("assets").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, assets: prev.assets.map(a => a.id === id ? { ...a, ...updates } : a) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteAsset = useCallback(async (id: string) => {
-    await supabase.from("assets").delete().eq("id", id);
+    const { error } = await supabase.from("assets").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, assets: prev.assets.filter(a => a.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Receivables
@@ -113,6 +126,7 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("receivables").insert({ description: r.description, value: r.value, paid_value: r.paidValue ?? 0, due_date: r.dueDate, type: r.type, status: r.status, responsible: r.responsible, notes: r.notes }).select().single();
     if (error || !row) { console.error("addReceivable error:", error); toast.error(`Erro ao salvar: ${error?.message ?? "desconhecido"}`); return false; }
     setData(prev => ({ ...prev, receivables: [mapReceivable(row), ...prev.receivables] }));
+    invalidatePatrimony();
     return true;
   }, []);
 
@@ -120,6 +134,7 @@ export function usePatrimony() {
     const { error } = await supabase.from("receivables").update(toSnake(updates) as never).eq("id", id);
     if (error) { console.error("updateReceivable error:", error); toast.error(`Erro ao atualizar: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.map(r => r.id === id ? { ...r, ...updates } : r) }));
+    invalidatePatrimony();
     return true;
   }, []);
 
@@ -127,6 +142,7 @@ export function usePatrimony() {
     const { error } = await supabase.from("receivables").delete().eq("id", id);
     if (error) { console.error("deleteReceivable error:", error); toast.error(`Erro ao excluir: ${error.message}`); return false; }
     setData(prev => ({ ...prev, receivables: prev.receivables.filter(r => r.id !== id) }));
+    invalidatePatrimony();
     return true;
   }, []);
 
@@ -135,24 +151,46 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("doubtful_credits").insert({ description: d.description, value: d.value, responsible: d.responsible, notes: d.notes }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, doubtfulCredits: [mapDoubtful(row), ...prev.doubtfulCredits] }));
+    invalidatePatrimony();
   }, []);
 
   const updateDoubtfulCredit = useCallback(async (id: string, updates: Partial<DoubtfulCredit>) => {
     const { error } = await supabase.from("doubtful_credits").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, doubtfulCredits: prev.doubtfulCredits.map(d => d.id === id ? { ...d, ...updates } : d) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteDoubtfulCredit = useCallback(async (id: string) => {
-    await supabase.from("doubtful_credits").delete().eq("id", id);
+    const { error } = await supabase.from("doubtful_credits").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, doubtfulCredits: prev.doubtfulCredits.filter(d => d.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Cash Entries
+  const addCashEntry = useCallback(async (c: Omit<CashEntry, "id">) => {
+    const { data: row, error } = await supabase.from("cash_entries").insert({ description: c.description, balance: c.balance, ref_date: c.refDate, notes: c.notes }).select().single();
+    if (error || !row) { toast.error(`Erro ao salvar: ${error?.message ?? "desconhecido"}`); return false; }
+    setData(prev => ({ ...prev, cashEntries: [mapCash(row), ...prev.cashEntries] }));
+    invalidatePatrimony();
+    return true;
+  }, []);
+
   const updateCashEntry = useCallback(async (id: string, updates: Partial<CashEntry>) => {
     const { error } = await supabase.from("cash_entries").update(toSnake(updates) as never).eq("id", id);
-    if (error) { toast.error("Erro ao atualizar"); return; }
+    if (error) { toast.error(`Erro ao atualizar: ${error.message}`); return false; }
     setData(prev => ({ ...prev, cashEntries: prev.cashEntries.map(c => c.id === id ? { ...c, ...updates } : c) }));
+    invalidatePatrimony();
+    return true;
+  }, []);
+
+  const deleteCashEntry = useCallback(async (id: string) => {
+    const { error } = await supabase.from("cash_entries").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return false; }
+    setData(prev => ({ ...prev, cashEntries: prev.cashEntries.filter(c => c.id !== id) }));
+    invalidatePatrimony();
+    return true;
   }, []);
 
   // Loans
@@ -160,17 +198,21 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("loans").insert({ contract: l.contract, institution: l.institution, type: l.type, next_payment: l.nextPayment, total_installments: l.totalInstallments, paid_installments: l.paidInstallments, installment_value: l.installmentValue, notes: l.notes, auto_debit: l.autoDebit || false, debit_day: l.debitDay, debit_start_date: l.debitStartDate, debit_end_date: l.debitEndDate, bank_account: l.bankAccount, debit_category: l.debitCategory }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, loans: [mapLoan(row), ...prev.loans] }));
+    invalidatePatrimony();
   }, []);
 
   const updateLoan = useCallback(async (id: string, updates: Partial<Loan>) => {
     const { error } = await supabase.from("loans").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, loans: prev.loans.map(l => l.id === id ? { ...l, ...updates } : l) }));
+    invalidatePatrimony();
   }, []);
 
   const deleteLoan = useCallback(async (id: string) => {
-    await supabase.from("loans").delete().eq("id", id);
+    const { error } = await supabase.from("loans").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, loans: prev.loans.filter(l => l.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   // Payables
@@ -178,17 +220,21 @@ export function usePatrimony() {
     const { data: row, error } = await supabase.from("payables").insert({ description: p.description, value: p.value, due_date: p.dueDate, scheduled_date: p.scheduledDate, responsible: p.responsible, status: p.status, notes: p.notes }).select().single();
     if (error || !row) { toast.error("Erro ao salvar"); return; }
     setData(prev => ({ ...prev, payables: [mapPayable(row), ...prev.payables] }));
+    invalidatePatrimony();
   }, []);
 
   const updatePayable = useCallback(async (id: string, updates: Partial<Payable>) => {
     const { error } = await supabase.from("payables").update(toSnake(updates) as never).eq("id", id);
     if (error) { toast.error("Erro ao atualizar"); return; }
     setData(prev => ({ ...prev, payables: prev.payables.map(p => p.id === id ? { ...p, ...updates } : p) }));
+    invalidatePatrimony();
   }, []);
 
   const deletePayable = useCallback(async (id: string) => {
-    await supabase.from("payables").delete().eq("id", id);
+    const { error } = await supabase.from("payables").delete().eq("id", id);
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return; }
     setData(prev => ({ ...prev, payables: prev.payables.filter(p => p.id !== id) }));
+    invalidatePatrimony();
   }, []);
 
   return {
@@ -196,7 +242,7 @@ export function usePatrimony() {
     addAsset, updateAsset, deleteAsset,
     addReceivable, updateReceivable, deleteReceivable,
     addDoubtfulCredit, updateDoubtfulCredit, deleteDoubtfulCredit,
-    updateCashEntry,
+    addCashEntry, updateCashEntry, deleteCashEntry,
     addLoan, updateLoan, deleteLoan,
     addPayable, updatePayable, deletePayable,
   };
