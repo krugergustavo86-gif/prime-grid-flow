@@ -17,9 +17,9 @@ interface Props {
   doubtfulCredits: DoubtfulCredit[];
   cashEntries: CashEntry[];
   caixaAtual?: number;
-  addReceivable: (r: Omit<Receivable, "id">) => void;
-  updateReceivable: (id: string, u: Partial<Receivable>) => void;
-  deleteReceivable: (id: string) => void;
+  addReceivable: (r: Omit<Receivable, "id">) => void | Promise<boolean | void>;
+  updateReceivable: (id: string, u: Partial<Receivable>) => void | Promise<boolean | void>;
+  deleteReceivable: (id: string) => void | Promise<boolean | void>;
   addDoubtfulCredit: (d: Omit<DoubtfulCredit, "id">) => void;
   updateDoubtfulCredit: (id: string, u: Partial<DoubtfulCredit>) => void;
   deleteDoubtfulCredit: (id: string) => void;
@@ -62,13 +62,13 @@ export function ReceivablesTab(props: Props) {
   });
   const totalCash = effectiveCashEntries.reduce((s, c) => s + c.balance, 0);
 
-  const handleSave = (data: Omit<Receivable, "id">) => {
+  const handleSave = async (data: Omit<Receivable, "id">) => {
     if (editing) {
-      props.updateReceivable(editing.id, data);
-      toast.success("Recebível atualizado");
+      const ok = await props.updateReceivable(editing.id, data);
+      if (ok !== false) toast.success("Recebível atualizado");
     } else {
-      props.addReceivable(data);
-      toast.success("Recebível adicionado");
+      const ok = await props.addReceivable(data);
+      if (ok !== false) toast.success("Recebível adicionado");
     }
     setEditing(null);
     setModalOpen(false);
@@ -194,7 +194,7 @@ export function ReceivablesTab(props: Props) {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader><AlertDialogTitle>Excluir recebível?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => { props.deleteReceivable(r.id); toast.success("Recebível excluído"); }}>Excluir</AlertDialogAction></AlertDialogFooter>
+                            <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={async () => { const ok = await props.deleteReceivable(r.id); if (ok !== false) toast.success("Recebível excluído"); }}>Excluir</AlertDialogAction></AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
