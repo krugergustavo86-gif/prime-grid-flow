@@ -292,7 +292,23 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Report Download */}
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2 flex-wrap">
+        <Label htmlFor="report-month" className="text-xs text-muted-foreground">Mês:</Label>
+        <select
+          id="report-month"
+          value={reportMonth}
+          onChange={(e) => setReportMonth(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        >
+          {Array.from({ length: 24 }).map((_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const y = d.getFullYear();
+            const v = `${m}/${y}`;
+            return <option key={v} value={v}>{formatMonth(v)}</option>;
+          })}
+        </select>
         <Button
           variant="outline"
           size="sm"
@@ -304,7 +320,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
           ) : (
             <FileDown className="h-4 w-4 mr-1" />
           )}
-          {generatingReport ? "Gerando..." : "Baixar Relatório Mensal"}
+          {generatingReport ? "Gerando..." : "Baixar Relatório"}
         </Button>
       </div>
       {/* KPI Summary */}
