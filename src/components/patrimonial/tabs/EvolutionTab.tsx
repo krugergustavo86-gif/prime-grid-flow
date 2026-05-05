@@ -84,6 +84,10 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportMonth, setReportMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+  });
 
   const handleDownloadReport = async () => {
     setGeneratingReport(true);
@@ -95,7 +99,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       }
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/generate-report`,
+        `https://${projectId}.supabase.co/functions/v1/generate-report?month=${encodeURIComponent(reportMonth)}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -111,9 +115,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const now = new Date();
-      const month = `${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-      a.download = `relatorio-${month}.pdf`;
+      a.download = `relatorio-${reportMonth.replace("/", "-")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Relatório gerado com sucesso!");
