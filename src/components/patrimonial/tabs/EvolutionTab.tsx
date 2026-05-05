@@ -84,6 +84,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [reportMonth, setReportMonth] = useState<string>(() => {
     const now = new Date();
     return `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
