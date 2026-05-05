@@ -84,6 +84,10 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportMonth, setReportMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+  });
 
   const handleDownloadReport = async () => {
     setGeneratingReport(true);
@@ -95,7 +99,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       }
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/generate-report`,
+        `https://${projectId}.supabase.co/functions/v1/generate-report?month=${encodeURIComponent(reportMonth)}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -111,9 +115,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const now = new Date();
-      const month = `${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-      a.download = `relatorio-${month}.pdf`;
+      a.download = `relatorio-${reportMonth.replace("/", "-")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Relatório gerado com sucesso!");
@@ -290,7 +292,23 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Report Download */}
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2 flex-wrap">
+        <Label htmlFor="report-month" className="text-xs text-muted-foreground">Mês:</Label>
+        <select
+          id="report-month"
+          value={reportMonth}
+          onChange={(e) => setReportMonth(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        >
+          {Array.from({ length: 24 }).map((_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const y = d.getFullYear();
+            const v = `${m}/${y}`;
+            return <option key={v} value={v}>{formatMonth(v)}</option>;
+          })}
+        </select>
         <Button
           variant="outline"
           size="sm"
@@ -302,7 +320,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
           ) : (
             <FileDown className="h-4 w-4 mr-1" />
           )}
-          {generatingReport ? "Gerando..." : "Baixar Relatório Mensal"}
+          {generatingReport ? "Gerando..." : "Baixar Relatório"}
         </Button>
       </div>
       {/* KPI Summary */}

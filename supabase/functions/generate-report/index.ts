@@ -55,7 +55,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const month = getCurrentMonth();
+    const url = new URL(req.url);
+    const monthParam = url.searchParams.get("month");
+    const month = monthParam && /^(0[1-9]|1[0-2])\/\d{4}$/.test(monthParam) ? monthParam : getCurrentMonth();
     const [m, y] = month.split("/");
     const monthLabel = getMonthLabel(month);
 
