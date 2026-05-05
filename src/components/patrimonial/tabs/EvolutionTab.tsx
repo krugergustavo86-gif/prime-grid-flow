@@ -120,6 +120,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Relatório gerado com sucesso!");
+      setExportOpen(false);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Erro ao gerar relatório");
