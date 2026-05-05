@@ -292,36 +292,52 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Report Download */}
-      <div className="flex justify-end items-center gap-2 flex-wrap">
-        <Label htmlFor="report-month" className="text-xs text-muted-foreground">Mês:</Label>
-        <select
-          id="report-month"
-          value={reportMonth}
-          onChange={(e) => setReportMonth(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-        >
-          {Array.from({ length: 24 }).map((_, i) => {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const m = String(d.getMonth() + 1).padStart(2, "0");
-            const y = d.getFullYear();
-            const v = `${m}/${y}`;
-            return <option key={v} value={v}>{formatMonth(v)}</option>;
-          })}
-        </select>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDownloadReport}
-          disabled={generatingReport}
-        >
-          {generatingReport ? (
-            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-          ) : (
+      <div className="flex justify-end">
+        <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
             <FileDown className="h-4 w-4 mr-1" />
-          )}
-          {generatingReport ? "Gerando..." : "Baixar Relatório"}
-        </Button>
+            Exportar Relatório
+          </Button>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Exportar Relatório Mensal</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3 py-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Mês</Label>
+                <select
+                  value={reportMonth.split("/")[0]}
+                  onChange={(e) => setReportMonth(`${e.target.value}/${reportMonth.split("/")[1]}`)}
+                  className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  {MONTHS_ORDER.map((m) => (
+                    <option key={m} value={m}>{MONTH_LABELS[m]}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Ano</Label>
+                <select
+                  value={reportMonth.split("/")[1]}
+                  onChange={(e) => setReportMonth(`${reportMonth.split("/")[0]}/${e.target.value}`)}
+                  className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  {Array.from({ length: 6 }).map((_, i) => {
+                    const y = String(new Date().getFullYear() - i);
+                    return <option key={y} value={y}>{y}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setExportOpen(false)}>Cancelar</Button>
+              <Button onClick={handleDownloadReport} disabled={generatingReport}>
+                {generatingReport ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileDown className="h-4 w-4 mr-1" />}
+                {generatingReport ? "Gerando..." : "Baixar PDF"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       {/* KPI Summary */}
       {latest && (
