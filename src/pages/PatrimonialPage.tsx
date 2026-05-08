@@ -14,6 +14,7 @@ import { LoansTab } from "@/components/patrimonial/tabs/LoansTab";
 import { AssetsTab } from "@/components/patrimonial/tabs/AssetsTab";
 import { PayablesTab } from "@/components/patrimonial/tabs/PayablesTab";
 import { EvolutionTab } from "@/components/patrimonial/tabs/EvolutionTab";
+import { ProjectionsTab } from "@/components/patrimonial/tabs/ProjectionsTab";
 
 export default function PatrimonialPage() {
   const { transactions, config, addTransaction } = useTransactions();
@@ -49,12 +50,13 @@ export default function PatrimonialPage() {
         />
 
         <Tabs defaultValue="receivables">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full h-auto">
             <TabsTrigger value="receivables">📥 Recebíveis</TabsTrigger>
             <TabsTrigger value="loans">🏦 Empréstimos</TabsTrigger>
             <TabsTrigger value="assets">🏗 Patrimônio</TabsTrigger>
             <TabsTrigger value="payables">💳 Contas</TabsTrigger>
             <TabsTrigger value="evolution">📈 Evolução</TabsTrigger>
+            <TabsTrigger value="projections">🔮 Projeções</TabsTrigger>
           </TabsList>
           <TabsContent value="receivables">
             <ReceivablesTab
@@ -118,6 +120,15 @@ export default function PatrimonialPage() {
               numSocios={config.numSocios}
               autoGrossPatrimony={kpis.grossPatrimony}
               autoTotalDebt={kpis.totalAPagar}
+            />
+          </TabsContent>
+          <TabsContent value="projections">
+            <ProjectionsTab
+              transactions={transactions}
+              loans={patrimony.loans}
+              netPatrimony={kpis.netPatrimony}
+              totalDebt={kpis.totalAPagar}
+              cashAvailable={kpis.cashAvailable}
             />
           </TabsContent>
         </Tabs>
