@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { Transaction, Loan } from "@/types";
 import { formatCurrency, formatCurrencyShort, MONTH_LABELS_SHORT } from "@/utils/formatters";
-import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw, Rocket } from "lucide-react";
+import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw, Rocket, PieChart } from "lucide-react";
 
 interface Props {
   transactions: Transaction[];
@@ -42,68 +42,97 @@ const HORIZON_OPTIONS = [
   { value: "120", label: "10 anos" },
 ];
 
-function detectPayroll(transactions: Transaction[]): number {
-  const now = new Date();
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-  const recent = transactions.filter(t => {
-    const d = new Date(t.date + "T12:00:00");
-    return d >= cutoff && t.category.toLowerCase().includes("folha");
-  });
-  if (recent.length === 0) return 209000;
-  const total = recent.reduce((s, t) => s + t.value, 0);
-  const monthly = total / 3;
-  return monthly > 1000 ? Math.round(monthly) : 209000;
+type CostKey = "folha" | "materiais" | "operacional" | "impostos" | "comissoes" | "outros";
+
+const COST_GROUPS: { key: CostKey; label: string; match: (cat: string) => boolean }[] = [
+  { key: "folha", label: "Folha de pagamento", match: c => c.includes("salário") || c.includes("salario") || c.includes("folha") || c.includes("reserva") || c.includes("décimo") || c.includes("decimo") || c.includes("férias") || c.includes("ferias") },
+  { key: "materiais", label: "Materiais", match: c => c.includes("materia") || c.includes("solar kit") },
+  { key: "operacional", label: "Custos operacionais", match: c => c.includes("custos fixos") || c.includes("custo operacional") || c.includes("combustível") || c.includes("combustivel") || c.includes("manutenç") },
+  { key: "impostos", label: "Impostos/Contabilidade", match: c => c.includes("imposto") || c.includes("contabil") },
+  { key: "comissoes", label: "Comissões/Marketing", match: c => c.includes("comiss") || c.includes("marketing") },
+  { key: "outros", label: "Outros custos", match: () => false },
+];
+
+function isLoanCategory(cat: string) {
+  return cat.includes("emprésti") || cat.includes("emprest") || cat.includes("financiamento");
 }
 
-function computeMonthlyAverages(transactions: Transaction[]) {
+function classifyCost(category: string): CostKey {
+  const c = category.toLowerCase();
+  for (const g of COST_GROUPS) {
+    if (g.key === "outros") continue;
+    if (g.match(c)) return g.key;
+  }
+  return "outros";
+}
+
+interface Baseline {
+  monthsUsed: number;
+  avgRevenue: number;
+  avgCosts: Record<CostKey, number>;
+  avgTotalCosts: number;
+  avgNetProfit: number;
+  avgLoanPayments: number;
+}
+
+function computeBaseline(transactions: Transaction[]): Baseline {
   const now = new Date();
-  const buckets = new Map<string, { entradas: number; saidas: number; folha: number; emprestimos: number }>();
+  const buckets = new Map<string, { entradas: number; loans: number; costs: Record<CostKey, number> }>();
+  // Last 6 closed months (excludes current month)
   for (let i = 1; i <= 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    buckets.set(key, { entradas: 0, saidas: 0, folha: 0, emprestimos: 0 });
+    buckets.set(key, {
+      entradas: 0,
+      loans: 0,
+      costs: { folha: 0, materiais: 0, operacional: 0, impostos: 0, comissoes: 0, outros: 0 },
+    });
   }
   for (const t of transactions) {
     const b = buckets.get(t.month);
     if (!b) continue;
-    if (t.type === "Entrada") b.entradas += t.value;
-    else {
-      b.saidas += t.value;
+    if (t.type === "Entrada") {
+      b.entradas += t.value;
+    } else {
       const cat = t.category.toLowerCase();
-      if (cat.includes("folha")) b.folha += t.value;
-      if (cat.includes("emprésti") || cat.includes("emprest") || cat.includes("financiamento")) b.emprestimos += t.value;
+      if (isLoanCategory(cat)) {
+        b.loans += t.value;
+      } else {
+        b.costs[classifyCost(t.category)] += t.value;
+      }
     }
   }
-  const arr = Array.from(buckets.values());
-  const n = arr.length || 1;
+  // Use only months with real activity
+  const active = Array.from(buckets.values()).filter(b => b.entradas > 0 || b.loans > 0 || Object.values(b.costs).some(v => v > 0));
+  const n = active.length || 1;
+  const avgCosts: Record<CostKey, number> = { folha: 0, materiais: 0, operacional: 0, impostos: 0, comissoes: 0, outros: 0 };
+  for (const k of Object.keys(avgCosts) as CostKey[]) {
+    avgCosts[k] = active.reduce((s, b) => s + b.costs[k], 0) / n;
+  }
+  const avgRevenue = active.reduce((s, b) => s + b.entradas, 0) / n;
+  const avgLoanPayments = active.reduce((s, b) => s + b.loans, 0) / n;
+  const avgTotalCosts = Object.values(avgCosts).reduce((s, v) => s + v, 0);
   return {
-    avgEntradas: arr.reduce((s, v) => s + v.entradas, 0) / n,
-    avgSaidas: arr.reduce((s, v) => s + v.saidas, 0) / n,
-    avgFolha: arr.reduce((s, v) => s + v.folha, 0) / n,
-    avgEmprestimos: arr.reduce((s, v) => s + v.emprestimos, 0) / n,
+    monthsUsed: active.length,
+    avgRevenue: Math.round(avgRevenue),
+    avgCosts: Object.fromEntries(
+      Object.entries(avgCosts).map(([k, v]) => [k, Math.round(v)]),
+    ) as Record<CostKey, number>,
+    avgTotalCosts: Math.round(avgTotalCosts),
+    avgNetProfit: Math.round(avgRevenue - avgTotalCosts),
+    avgLoanPayments: Math.round(avgLoanPayments),
   };
 }
 
 export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, cashAvailable }: Props) {
-  const baseline = useMemo(() => computeMonthlyAverages(transactions), [transactions]);
-  const detectedPayroll = useMemo(() => {
-    const fromCategory = baseline.avgFolha;
-    return fromCategory > 1000 ? Math.round(fromCategory) : detectPayroll(transactions);
-  }, [transactions, baseline.avgFolha]);
-
-  const baseRevenue = Math.round(baseline.avgEntradas) || 0;
-  const baseOtherExpenses = Math.max(
-    0,
-    Math.round(baseline.avgSaidas - baseline.avgFolha - baseline.avgEmprestimos),
-  );
+  const baseline = useMemo(() => computeBaseline(transactions), [transactions]);
 
   const [horizon, setHorizon] = useState("12");
   const projectionMonths = parseInt(horizon, 10);
 
-  const [payroll, setPayroll] = useState(detectedPayroll);
-  const [revenue, setRevenue] = useState(baseRevenue);
+  const [revenue, setRevenue] = useState(baseline.avgRevenue);
+  const [costs, setCosts] = useState<Record<CostKey, number>>(baseline.avgCosts);
   const [reduction, setReduction] = useState(0);
-  const [otherExpenses, setOtherExpenses] = useState(baseOtherExpenses);
 
   const [newLoanValue, setNewLoanValue] = useState(0);
   const [newLoanRate, setNewLoanRate] = useState(2);
@@ -111,17 +140,24 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
   const [payoffLoanId, setPayoffLoanId] = useState<string>("none");
 
+  const setCost = (k: CostKey, v: number) => setCosts(prev => ({ ...prev, [k]: v }));
+
   const reset = () => {
-    setPayroll(detectedPayroll);
-    setRevenue(baseRevenue);
+    setRevenue(baseline.avgRevenue);
+    setCosts(baseline.avgCosts);
     setReduction(0);
-    setOtherExpenses(baseOtherExpenses);
     setNewLoanValue(0);
     setNewLoanRate(2);
     setNewLoanTerm(24);
     setPayoffLoanId("none");
     setHorizon("12");
   };
+
+  const totalSimCosts = useMemo(
+    () => Object.values(costs).reduce((s, v) => s + v, 0),
+    [costs],
+  );
+  const simulatedNetProfit = revenue - totalSimCosts + reduction;
 
   const loanSchedule = useMemo(() => {
     return loans.map(l => {
@@ -137,7 +173,6 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     return (newLoanValue * i * Math.pow(1 + i, newLoanTerm)) / (Math.pow(1 + i, newLoanTerm) - 1);
   }, [newLoanValue, newLoanRate, newLoanTerm]);
 
-  // Total monthly loan payments at month i (1-indexed)
   const totalLoanPaymentsAt = (i: number) =>
     loanSchedule.reduce((s, l) => s + (i <= l.monthsRemaining ? l.monthlyPayment : 0), 0);
 
@@ -147,9 +182,8 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     const now = new Date();
     const data: { label: string; atual: number; simulado: number; mes: number }[] = [];
 
-    // Operational net (excludes loan installments — those are net-zero on equity)
-    const baselineOpNet = baseline.avgEntradas - (baseline.avgSaidas - baseline.avgEmprestimos);
-    const simulatedOpNet = revenue - (payroll + otherExpenses - reduction);
+    // Baseline net profit from real history (excludes loan payments — those are equity-neutral)
+    const baselineNet = baseline.avgNetProfit;
 
     let newLoanRemaining = newLoanValue;
     const newLoanMonthlyRate = newLoanRate / 100;
@@ -157,10 +191,9 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     let atualNet = netPatrimony;
     let simNet = netPatrimony;
 
-    // Step interval for X labels based on horizon
     for (let i = 1; i <= projectionMonths; i++) {
-      atualNet += baselineOpNet;
-      let monthDelta = simulatedOpNet;
+      atualNet += baselineNet;
+      let monthDelta = simulatedNetProfit;
 
       if (newLoanRemaining > 0 && i <= newLoanTerm) {
         const interest = newLoanRemaining * newLoanMonthlyRate;
@@ -172,7 +205,6 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
       simNet += monthDelta;
 
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      // Label format: short for ≤24 months, year-only checkpoints for longer
       let label: string;
       if (projectionMonths <= 24) {
         label = `${MONTH_LABELS_SHORT[monthDate.getMonth()]}/${String(monthDate.getFullYear()).slice(2)}`;
@@ -189,7 +221,7 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
     return data;
   }, [
-    baseline, payroll, revenue, reduction, otherExpenses,
+    baseline, simulatedNetProfit,
     newLoanValue, newLoanRate, newLoanTerm, newLoanInstallment,
     netPatrimony, projectionMonths,
   ]);
@@ -230,8 +262,9 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   }, [maxLoanMonths]);
 
-  const monthlyMargin = revenue - (payroll + otherExpenses - reduction) - currentMonthlyLoanPayments;
-  const postPayoffMargin = revenue - (payroll + otherExpenses - reduction);
+  // Net profit (revenue - costs) is what funds equity. Loan payments come out of that net profit cash flow.
+  const monthlyMargin = simulatedNetProfit - currentMonthlyLoanPayments;
+  const postPayoffMargin = simulatedNetProfit;
   const freedAfterPayoff = currentMonthlyLoanPayments;
 
   // Patrimony at specific milestones (use simulated)
@@ -433,59 +466,96 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Operacional</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieChart className="h-4 w-4" /> Receita e Custos (média real)
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Folha de pagamento</Label>
-                <span className="text-sm font-semibold tabular-nums">{formatCurrency(payroll)}</span>
-              </div>
-              <Slider
-                value={[payroll]}
-                min={150000}
-                max={250000}
-                step={1000}
-                onValueChange={v => setPayroll(v[0])}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Detectado: {formatCurrency(detectedPayroll)}</p>
-            </div>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Base: média dos últimos {baseline.monthsUsed} {baseline.monthsUsed === 1 ? "mês com dados" : "meses com dados"}.
+              Ajuste cada linha para simular cenários.
+            </p>
 
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Faturamento mensal</Label>
-                <span className="text-sm font-semibold tabular-nums">{formatCurrency(revenue)}</span>
+              <div className="flex justify-between items-center mb-1">
+                <Label className="text-sm">Faturamento mensal</Label>
+                <span className="text-sm font-semibold tabular-nums text-success">{formatCurrency(revenue)}</span>
               </div>
               <Slider
                 value={[revenue]}
-                min={Math.max(0, baseRevenue * 0.5)}
-                max={Math.max(baseRevenue * 1.5, 100000)}
+                min={Math.max(0, baseline.avgRevenue * 0.5)}
+                max={Math.max(baseline.avgRevenue * 1.5, 100000)}
                 step={5000}
                 onValueChange={v => setRevenue(v[0])}
               />
-              <p className="text-xs text-muted-foreground mt-1">Média 6m: {formatCurrency(baseRevenue)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Média real: {formatCurrency(baseline.avgRevenue)}</p>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t">
+              {COST_GROUPS.map(g => (
+                <div key={g.key}>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label className="text-xs">{g.label}</Label>
+                    <span className="text-xs font-semibold tabular-nums text-destructive">
+                      − {formatCurrency(costs[g.key])}
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    value={costs[g.key]}
+                    onChange={e => setCost(g.key, Number(e.target.value) || 0)}
+                    className="h-8"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Média real: {formatCurrency(baseline.avgCosts[g.key])}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div>
-              <Label htmlFor="reduction">Redução planejada (R$/mês)</Label>
+              <Label htmlFor="reduction" className="text-xs">Economia adicional planejada (R$/mês)</Label>
               <Input
                 id="reduction"
                 type="number"
                 value={reduction}
                 onChange={e => setReduction(Number(e.target.value) || 0)}
                 placeholder="Ex: 25000"
+                className="h-8"
               />
             </div>
 
-            <div>
-              <Label htmlFor="otherExp">Outras despesas mensais</Label>
-              <Input
-                id="otherExp"
-                type="number"
-                value={otherExpenses}
-                onChange={e => setOtherExpenses(Number(e.target.value) || 0)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Média 6m: {formatCurrency(baseOtherExpenses)}</p>
+            <div className="rounded-md border bg-muted/30 p-3 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Receita simulada:</span>
+                <span className="font-semibold tabular-nums">{formatCurrency(revenue)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Custos simulados:</span>
+                <span className="font-semibold tabular-nums text-destructive">− {formatCurrency(totalSimCosts)}</span>
+              </div>
+              {reduction > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Economia planejada:</span>
+                  <span className="font-semibold tabular-nums text-success">+ {formatCurrency(reduction)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1 border-t">
+                <span className="font-semibold">Lucro líquido projetado:</span>
+                <span className={`font-bold tabular-nums ${simulatedNetProfit >= 0 ? "text-success" : "text-destructive"}`}>
+                  {formatCurrency(simulatedNetProfit)}
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px] pt-1">
+                <span className="text-muted-foreground">Margem líquida:</span>
+                <span className="tabular-nums">
+                  {revenue > 0 ? `${((simulatedNetProfit / revenue) * 100).toFixed(1)}%` : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-muted-foreground">Lucro real (média 6m):</span>
+                <span className="tabular-nums">{formatCurrency(baseline.avgNetProfit)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -555,6 +625,56 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
           </CardContent>
         </Card>
       </div>
+
+      {/* Destination of profit */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Destino do Lucro Líquido Mensal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const profit = simulatedNetProfit;
+            const toLoans = Math.max(0, Math.min(profit, currentMonthlyLoanPayments));
+            const toCash = Math.max(0, profit - currentMonthlyLoanPayments);
+            const deficit = profit < 0 ? Math.abs(profit) : 0;
+            const total = Math.max(1, toLoans + toCash);
+            const pctLoans = (toLoans / total) * 100;
+            const pctCash = (toCash / total) * 100;
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">Lucro líquido</p>
+                    <p className={`text-lg font-bold tabular-nums ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+                      {formatCurrency(profit)}
+                    </p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">→ Quitação de empréstimos</p>
+                    <p className="text-lg font-bold tabular-nums text-primary">{formatCurrency(toLoans)}</p>
+                    <p className="text-[10px] text-muted-foreground">parcelas mensais atuais</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">→ Acúmulo de caixa</p>
+                    <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(toCash)}</p>
+                    <p className="text-[10px] text-muted-foreground">sobra após pagar parcelas</p>
+                  </div>
+                </div>
+                {profit > 0 ? (
+                  <div className="flex h-3 rounded-full overflow-hidden border">
+                    <div className="bg-primary" style={{ width: `${pctLoans}%` }} />
+                    <div className="bg-success" style={{ width: `${pctCash}%` }} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-destructive">
+                    Déficit de {formatCurrency(deficit)}/mês — empréstimos consomem caixa existente.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
 
       {/* Loans timeline */}
       {loanSchedule.length > 0 && (
