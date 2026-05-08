@@ -125,25 +125,14 @@ function computeBaseline(transactions: Transaction[]): Baseline {
 }
 
 export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, cashAvailable }: Props) {
-  const baseline = useMemo(() => computeMonthlyAverages(transactions), [transactions]);
-  const detectedPayroll = useMemo(() => {
-    const fromCategory = baseline.avgFolha;
-    return fromCategory > 1000 ? Math.round(fromCategory) : detectPayroll(transactions);
-  }, [transactions, baseline.avgFolha]);
-
-  const baseRevenue = Math.round(baseline.avgEntradas) || 0;
-  const baseOtherExpenses = Math.max(
-    0,
-    Math.round(baseline.avgSaidas - baseline.avgFolha - baseline.avgEmprestimos),
-  );
+  const baseline = useMemo(() => computeBaseline(transactions), [transactions]);
 
   const [horizon, setHorizon] = useState("12");
   const projectionMonths = parseInt(horizon, 10);
 
-  const [payroll, setPayroll] = useState(detectedPayroll);
-  const [revenue, setRevenue] = useState(baseRevenue);
+  const [revenue, setRevenue] = useState(baseline.avgRevenue);
+  const [costs, setCosts] = useState<Record<CostKey, number>>(baseline.avgCosts);
   const [reduction, setReduction] = useState(0);
-  const [otherExpenses, setOtherExpenses] = useState(baseOtherExpenses);
 
   const [newLoanValue, setNewLoanValue] = useState(0);
   const [newLoanRate, setNewLoanRate] = useState(2);
@@ -151,17 +140,24 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
   const [payoffLoanId, setPayoffLoanId] = useState<string>("none");
 
+  const setCost = (k: CostKey, v: number) => setCosts(prev => ({ ...prev, [k]: v }));
+
   const reset = () => {
-    setPayroll(detectedPayroll);
-    setRevenue(baseRevenue);
+    setRevenue(baseline.avgRevenue);
+    setCosts(baseline.avgCosts);
     setReduction(0);
-    setOtherExpenses(baseOtherExpenses);
     setNewLoanValue(0);
     setNewLoanRate(2);
     setNewLoanTerm(24);
     setPayoffLoanId("none");
     setHorizon("12");
   };
+
+  const totalSimCosts = useMemo(
+    () => Object.values(costs).reduce((s, v) => s + v, 0),
+    [costs],
+  );
+  const simulatedNetProfit = revenue - totalSimCosts + reduction;
 
   const loanSchedule = useMemo(() => {
     return loans.map(l => {
@@ -177,7 +173,6 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     return (newLoanValue * i * Math.pow(1 + i, newLoanTerm)) / (Math.pow(1 + i, newLoanTerm) - 1);
   }, [newLoanValue, newLoanRate, newLoanTerm]);
 
-  // Total monthly loan payments at month i (1-indexed)
   const totalLoanPaymentsAt = (i: number) =>
     loanSchedule.reduce((s, l) => s + (i <= l.monthsRemaining ? l.monthlyPayment : 0), 0);
 
@@ -187,9 +182,8 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     const now = new Date();
     const data: { label: string; atual: number; simulado: number; mes: number }[] = [];
 
-    // Operational net (excludes loan installments — those are net-zero on equity)
-    const baselineOpNet = baseline.avgEntradas - (baseline.avgSaidas - baseline.avgEmprestimos);
-    const simulatedOpNet = revenue - (payroll + otherExpenses - reduction);
+    // Baseline net profit from real history (excludes loan payments — those are equity-neutral)
+    const baselineNet = baseline.avgNetProfit;
 
     let newLoanRemaining = newLoanValue;
     const newLoanMonthlyRate = newLoanRate / 100;
@@ -197,10 +191,9 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     let atualNet = netPatrimony;
     let simNet = netPatrimony;
 
-    // Step interval for X labels based on horizon
     for (let i = 1; i <= projectionMonths; i++) {
-      atualNet += baselineOpNet;
-      let monthDelta = simulatedOpNet;
+      atualNet += baselineNet;
+      let monthDelta = simulatedNetProfit;
 
       if (newLoanRemaining > 0 && i <= newLoanTerm) {
         const interest = newLoanRemaining * newLoanMonthlyRate;
@@ -212,7 +205,6 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
       simNet += monthDelta;
 
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      // Label format: short for ≤24 months, year-only checkpoints for longer
       let label: string;
       if (projectionMonths <= 24) {
         label = `${MONTH_LABELS_SHORT[monthDate.getMonth()]}/${String(monthDate.getFullYear()).slice(2)}`;
@@ -229,7 +221,7 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
     return data;
   }, [
-    baseline, payroll, revenue, reduction, otherExpenses,
+    baseline, simulatedNetProfit,
     newLoanValue, newLoanRate, newLoanTerm, newLoanInstallment,
     netPatrimony, projectionMonths,
   ]);
