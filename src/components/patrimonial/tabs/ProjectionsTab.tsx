@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { Transaction, Loan } from "@/types";
 import { formatCurrency, formatCurrencyShort, MONTH_LABELS_SHORT } from "@/utils/formatters";
-import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw, Rocket } from "lucide-react";
+import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw, Rocket, PieChart } from "lucide-react";
 
 interface Props {
   transactions: Transaction[];
@@ -42,45 +42,85 @@ const HORIZON_OPTIONS = [
   { value: "120", label: "10 anos" },
 ];
 
-function detectPayroll(transactions: Transaction[]): number {
-  const now = new Date();
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-  const recent = transactions.filter(t => {
-    const d = new Date(t.date + "T12:00:00");
-    return d >= cutoff && t.category.toLowerCase().includes("folha");
-  });
-  if (recent.length === 0) return 209000;
-  const total = recent.reduce((s, t) => s + t.value, 0);
-  const monthly = total / 3;
-  return monthly > 1000 ? Math.round(monthly) : 209000;
+type CostKey = "folha" | "materiais" | "operacional" | "impostos" | "comissoes" | "outros";
+
+const COST_GROUPS: { key: CostKey; label: string; match: (cat: string) => boolean }[] = [
+  { key: "folha", label: "Folha de pagamento", match: c => c.includes("salário") || c.includes("salario") || c.includes("folha") || c.includes("reserva") || c.includes("décimo") || c.includes("decimo") || c.includes("férias") || c.includes("ferias") },
+  { key: "materiais", label: "Materiais", match: c => c.includes("materia") || c.includes("solar kit") },
+  { key: "operacional", label: "Custos operacionais", match: c => c.includes("custos fixos") || c.includes("custo operacional") || c.includes("combustível") || c.includes("combustivel") || c.includes("manutenç") },
+  { key: "impostos", label: "Impostos/Contabilidade", match: c => c.includes("imposto") || c.includes("contabil") },
+  { key: "comissoes", label: "Comissões/Marketing", match: c => c.includes("comiss") || c.includes("marketing") },
+  { key: "outros", label: "Outros custos", match: () => false },
+];
+
+function isLoanCategory(cat: string) {
+  return cat.includes("emprésti") || cat.includes("emprest") || cat.includes("financiamento");
 }
 
-function computeMonthlyAverages(transactions: Transaction[]) {
+function classifyCost(category: string): CostKey {
+  const c = category.toLowerCase();
+  for (const g of COST_GROUPS) {
+    if (g.key === "outros") continue;
+    if (g.match(c)) return g.key;
+  }
+  return "outros";
+}
+
+interface Baseline {
+  monthsUsed: number;
+  avgRevenue: number;
+  avgCosts: Record<CostKey, number>;
+  avgTotalCosts: number;
+  avgNetProfit: number;
+  avgLoanPayments: number;
+}
+
+function computeBaseline(transactions: Transaction[]): Baseline {
   const now = new Date();
-  const buckets = new Map<string, { entradas: number; saidas: number; folha: number; emprestimos: number }>();
+  const buckets = new Map<string, { entradas: number; loans: number; costs: Record<CostKey, number> }>();
+  // Last 6 closed months (excludes current month)
   for (let i = 1; i <= 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    buckets.set(key, { entradas: 0, saidas: 0, folha: 0, emprestimos: 0 });
+    buckets.set(key, {
+      entradas: 0,
+      loans: 0,
+      costs: { folha: 0, materiais: 0, operacional: 0, impostos: 0, comissoes: 0, outros: 0 },
+    });
   }
   for (const t of transactions) {
     const b = buckets.get(t.month);
     if (!b) continue;
-    if (t.type === "Entrada") b.entradas += t.value;
-    else {
-      b.saidas += t.value;
+    if (t.type === "Entrada") {
+      b.entradas += t.value;
+    } else {
       const cat = t.category.toLowerCase();
-      if (cat.includes("folha")) b.folha += t.value;
-      if (cat.includes("emprésti") || cat.includes("emprest") || cat.includes("financiamento")) b.emprestimos += t.value;
+      if (isLoanCategory(cat)) {
+        b.loans += t.value;
+      } else {
+        b.costs[classifyCost(t.category)] += t.value;
+      }
     }
   }
-  const arr = Array.from(buckets.values());
-  const n = arr.length || 1;
+  // Use only months with real activity
+  const active = Array.from(buckets.values()).filter(b => b.entradas > 0 || b.loans > 0 || Object.values(b.costs).some(v => v > 0));
+  const n = active.length || 1;
+  const avgCosts: Record<CostKey, number> = { folha: 0, materiais: 0, operacional: 0, impostos: 0, comissoes: 0, outros: 0 };
+  for (const k of Object.keys(avgCosts) as CostKey[]) {
+    avgCosts[k] = active.reduce((s, b) => s + b.costs[k], 0) / n;
+  }
+  const avgRevenue = active.reduce((s, b) => s + b.entradas, 0) / n;
+  const avgLoanPayments = active.reduce((s, b) => s + b.loans, 0) / n;
+  const avgTotalCosts = Object.values(avgCosts).reduce((s, v) => s + v, 0);
   return {
-    avgEntradas: arr.reduce((s, v) => s + v.entradas, 0) / n,
-    avgSaidas: arr.reduce((s, v) => s + v.saidas, 0) / n,
-    avgFolha: arr.reduce((s, v) => s + v.folha, 0) / n,
-    avgEmprestimos: arr.reduce((s, v) => s + v.emprestimos, 0) / n,
+    monthsUsed: active.length,
+    avgRevenue: Math.round(avgRevenue),
+    avgCosts: Object.fromEntries(
+      Object.entries(avgCosts).map(([k, v]) => [k, Math.round(v)]),
+    ) as Record<CostKey, number>,
+    avgTotalCosts: Math.round(avgTotalCosts),
+    avgNetProfit: Math.round(avgRevenue - avgTotalCosts),
+    avgLoanPayments: Math.round(avgLoanPayments),
   };
 }
 
