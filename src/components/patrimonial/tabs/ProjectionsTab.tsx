@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { Transaction, Loan } from "@/types";
 import { formatCurrency, formatCurrencyShort, MONTH_LABELS_SHORT } from "@/utils/formatters";
-import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw } from "lucide-react";
+import { TrendingUp, Calendar, Wallet, Lightbulb, RotateCcw, Rocket } from "lucide-react";
 
 interface Props {
   transactions: Transaction[];
@@ -34,10 +34,15 @@ interface Props {
   cashAvailable: number;
 }
 
-const PROJECTION_MONTHS = 12;
+const HORIZON_OPTIONS = [
+  { value: "12", label: "12 meses" },
+  { value: "24", label: "24 meses" },
+  { value: "36", label: "36 meses" },
+  { value: "60", label: "5 anos" },
+  { value: "120", label: "10 anos" },
+];
 
 function detectPayroll(transactions: Transaction[]): number {
-  // Try to detect average monthly payroll from "Folha" category in last 3 months
   const now = new Date();
   const cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
   const recent = transactions.filter(t => {
@@ -51,7 +56,6 @@ function detectPayroll(transactions: Transaction[]): number {
 }
 
 function computeMonthlyAverages(transactions: Transaction[]) {
-  // Use last 6 months (excluding current) for averages
   const now = new Date();
   const buckets = new Map<string, { entradas: number; saidas: number; folha: number; emprestimos: number }>();
   for (let i = 1; i <= 6; i++) {
@@ -72,11 +76,12 @@ function computeMonthlyAverages(transactions: Transaction[]) {
   }
   const arr = Array.from(buckets.values());
   const n = arr.length || 1;
-  const avgEntradas = arr.reduce((s, v) => s + v.entradas, 0) / n;
-  const avgSaidas = arr.reduce((s, v) => s + v.saidas, 0) / n;
-  const avgFolha = arr.reduce((s, v) => s + v.folha, 0) / n;
-  const avgEmprestimos = arr.reduce((s, v) => s + v.emprestimos, 0) / n;
-  return { avgEntradas, avgSaidas, avgFolha, avgEmprestimos };
+  return {
+    avgEntradas: arr.reduce((s, v) => s + v.entradas, 0) / n,
+    avgSaidas: arr.reduce((s, v) => s + v.saidas, 0) / n,
+    avgFolha: arr.reduce((s, v) => s + v.folha, 0) / n,
+    avgEmprestimos: arr.reduce((s, v) => s + v.emprestimos, 0) / n,
+  };
 }
 
 export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, cashAvailable }: Props) {
@@ -91,20 +96,19 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     0,
     Math.round(baseline.avgSaidas - baseline.avgFolha - baseline.avgEmprestimos),
   );
-  const baseLoanPayments = Math.round(baseline.avgEmprestimos) || 0;
 
-  // Simulator state
+  const [horizon, setHorizon] = useState("12");
+  const projectionMonths = parseInt(horizon, 10);
+
   const [payroll, setPayroll] = useState(detectedPayroll);
   const [revenue, setRevenue] = useState(baseRevenue);
-  const [reduction, setReduction] = useState(0); // additional expense reduction (positive = save)
+  const [reduction, setReduction] = useState(0);
   const [otherExpenses, setOtherExpenses] = useState(baseOtherExpenses);
 
-  // New loan simulator
   const [newLoanValue, setNewLoanValue] = useState(0);
-  const [newLoanRate, setNewLoanRate] = useState(2); // % per month
+  const [newLoanRate, setNewLoanRate] = useState(2);
   const [newLoanTerm, setNewLoanTerm] = useState(24);
 
-  // Early payoff
   const [payoffLoanId, setPayoffLoanId] = useState<string>("none");
 
   const reset = () => {
@@ -116,31 +120,16 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     setNewLoanRate(2);
     setNewLoanTerm(24);
     setPayoffLoanId("none");
+    setHorizon("12");
   };
 
-  // Compute loans schedule (months ahead)
   const loanSchedule = useMemo(() => {
     return loans.map(l => {
       const monthsRemaining = Math.max(0, l.totalInstallments - l.paidInstallments);
-      const monthlyPayment = l.installmentValue;
-      return { id: l.id, contract: l.contract, monthsRemaining, monthlyPayment };
+      return { id: l.id, contract: l.contract, monthsRemaining, monthlyPayment: l.installmentValue };
     });
   }, [loans]);
 
-  // For each future month i (1..12), sum loan installments still being paid
-  const loanPaymentsByMonth = useMemo(() => {
-    const arr: number[] = [];
-    for (let i = 1; i <= PROJECTION_MONTHS; i++) {
-      let total = 0;
-      for (const l of loanSchedule) {
-        if (i <= l.monthsRemaining) total += l.monthlyPayment;
-      }
-      arr.push(total);
-    }
-    return arr;
-  }, [loanSchedule]);
-
-  // New loan installment (Price-style approximation)
   const newLoanInstallment = useMemo(() => {
     if (newLoanValue <= 0 || newLoanTerm <= 0) return 0;
     const i = newLoanRate / 100;
@@ -148,116 +137,151 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     return (newLoanValue * i * Math.pow(1 + i, newLoanTerm)) / (Math.pow(1 + i, newLoanTerm) - 1);
   }, [newLoanValue, newLoanRate, newLoanTerm]);
 
-  // Build projection
+  // Total monthly loan payments at month i (1-indexed)
+  const totalLoanPaymentsAt = (i: number) =>
+    loanSchedule.reduce((s, l) => s + (i <= l.monthsRemaining ? l.monthlyPayment : 0), 0);
+
+  const currentMonthlyLoanPayments = totalLoanPaymentsAt(1);
+
   const chartData = useMemo(() => {
     const now = new Date();
-    const data: { label: string; atual: number; simulado: number }[] = [];
+    const data: { label: string; atual: number; simulado: number; mes: number }[] = [];
 
-    // Baseline scenario monthly net delta = avgEntradas - avgSaidas (no changes)
-    // BUT loan installments paid don't change net equity (cash↓, debt↓ cancel).
-    // So net equity monthly change ≈ revenue - (saidas - loanPayments)
-    const baselineMonthlyNet = baseline.avgEntradas - (baseline.avgSaidas - baseline.avgEmprestimos);
+    // Operational net (excludes loan installments — those are net-zero on equity)
+    const baselineOpNet = baseline.avgEntradas - (baseline.avgSaidas - baseline.avgEmprestimos);
+    const simulatedOpNet = revenue - (payroll + otherExpenses - reduction);
 
-    // Simulated scenario monthly base
-    const simulatedOpExpenses = payroll + otherExpenses - reduction;
-    const simulatedMonthlyNet = revenue - simulatedOpExpenses;
-
-    // New loan: increases gross (cash) by value once, increases debt by value.
-    // Net effect at month 0: 0. Then each month installment paid: cash↓ by inst, debt↓ by principal portion.
-    // Simplification: new loan adds extra installment expense AFTER receiving (net effect on equity ≈ -interest portion).
-    // We'll add full installment as extra expense for term months, and add principal back as it's paid (net-zero principal).
-    // Approximation: subtract interest only.
     let newLoanRemaining = newLoanValue;
-    const newLoanMonthlyInterest = newLoanRate / 100;
-
-    // Early payoff: at month 1 reduces both cash and debt by remaining balance → net 0,
-    // but eliminates future installments → frees cash flow. We model by removing those installments from sim.
-    const payoffLoan = loans.find(l => l.id === payoffLoanId);
-    const payoffMonthsRemaining = payoffLoan ? Math.max(0, payoffLoan.totalInstallments - payoffLoan.paidInstallments) : 0;
-    const payoffInstallment = payoffLoan?.installmentValue ?? 0;
-    const payoffBalance = payoffMonthsRemaining * payoffInstallment;
+    const newLoanMonthlyRate = newLoanRate / 100;
 
     let atualNet = netPatrimony;
     let simNet = netPatrimony;
 
-    for (let i = 1; i <= PROJECTION_MONTHS; i++) {
-      atualNet += baselineMonthlyNet;
+    // Step interval for X labels based on horizon
+    for (let i = 1; i <= projectionMonths; i++) {
+      atualNet += baselineOpNet;
+      let monthDelta = simulatedOpNet;
 
-      // Simulated
-      let monthDelta = simulatedMonthlyNet;
-
-      // New loan effect: pay interest portion this month if still owed
       if (newLoanRemaining > 0 && i <= newLoanTerm) {
-        const interest = newLoanRemaining * newLoanMonthlyInterest;
+        const interest = newLoanRemaining * newLoanMonthlyRate;
         const principal = Math.min(newLoanRemaining, newLoanInstallment - interest);
-        monthDelta -= interest; // interest reduces net equity
+        monthDelta -= interest;
         newLoanRemaining = Math.max(0, newLoanRemaining - principal);
       }
-
-      // Early payoff frees up the installment cash flow (would have been spent on payoff loan principal+interest);
-      // assume the payoff happens at month 1, so from month 1 onward we don't subtract that installment.
-      // Since installments are net-zero on equity (cash↓ = debt↓), removing them doesn't change net delta directly.
-      // But we already removed them by NOT modeling installments in baselineMonthlyNet. So payoff effect is mostly informational.
 
       simNet += monthDelta;
 
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const label = `${MONTH_LABELS_SHORT[monthDate.getMonth()]}/${String(monthDate.getFullYear()).slice(2)}`;
-      data.push({ label, atual: Math.round(atualNet), simulado: Math.round(simNet) });
+      // Label format: short for ≤24 months, year-only checkpoints for longer
+      let label: string;
+      if (projectionMonths <= 24) {
+        label = `${MONTH_LABELS_SHORT[monthDate.getMonth()]}/${String(monthDate.getFullYear()).slice(2)}`;
+      } else if (projectionMonths <= 60) {
+        label = monthDate.getMonth() === 0 || i === 1
+          ? `${MONTH_LABELS_SHORT[monthDate.getMonth()]}/${String(monthDate.getFullYear()).slice(2)}`
+          : `${MONTH_LABELS_SHORT[monthDate.getMonth()]}`;
+      } else {
+        label = `${monthDate.getFullYear()}`;
+      }
+
+      data.push({ label, atual: Math.round(atualNet), simulado: Math.round(simNet), mes: i });
     }
 
     return data;
   }, [
-    baseline,
-    payroll,
-    revenue,
-    reduction,
-    otherExpenses,
-    newLoanValue,
-    newLoanRate,
-    newLoanTerm,
-    newLoanInstallment,
-    payoffLoanId,
-    loans,
-    netPatrimony,
+    baseline, payroll, revenue, reduction, otherExpenses,
+    newLoanValue, newLoanRate, newLoanTerm, newLoanInstallment,
+    netPatrimony, projectionMonths,
   ]);
 
-  // Decision indicators
-  const patrimonyIn12 = chartData[chartData.length - 1]?.simulado ?? netPatrimony;
-  const patrimonyDelta = patrimonyIn12 - netPatrimony;
+  // X axis tick interval
+  const xTickInterval = useMemo(() => {
+    if (projectionMonths <= 12) return 0;
+    if (projectionMonths <= 24) return 1;
+    if (projectionMonths <= 36) return 2;
+    if (projectionMonths <= 60) return 5;
+    return 11; // every ~12 months for 10y
+  }, [projectionMonths]);
 
-  // Date when all loans are paid
+  // Loan payoff markers within horizon
+  const loanPayoffMarkers = useMemo(() => {
+    const now = new Date();
+    return loanSchedule
+      .filter(l => l.monthsRemaining > 0 && l.monthsRemaining <= projectionMonths)
+      .map(l => {
+        const idx = l.monthsRemaining - 1;
+        const d = new Date(now.getFullYear(), now.getMonth() + l.monthsRemaining, 1);
+        return {
+          id: l.id,
+          contract: l.contract,
+          monthlyPayment: l.monthlyPayment,
+          monthsRemaining: l.monthsRemaining,
+          label: chartData[idx]?.label ?? "",
+          dateLabel: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+        };
+      });
+  }, [loanSchedule, projectionMonths, chartData]);
+
   const maxLoanMonths = Math.max(0, ...loanSchedule.map(l => l.monthsRemaining));
+
   const loanFreeDate = useMemo(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + maxLoanMonths);
     return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   }, [maxLoanMonths]);
 
-  const monthlyMargin =
-    revenue - (payroll + otherExpenses - reduction) - loanPaymentsByMonth[0];
+  const monthlyMargin = revenue - (payroll + otherExpenses - reduction) - currentMonthlyLoanPayments;
+  const postPayoffMargin = revenue - (payroll + otherExpenses - reduction);
+  const freedAfterPayoff = currentMonthlyLoanPayments;
+
+  // Patrimony at specific milestones (use simulated)
+  const valueAtMonth = (m: number) => {
+    if (m <= 0) return netPatrimony;
+    if (m > chartData.length) return chartData[chartData.length - 1]?.simulado ?? netPatrimony;
+    return chartData[m - 1]?.simulado ?? netPatrimony;
+  };
+
+  const patrimonyHorizon = chartData[chartData.length - 1]?.simulado ?? netPatrimony;
+  const patrimony5y = valueAtMonth(60);
+  const patrimony10y = valueAtMonth(120);
 
   const recommendation = useMemo(() => {
     const selectedPayoff = loans.find(l => l.id === payoffLoanId);
     if (selectedPayoff) {
       const remaining = (selectedPayoff.totalInstallments - selectedPayoff.paidInstallments) * selectedPayoff.installmentValue;
       if (cashAvailable >= remaining * 1.5) {
-        return `Quitar ${selectedPayoff.contract}: caixa suficiente e libera R$ ${formatCurrencyShort(selectedPayoff.installmentValue)}/mês.`;
+        return `Quitar ${selectedPayoff.contract}: caixa suficiente e libera ${formatCurrencyShort(selectedPayoff.installmentValue)}/mês.`;
       }
-      return `Atenção: quitar ${selectedPayoff.contract} consome ${((remaining / cashAvailable) * 100).toFixed(0)}% do caixa.`;
+      return `Atenção: quitar ${selectedPayoff.contract} consome ${((remaining / Math.max(1, cashAvailable)) * 100).toFixed(0)}% do caixa.`;
     }
     if (monthlyMargin > 50000) return "Margem confortável — considere quitar empréstimo de maior taxa.";
     if (monthlyMargin > 0) return "Margem positiva — manter estratégia conservadora.";
     return "Margem negativa — reduzir despesas ou renegociar empréstimos.";
   }, [payoffLoanId, loans, cashAvailable, monthlyMargin]);
 
+  const horizonLabel = HORIZON_OPTIONS.find(o => o.value === horizon)?.label ?? "";
+
   const indicators = [
     {
-      label: "Patrimônio em 12 meses",
-      value: formatCurrency(patrimonyIn12),
-      sub: `${patrimonyDelta >= 0 ? "+" : ""}${formatCurrency(patrimonyDelta)}`,
+      label: `Patrimônio em ${horizonLabel}`,
+      value: formatCurrency(patrimonyHorizon),
+      sub: `${patrimonyHorizon - netPatrimony >= 0 ? "+" : ""}${formatCurrency(patrimonyHorizon - netPatrimony)}`,
       icon: TrendingUp,
-      color: patrimonyDelta >= 0 ? "text-success" : "text-destructive",
+      color: patrimonyHorizon - netPatrimony >= 0 ? "text-success" : "text-destructive",
+    },
+    {
+      label: "Patrimônio em 5 anos",
+      value: formatCurrency(patrimony5y),
+      sub: projectionMonths < 60 ? "extrapolado" : "projetado",
+      icon: TrendingUp,
+      color: "text-primary",
+    },
+    {
+      label: "Patrimônio em 10 anos",
+      value: formatCurrency(patrimony10y),
+      sub: projectionMonths < 120 ? "extrapolado" : "projetado",
+      icon: Rocket,
+      color: "text-primary",
     },
     {
       label: "Empréstimos zerados em",
@@ -267,11 +291,18 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
       color: "text-primary",
     },
     {
-      label: "Margem mensal",
+      label: "Margem mensal atual",
       value: formatCurrency(monthlyMargin),
       sub: monthlyMargin >= 0 ? "disponível" : "déficit",
       icon: Wallet,
       color: monthlyMargin >= 0 ? "text-chart-entrada" : "text-destructive",
+    },
+    {
+      label: "Margem pós-quitação",
+      value: formatCurrency(postPayoffMargin),
+      sub: `+${formatCurrencyShort(freedAfterPayoff)}/mês livres`,
+      icon: Rocket,
+      color: "text-success",
     },
     {
       label: "Recomendação",
@@ -285,6 +316,24 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
   return (
     <div className="space-y-6">
+      {/* Horizon selector */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Label className="text-sm">Horizonte de projeção:</Label>
+        <Select value={horizon} onValueChange={setHorizon}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {HORIZON_OPTIONS.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={reset}>
+          <RotateCcw className="h-3 w-3 mr-1" /> Resetar
+        </Button>
+      </div>
+
       {/* Indicators */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {indicators.map(ind => (
@@ -307,18 +356,23 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
 
       {/* Chart */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Projeção de Patrimônio Líquido — Atual vs Simulado</CardTitle>
-          <Button variant="outline" size="sm" onClick={reset}>
-            <RotateCcw className="h-3 w-3 mr-1" /> Resetar
-          </Button>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Projeção de Patrimônio Líquido — {horizonLabel} (Atual vs Simulado)
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-72">
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <XAxis
+                  dataKey="label"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  interval={xTickInterval}
+                  minTickGap={10}
+                />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={11}
@@ -348,19 +402,30 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
                   name="Cenário simulado"
                   stroke="hsl(var(--primary))"
                   strokeWidth={2.5}
-                  dot={{ r: 3 }}
+                  dot={false}
                 />
-                {maxLoanMonths > 0 && maxLoanMonths <= PROJECTION_MONTHS && (
+                {loanPayoffMarkers.map(m => (
                   <ReferenceLine
-                    x={chartData[maxLoanMonths - 1]?.label}
+                    key={m.id}
+                    x={m.label}
                     stroke="hsl(var(--success))"
-                    strokeDasharray="4 4"
-                    label={{ value: "Quitação total", position: "top", fontSize: 10, fill: "hsl(var(--success))" }}
+                    strokeDasharray="3 3"
+                    label={{
+                      value: `✓ ${m.contract} (+${formatCurrencyShort(m.monthlyPayment)}/m)`,
+                      position: "top",
+                      fontSize: 9,
+                      fill: "hsl(var(--success))",
+                    }}
                   />
-                )}
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
+          {loanPayoffMarkers.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Marcadores verdes indicam o mês de quitação de cada empréstimo. Após cada quitação, a parcela correspondente deixa de ser paga, liberando margem mensal.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -435,28 +500,15 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
               <div className="grid grid-cols-3 gap-2 mt-2">
                 <div>
                   <Label className="text-xs text-muted-foreground">Valor</Label>
-                  <Input
-                    type="number"
-                    value={newLoanValue}
-                    onChange={e => setNewLoanValue(Number(e.target.value) || 0)}
-                  />
+                  <Input type="number" value={newLoanValue} onChange={e => setNewLoanValue(Number(e.target.value) || 0)} />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Taxa %/mês</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={newLoanRate}
-                    onChange={e => setNewLoanRate(Number(e.target.value) || 0)}
-                  />
+                  <Input type="number" step="0.1" value={newLoanRate} onChange={e => setNewLoanRate(Number(e.target.value) || 0)} />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Prazo (m)</Label>
-                  <Input
-                    type="number"
-                    value={newLoanTerm}
-                    onChange={e => setNewLoanTerm(Number(e.target.value) || 0)}
-                  />
+                  <Input type="number" value={newLoanTerm} onChange={e => setNewLoanTerm(Number(e.target.value) || 0)} />
                 </div>
               </div>
               {newLoanValue > 0 && (
@@ -497,7 +549,7 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
               </p>
               <p>
                 <span className="text-muted-foreground">Parcelas mensais (atual):</span>{" "}
-                <span className="font-semibold tabular-nums">{formatCurrency(loanPaymentsByMonth[0])}</span>
+                <span className="font-semibold tabular-nums">{formatCurrency(currentMonthlyLoanPayments)}</span>
               </p>
             </div>
           </CardContent>
@@ -522,16 +574,14 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
                     <div key={l.id} className="flex items-center gap-3 text-sm">
                       <div className="w-32 truncate font-medium">{l.contract}</div>
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full bg-primary"
-                          style={{ width: `${pct}%` }}
-                        />
+                        <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="w-24 text-right text-muted-foreground tabular-nums">
-                        {l.monthsRemaining}m
-                      </div>
+                      <div className="w-24 text-right text-muted-foreground tabular-nums">{l.monthsRemaining}m</div>
                       <div className="w-28 text-right text-xs text-muted-foreground">
                         {endDate.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })}
+                      </div>
+                      <div className="w-28 text-right text-xs text-success tabular-nums">
+                        +{formatCurrencyShort(l.monthlyPayment)}/m
                       </div>
                     </div>
                   );
