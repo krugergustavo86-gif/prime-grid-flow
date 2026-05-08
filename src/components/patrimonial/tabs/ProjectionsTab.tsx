@@ -466,59 +466,96 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Operacional</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieChart className="h-4 w-4" /> Receita e Custos (média real)
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Folha de pagamento</Label>
-                <span className="text-sm font-semibold tabular-nums">{formatCurrency(payroll)}</span>
-              </div>
-              <Slider
-                value={[payroll]}
-                min={150000}
-                max={250000}
-                step={1000}
-                onValueChange={v => setPayroll(v[0])}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Detectado: {formatCurrency(detectedPayroll)}</p>
-            </div>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Base: média dos últimos {baseline.monthsUsed} {baseline.monthsUsed === 1 ? "mês com dados" : "meses com dados"}.
+              Ajuste cada linha para simular cenários.
+            </p>
 
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Faturamento mensal</Label>
-                <span className="text-sm font-semibold tabular-nums">{formatCurrency(revenue)}</span>
+              <div className="flex justify-between items-center mb-1">
+                <Label className="text-sm">Faturamento mensal</Label>
+                <span className="text-sm font-semibold tabular-nums text-success">{formatCurrency(revenue)}</span>
               </div>
               <Slider
                 value={[revenue]}
-                min={Math.max(0, baseRevenue * 0.5)}
-                max={Math.max(baseRevenue * 1.5, 100000)}
+                min={Math.max(0, baseline.avgRevenue * 0.5)}
+                max={Math.max(baseline.avgRevenue * 1.5, 100000)}
                 step={5000}
                 onValueChange={v => setRevenue(v[0])}
               />
-              <p className="text-xs text-muted-foreground mt-1">Média 6m: {formatCurrency(baseRevenue)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Média real: {formatCurrency(baseline.avgRevenue)}</p>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t">
+              {COST_GROUPS.map(g => (
+                <div key={g.key}>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label className="text-xs">{g.label}</Label>
+                    <span className="text-xs font-semibold tabular-nums text-destructive">
+                      − {formatCurrency(costs[g.key])}
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    value={costs[g.key]}
+                    onChange={e => setCost(g.key, Number(e.target.value) || 0)}
+                    className="h-8"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Média real: {formatCurrency(baseline.avgCosts[g.key])}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div>
-              <Label htmlFor="reduction">Redução planejada (R$/mês)</Label>
+              <Label htmlFor="reduction" className="text-xs">Economia adicional planejada (R$/mês)</Label>
               <Input
                 id="reduction"
                 type="number"
                 value={reduction}
                 onChange={e => setReduction(Number(e.target.value) || 0)}
                 placeholder="Ex: 25000"
+                className="h-8"
               />
             </div>
 
-            <div>
-              <Label htmlFor="otherExp">Outras despesas mensais</Label>
-              <Input
-                id="otherExp"
-                type="number"
-                value={otherExpenses}
-                onChange={e => setOtherExpenses(Number(e.target.value) || 0)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Média 6m: {formatCurrency(baseOtherExpenses)}</p>
+            <div className="rounded-md border bg-muted/30 p-3 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Receita simulada:</span>
+                <span className="font-semibold tabular-nums">{formatCurrency(revenue)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Custos simulados:</span>
+                <span className="font-semibold tabular-nums text-destructive">− {formatCurrency(totalSimCosts)}</span>
+              </div>
+              {reduction > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Economia planejada:</span>
+                  <span className="font-semibold tabular-nums text-success">+ {formatCurrency(reduction)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1 border-t">
+                <span className="font-semibold">Lucro líquido projetado:</span>
+                <span className={`font-bold tabular-nums ${simulatedNetProfit >= 0 ? "text-success" : "text-destructive"}`}>
+                  {formatCurrency(simulatedNetProfit)}
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px] pt-1">
+                <span className="text-muted-foreground">Margem líquida:</span>
+                <span className="tabular-nums">
+                  {revenue > 0 ? `${((simulatedNetProfit / revenue) * 100).toFixed(1)}%` : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-muted-foreground">Lucro real (média 6m):</span>
+                <span className="tabular-nums">{formatCurrency(baseline.avgNetProfit)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
