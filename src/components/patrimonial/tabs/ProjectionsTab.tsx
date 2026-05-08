@@ -262,8 +262,9 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
     return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   }, [maxLoanMonths]);
 
-  const monthlyMargin = revenue - (payroll + otherExpenses - reduction) - currentMonthlyLoanPayments;
-  const postPayoffMargin = revenue - (payroll + otherExpenses - reduction);
+  // Net profit (revenue - costs) is what funds equity. Loan payments come out of that net profit cash flow.
+  const monthlyMargin = simulatedNetProfit - currentMonthlyLoanPayments;
+  const postPayoffMargin = simulatedNetProfit;
   const freedAfterPayoff = currentMonthlyLoanPayments;
 
   // Patrimony at specific milestones (use simulated)
