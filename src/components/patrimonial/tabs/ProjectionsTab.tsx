@@ -626,6 +626,56 @@ export function ProjectionsTab({ transactions, loans, netPatrimony, totalDebt, c
         </Card>
       </div>
 
+      {/* Destination of profit */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Destino do Lucro Líquido Mensal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const profit = simulatedNetProfit;
+            const toLoans = Math.max(0, Math.min(profit, currentMonthlyLoanPayments));
+            const toCash = Math.max(0, profit - currentMonthlyLoanPayments);
+            const deficit = profit < 0 ? Math.abs(profit) : 0;
+            const total = Math.max(1, toLoans + toCash);
+            const pctLoans = (toLoans / total) * 100;
+            const pctCash = (toCash / total) * 100;
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">Lucro líquido</p>
+                    <p className={`text-lg font-bold tabular-nums ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+                      {formatCurrency(profit)}
+                    </p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">→ Quitação de empréstimos</p>
+                    <p className="text-lg font-bold tabular-nums text-primary">{formatCurrency(toLoans)}</p>
+                    <p className="text-[10px] text-muted-foreground">parcelas mensais atuais</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-[11px] uppercase text-muted-foreground">→ Acúmulo de caixa</p>
+                    <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(toCash)}</p>
+                    <p className="text-[10px] text-muted-foreground">sobra após pagar parcelas</p>
+                  </div>
+                </div>
+                {profit > 0 ? (
+                  <div className="flex h-3 rounded-full overflow-hidden border">
+                    <div className="bg-primary" style={{ width: `${pctLoans}%` }} />
+                    <div className="bg-success" style={{ width: `${pctCash}%` }} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-destructive">
+                    Déficit de {formatCurrency(deficit)}/mês — empréstimos consomem caixa existente.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
+
       {/* Loans timeline */}
       {loanSchedule.length > 0 && (
         <Card>
