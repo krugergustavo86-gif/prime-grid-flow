@@ -71,8 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       void syncAuthState(nextSession);
+      if (event === "SIGNED_IN" && nextSession?.user) {
+        const u = nextSession.user;
+        setTimeout(() => {
+          void supabase.from("audit_log").insert({
+            user_id: u.id,
+            user_email: u.email ?? null,
+            action: "LOGIN",
+            entity: "auth",
+            description: `Login: ${u.email ?? u.id}`,
+          });
+        }, 0);
+      }
     });
 
     supabase.auth.getSession()
@@ -90,6 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    if (user) {
+      await supabase.from("audit_log").insert({
+        user_id: user.id,
+        user_email: user.email ?? null,
+        action: "LOGOUT",
+        entity: "auth",
+        description: `Logout: ${user.email ?? user.id}`,
+      });
+    }
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
