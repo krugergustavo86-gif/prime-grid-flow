@@ -19,6 +19,10 @@ interface Props {
   updateAsset: (id: string, u: Partial<Asset>) => void;
   deleteAsset: (id: string) => void;
   readOnly?: boolean;
+  cashAndInvestments?: number;
+  receivables?: number;
+  totalLoans?: number;
+  totalPayables?: number;
 }
 
 const GROUPS: { key: AssetGroup; label: string; icon: React.ElementType }[] = [
@@ -32,19 +36,28 @@ const GROUPS: { key: AssetGroup; label: string; icon: React.ElementType }[] = [
 const CHART_COLORS = [
   "hsl(219, 52%, 25%)", "hsl(162, 76%, 24%)", "hsl(222, 45%, 37%)",
   "hsl(0, 55%, 41%)", "hsl(35, 80%, 50%)",
+  "hsl(180, 60%, 35%)", "hsl(280, 45%, 45%)",
 ];
 
-export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly }: Props) {
+export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly, cashAndInvestments = 0, receivables = 0, totalLoans = 0, totalPayables = 0 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [defaultGroup, setDefaultGroup] = useState<AssetGroup>("Veículos");
 
-  const groupTotals = GROUPS.map(g => ({
+  const assetGroupTotals = GROUPS.map(g => ({
     name: g.key,
     value: assets.filter(a => a.group === g.key).reduce((s, a) => s + a.valueMarket, 0),
   })).filter(g => g.value > 0);
 
+  const groupTotals = [
+    ...assetGroupTotals,
+    ...(cashAndInvestments > 0 ? [{ name: "💰 Caixa e Investimentos", value: cashAndInvestments }] : []),
+    ...(receivables > 0 ? [{ name: "📥 Contas a Receber", value: receivables }] : []),
+  ];
+
   const totalPhysical = assets.reduce((s, a) => s + a.valueMarket, 0);
+  const totalBruto = totalPhysical + cashAndInvestments + receivables;
+  const totalLiquido = totalBruto - totalLoans - totalPayables;
 
   const handleSave = (data: Omit<Asset, "id">) => {
     if (editing) {
@@ -157,6 +170,16 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly
       <div className="bg-primary/10 rounded-lg border border-primary/20 p-4 flex items-center justify-between">
         <span className="font-bold text-primary">Patrimônio Físico Total</span>
         <span className="text-xl font-bold tabular-nums text-primary">{formatCurrency(totalPhysical)}</span>
+      </div>
+
+      <div className="bg-card rounded-lg border p-4 space-y-2 text-sm">
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Patrimônio Físico</span><span className="tabular-nums">{formatCurrency(totalPhysical)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Caixa e Investimentos</span><span className="tabular-nums">{formatCurrency(cashAndInvestments)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Contas a Receber</span><span className="tabular-nums">{formatCurrency(receivables)}</span></div>
+        <div className="flex justify-between border-t pt-2 font-semibold"><span>= Patrimônio Bruto</span><span className="tabular-nums">{formatCurrency(totalBruto)}</span></div>
+        <div className="flex justify-between text-destructive"><span>− Empréstimos</span><span className="tabular-nums">{formatCurrency(totalLoans)}</span></div>
+        <div className="flex justify-between text-destructive"><span>− Contas a Pagar</span><span className="tabular-nums">{formatCurrency(totalPayables)}</span></div>
+        <div className="flex justify-between border-t pt-2 font-bold text-base text-primary"><span>= Patrimônio Líquido</span><span className="tabular-nums">{formatCurrency(totalLiquido)}</span></div>
       </div>
 
       <AssetModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} defaultGroup={defaultGroup} />
