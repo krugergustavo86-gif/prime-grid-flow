@@ -172,6 +172,16 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly
         <span className="text-xl font-bold tabular-nums text-primary">{formatCurrency(totalPhysical)}</span>
       </div>
 
+      <div className="bg-card rounded-lg border p-4 space-y-2 text-sm">
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Patrimônio Físico</span><span className="tabular-nums">{formatCurrency(totalPhysical)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Caixa e Investimentos</span><span className="tabular-nums">{formatCurrency(cashAndInvestments)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">+ Contas a Receber</span><span className="tabular-nums">{formatCurrency(receivables)}</span></div>
+        <div className="flex justify-between border-t pt-2 font-semibold"><span>= Patrimônio Bruto</span><span className="tabular-nums">{formatCurrency(totalBruto)}</span></div>
+        <div className="flex justify-between text-destructive"><span>− Empréstimos</span><span className="tabular-nums">{formatCurrency(totalLoans)}</span></div>
+        <div className="flex justify-between text-destructive"><span>− Contas a Pagar</span><span className="tabular-nums">{formatCurrency(totalPayables)}</span></div>
+        <div className="flex justify-between border-t pt-2 font-bold text-base text-primary"><span>= Patrimônio Líquido</span><span className="tabular-nums">{formatCurrency(totalLiquido)}</span></div>
+      </div>
+
       <AssetModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} defaultGroup={defaultGroup} />
     </div>
   );
