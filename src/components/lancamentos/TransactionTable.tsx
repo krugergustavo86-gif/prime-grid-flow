@@ -29,7 +29,7 @@ interface TransactionTableProps {
   onDelete: (id: string) => void;
 }
 
-export function TransactionTable({ transactions, locked, onEdit, onDelete }: TransactionTableProps) {
+function TransactionTableInner({ transactions, locked, onEdit, onDelete }: TransactionTableProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "Entrada" | "Saída">("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
