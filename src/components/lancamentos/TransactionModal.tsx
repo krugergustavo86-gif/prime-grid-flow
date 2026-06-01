@@ -22,6 +22,8 @@ interface TransactionModalProps {
   editTransaction?: Transaction | null;
 }
 
+const DRAFT_KEY = "primecash:transaction-draft";
+
 export function TransactionModal({ open, onClose, onSave, editTransaction }: TransactionModalProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [type, setType] = useState<TransactionType>("Saída");
@@ -34,6 +36,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const { categories: customCats, addCategory } = useCustomCategories();
 
   useEffect(() => {
+    if (!open) return;
     if (editTransaction) {
       setDate(new Date(editTransaction.date + "T12:00:00"));
       setType(editTransaction.type);
@@ -41,15 +44,45 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       setDescription(editTransaction.description);
       setValue(editTransaction.value.toFixed(2).replace(".", ","));
       setNotes(editTransaction.notes || "");
-    } else {
-      setDate(new Date());
-      setType("Saída");
-      setCategory("");
-      setDescription("");
-      setValue("");
-      setNotes("");
+      return;
     }
+    // Novo lançamento: tenta restaurar rascunho
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.description || d.value) {
+          if (window.confirm("Você tem um rascunho não salvo. Deseja continuar de onde parou?")) {
+            setDate(d.date ? new Date(d.date) : new Date());
+            setType(d.type || "Saída");
+            setCategory(d.category || "");
+            setDescription(d.description || "");
+            setValue(d.value || "");
+            setNotes(d.notes || "");
+            return;
+          }
+          sessionStorage.removeItem(DRAFT_KEY);
+        }
+      }
+    } catch { /* ignore */ }
+    setDate(new Date());
+    setType("Saída");
+    setCategory("");
+    setDescription("");
+    setValue("");
+    setNotes("");
   }, [editTransaction, open]);
+
+  // Auto-save rascunho (apenas para novos)
+  useEffect(() => {
+    if (!open || editTransaction) return;
+    if (!description && !value) return;
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        date: date.toISOString(), type, category, description, value, notes,
+      }));
+    } catch { /* ignore */ }
+  }, [open, editTransaction, date, type, category, description, value, notes]);
 
   const builtIn = getCategoriesByType(type);
   const custom = customCats.filter(c => c.type === type).map(c => c.name);
@@ -87,6 +120,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       value: numValue,
       notes: notes.trim() || undefined,
     });
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     onClose();
   };
 
