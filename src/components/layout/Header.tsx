@@ -28,7 +28,7 @@ export function Header({ title }: HeaderProps) {
             {user?.email?.split("@")[0]} · {roleLabels[role]}
           </span>
         )}
-        <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={signOut}>
+        <Button variant="ghost" size="icon" aria-label="Sair" className="md:hidden h-8 w-8" onClick={signOut}>
           <LogOut className="h-4 w-4" />
         </Button>
       </div>
