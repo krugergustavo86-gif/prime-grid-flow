@@ -113,8 +113,10 @@ export function useTransactions() {
     const dbUpdates: Record<string, unknown> = { ...updates };
     if (updates.date) dbUpdates.month = getMonthFromDate(updates.date);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from("transactions").update(dbUpdates as any).eq("id", id);
+    const { error } = await supabase
+      .from("transactions")
+      .update(dbUpdates as Database["public"]["Tables"]["transactions"]["Update"])
+      .eq("id", id);
     if (error) {
       console.error("Failed to update transaction:", error);
       toast.error("Erro ao atualizar lançamento");
