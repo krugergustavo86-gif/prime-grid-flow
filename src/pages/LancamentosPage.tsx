@@ -23,7 +23,7 @@ export default function LancamentosPage() {
   const [editTx, setEditTx] = useState<Transaction | null>(null);
   const { canManageLancamentos, isGerencia } = useAuth();
 
-  const { transactions, addTransaction, updateTransaction, deleteTransaction, getTransactionsByMonth } = useTransactions();
+  const { addTransaction, updateTransaction, deleteTransaction, getTransactionsByMonth } = useTransactions();
   const monthTxns = getTransactionsByMonth(selectedMonth);
   const { entradas, saidas, balanco, isLocked } = useMonthSummary(monthTxns, selectedMonth);
   const { autoTxns, loading: autoLoading, reverseAutoTransaction } = useAutoTransactions();
