@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ interface TransactionTableProps {
   onDelete: (id: string) => void;
 }
 
-export function TransactionTable({ transactions, locked, onEdit, onDelete }: TransactionTableProps) {
+function TransactionTableInner({ transactions, locked, onEdit, onDelete }: TransactionTableProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "Entrada" | "Saída">("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -201,6 +201,8 @@ export function TransactionTable({ transactions, locked, onEdit, onDelete }: Tra
     </div>
   );
 }
+
+export const TransactionTable = memo(TransactionTableInner);
 
 function Receipt(props: React.SVGProps<SVGSVGElement> & { className?: string }) {
   return (

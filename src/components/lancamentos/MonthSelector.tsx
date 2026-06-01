@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Lock } from "lucide-react";
 import { MONTH_LABELS_SHORT } from "@/utils/formatters";
 import { LOCKED_MONTHS } from "@/utils/lockedMonths";
@@ -8,7 +9,7 @@ interface MonthSelectorProps {
   onSelect: (month: string) => void;
 }
 
-export function MonthSelector({ selectedMonth, onSelect }: MonthSelectorProps) {
+function MonthSelectorInner({ selectedMonth, onSelect }: MonthSelectorProps) {
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
       {MONTH_LABELS_SHORT.map((label, i) => {
@@ -41,3 +42,5 @@ export function MonthSelector({ selectedMonth, onSelect }: MonthSelectorProps) {
     </div>
   );
 }
+
+export const MonthSelector = memo(MonthSelectorInner);

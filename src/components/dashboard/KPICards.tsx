@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -8,7 +9,7 @@ interface KPICardsProps {
   acumuladoAno: number;
 }
 
-export function KPICards({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno }: KPICardsProps) {
+function KPICardsInner({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno }: KPICardsProps) {
   const cards = [
     { label: "CAIXA ATUAL", value: caixaAtual, icon: Wallet, accent: "text-primary" },
     { label: "TOTAL ENTRADAS 2026", value: totalEntradas, icon: TrendingUp, accent: "text-chart-entrada" },
@@ -34,3 +35,5 @@ export function KPICards({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno 
     </div>
   );
 }
+
+export const KPICards = memo(KPICardsInner);
