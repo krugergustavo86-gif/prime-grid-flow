@@ -37,3 +37,5 @@ function MonthSummaryCardsInner({ entradas, saidas, balanco }: MonthSummaryCards
     </div>
   );
 }
+
+export const MonthSummaryCards = memo(MonthSummaryCardsInner);
