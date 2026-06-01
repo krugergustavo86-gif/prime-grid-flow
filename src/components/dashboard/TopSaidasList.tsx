@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Progress } from "@/components/ui/progress";
@@ -7,7 +8,7 @@ interface TopSaidasListProps {
   currentMonth: string;
 }
 
-export function TopSaidasList({ transactions, currentMonth }: TopSaidasListProps) {
+function TopSaidasListInner({ transactions, currentMonth }: TopSaidasListProps) {
   const saidas = transactions.filter(t => t.type === "Saída" && t.month.startsWith(currentMonth + "/"));
   const totalSaidas = saidas.reduce((s, t) => s + t.value, 0);
 
