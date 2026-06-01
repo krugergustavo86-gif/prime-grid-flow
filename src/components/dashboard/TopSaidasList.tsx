@@ -52,3 +52,5 @@ function TopSaidasListInner({ transactions, currentMonth }: TopSaidasListProps) 
     </div>
   );
 }
+
+export const TopSaidasList = memo(TopSaidasListInner);
