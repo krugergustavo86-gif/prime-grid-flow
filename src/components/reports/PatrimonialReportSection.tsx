@@ -6,7 +6,7 @@ import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/formatters";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ["#A32D2D", "#0F6E56", "#1F3864", "#D46A6A", "#25A686", "#3B6FA0", "#E08888", "#4DD4B0", "#5B8DCE", "#CC6633"];
 

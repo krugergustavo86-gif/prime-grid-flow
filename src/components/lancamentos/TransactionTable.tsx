@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
-import { Badge } from "@/components/ui/badge";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Pencil, Trash2, Search } from "lucide-react";
