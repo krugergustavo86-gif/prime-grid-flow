@@ -493,7 +493,7 @@ export default function ReportsPage() {
             </TabsContent>
           </Tabs>
 
-          <PatrimonialReportSection />
+          <PatrimonialReportSection periodTotals={totals} />
         </div>
       </div>
     </div>
