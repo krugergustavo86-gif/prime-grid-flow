@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Transaction, TransactionType } from "@/types";
 import { getCategoriesByType } from "@/utils/categories";
+import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +29,9 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const { categories: customCats, addCategory } = useCustomCategories();
 
   useEffect(() => {
     if (editTransaction) {
@@ -47,7 +51,18 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     }
   }, [editTransaction, open]);
 
-  const categories = getCategoriesByType(type);
+  const builtIn = getCategoriesByType(type);
+  const custom = customCats.filter(c => c.type === type).map(c => c.name);
+  const categories = Array.from(new Set([...builtIn, ...custom]));
+
+  const handleAddCategory = async () => {
+    const created = await addCategory(newCatName, type);
+    if (created) {
+      setCategory(created.name);
+      setNewCatName("");
+      setAdding(false);
+    }
+  };
 
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
