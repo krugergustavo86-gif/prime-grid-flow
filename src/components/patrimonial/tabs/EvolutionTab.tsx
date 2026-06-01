@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { errorMessage } from "@/utils/errors";
 import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,9 +122,9 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       URL.revokeObjectURL(url);
       toast.success("Relatório gerado com sucesso!");
       setExportOpen(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || "Erro ao gerar relatório");
+      toast.error(errorMessage(err, "Erro ao gerar relatório"));
     } finally {
       setGeneratingReport(false);
     }
@@ -137,7 +138,8 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
       console.error(error);
       return;
     }
-    const mapped: Snapshot[] = (data || []).map((r: any) => ({
+    type Row = { id: string; month: string; gross_patrimony: number | string; total_debt: number | string; net_equity_per_partner: number | string; notes: string | null };
+    const mapped: Snapshot[] = ((data as Row[] | null) || []).map((r) => ({
       id: r.id,
       month: r.month,
       gross_patrimony: Number(r.gross_patrimony),

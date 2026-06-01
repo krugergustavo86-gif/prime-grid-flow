@@ -20,11 +20,17 @@ export function useAutoTransactions() {
         return;
       }
 
+      type Row = {
+        id: string; loan_id: string; transaction_id: string | null;
+        generated_date: string; month: string; value: number | string;
+        description: string; reversed: boolean; created_at: string;
+        loans?: { contract: string } | null;
+      };
       setAutoTxns(
-        (data || []).map((r: any) => ({
+        ((data as Row[] | null) || []).map((r) => ({
           id: r.id,
           loanId: r.loan_id,
-          transactionId: r.transaction_id,
+          transactionId: r.transaction_id ?? undefined,
           generatedDate: r.generated_date,
           month: r.month,
           value: Number(r.value),

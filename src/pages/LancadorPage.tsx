@@ -137,10 +137,10 @@ export default function LancadorPage() {
                     <span className={`text-sm font-bold tabular-nums ${tx.type === "Entrada" ? "text-chart-entrada" : "text-chart-saida"}`}>
                       {tx.type === "Saída" ? "-" : "+"}{formatCurrency(tx.value)}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditTx(tx); setModalOpen(true); }}>
+                    <Button variant="ghost" size="icon" aria-label="Editar" className="h-8 w-8" onClick={() => { setEditTx(tx); setModalOpen(true); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(tx.id)}>
+                    <Button variant="ghost" size="icon" aria-label="Excluir" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(tx.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -153,6 +153,7 @@ export default function LancadorPage() {
 
       <Button
         onClick={() => { setEditTx(null); setModalOpen(true); }}
+        aria-label="Novo lançamento"
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
         size="icon"
       >
