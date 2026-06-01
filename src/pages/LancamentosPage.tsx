@@ -90,7 +90,7 @@ export default function LancamentosPage() {
       </div>
 
       {!readOnly && (
-        <Button onClick={handleNew} className="fixed bottom-20 md:bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40" size="icon">
+        <Button onClick={handleNew} aria-label="Novo lançamento" className="fixed bottom-20 md:bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40" size="icon">
           <Plus className="h-6 w-6" />
         </Button>
       )}
