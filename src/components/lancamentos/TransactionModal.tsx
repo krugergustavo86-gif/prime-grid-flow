@@ -138,17 +138,35 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
           </div>
 
           <div>
-            <Label>Categoria</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label>Categoria</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setAdding(v => !v)}>
+                <Plus className="h-3 w-3 mr-1" /> {adding ? "Cancelar" : "Nova"}
+              </Button>
+            </div>
+            {adding ? (
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="Nome da nova categoria"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCategory(); } }}
+                  autoFocus
+                />
+                <Button type="button" onClick={handleAddCategory} disabled={!newCatName.trim()}>Criar</Button>
+              </div>
+            ) : (
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div>
