@@ -99,6 +99,36 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
   const passivoTotal = kpis.totalAPagar;
   const patrimonioLiquido = kpis.netPatrimony;
 
+  // Indicadores financeiros
+  const debtRate = ativoTotal > 0 ? (passivoTotal / ativoTotal) * 100 : 0;
+  const ativoCirculante = kpis.cashAvailable + kpis.totalReceivables;
+  const passivoCirculante = payables.filter(p => p.status !== "Pago").reduce((s, p) => s + p.value, 0);
+  const liquidez = passivoCirculante > 0 ? ativoCirculante / passivoCirculante : 0;
+  const margem = periodTotals && periodTotals.entradas > 0 ? (periodTotals.lucro / periodTotals.entradas) * 100 : null;
+
+  const debtColor = debtRate < 50 ? "text-chart-entrada" : debtRate <= 70 ? "text-yellow-500" : "text-chart-saida";
+  const liqColor = liquidez >= 1.5 ? "text-chart-entrada" : liquidez >= 1 ? "text-yellow-500" : "text-chart-saida";
+  const margemColor = margem === null ? "text-muted-foreground" : margem >= 15 ? "text-chart-entrada" : margem >= 0 ? "text-yellow-500" : "text-chart-saida";
+
+  // Vencimentos de contas a pagar por semana (próximas 8 semanas)
+  const vencSemanas = useMemo(() => {
+    const buckets: Record<string, number> = {};
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    payables.filter(p => p.status !== "Pago" && p.dueDate).forEach(p => {
+      const d = new Date(p.dueDate!);
+      const diffDays = Math.floor((d.getTime() - now.getTime()) / 86400000);
+      const wk = Math.floor(diffDays / 7);
+      let label: string;
+      if (wk < 0) label = "Vencidas";
+      else if (wk === 0) label = "Esta semana";
+      else if (wk <= 8) label = `S+${wk}`;
+      else label = "9+ semanas";
+      buckets[label] = (buckets[label] || 0) + p.value;
+    });
+    const order = ["Vencidas", "Esta semana", "S+1", "S+2", "S+3", "S+4", "S+5", "S+6", "S+7", "S+8", "9+ semanas"];
+    return order.filter(k => buckets[k] !== undefined).map(k => ({ name: k, value: buckets[k] }));
+  }, [payables]);
+
   return (
     <div className="space-y-4 mt-6 pt-6 border-t-2 border-border">
       <h2 className="text-xl font-bold text-foreground">Visão Patrimonial Completa</h2>
@@ -112,6 +142,35 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
           <Kpi title="Patrimônio Líquido" value={patrimonioLiquido} color={patrimonioLiquido >= 0 ? "text-chart-entrada" : "text-chart-saida"} />
         </CardContent>
       </Card>
+
+      {/* Indicadores Financeiros */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Indicadores Financeiros</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Taxa de Endividamento</p>
+              <p className={`text-2xl font-bold tabular-nums ${debtColor}`}>{debtRate.toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Passivo / Ativo · {debtRate < 50 ? "Saudável" : debtRate <= 70 ? "Atenção" : "Crítico"}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Liquidez Corrente</p>
+              <p className={`text-2xl font-bold tabular-nums ${liqColor}`}>{liquidez.toFixed(2)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Caixa+Receber / A Pagar · {liquidez >= 1.5 ? "Forte" : liquidez >= 1 ? "Adequada" : "Insuficiente"}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Margem de Lucro</p>
+              <p className={`text-2xl font-bold tabular-nums ${margemColor}`}>{margem === null ? "—" : `${margem.toFixed(1)}%`}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Lucro / Receita do período</p>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
 
       {/* Patrimônio */}
       <Card>
