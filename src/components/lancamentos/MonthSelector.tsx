@@ -42,3 +42,5 @@ function MonthSelectorInner({ selectedMonth, onSelect }: MonthSelectorProps) {
     </div>
   );
 }
+
+export const MonthSelector = memo(MonthSelectorInner);
