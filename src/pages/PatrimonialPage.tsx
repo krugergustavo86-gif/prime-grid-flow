@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
 import { Loan } from "@/types";
-import { getMonthFromDate } from "@/utils/formatters";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceivablesTab } from "@/components/patrimonial/tabs/ReceivablesTab";
 import { LoansTab } from "@/components/patrimonial/tabs/LoansTab";
