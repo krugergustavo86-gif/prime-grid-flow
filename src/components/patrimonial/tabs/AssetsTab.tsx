@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Asset, AssetGroup } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -195,7 +195,7 @@ function AssetModal({ open, onClose, onSave, initial, defaultGroup }: { open: bo
   const [valueMarket, setValueMarket] = useState(initial?.valueMarket?.toString() || "");
   const [notes, setNotes] = useState(initial?.notes || "");
 
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setGroup(initial?.group || defaultGroup);
       setDescription(initial?.description || "");
@@ -204,7 +204,7 @@ function AssetModal({ open, onClose, onSave, initial, defaultGroup }: { open: bo
       setValueMarket(initial?.valueMarket?.toString() || "");
       setNotes(initial?.notes || "");
     }
-  });
+  }, [open, initial, defaultGroup]);
 
   const handleSubmit = () => {
     if (!description || !valueMarket) { toast.error("Preencha os campos obrigatórios"); return; }
