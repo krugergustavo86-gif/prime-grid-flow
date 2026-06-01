@@ -18,6 +18,7 @@ import { Download, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { PatrimonialReportSection } from "@/components/reports/PatrimonialReportSection";
 
 type PeriodType = "month" | "quarter" | "semester" | "year" | "custom";
 
@@ -491,6 +492,8 @@ export default function ReportsPage() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          <PatrimonialReportSection />
         </div>
       </div>
     </div>
