@@ -21,7 +21,11 @@ function Kpi({ title, value, color = "text-foreground" }: { title: string; value
   );
 }
 
-export function PatrimonialReportSection() {
+interface Props {
+  periodTotals?: { entradas: number; saidas: number; lucro: number };
+}
+
+export function PatrimonialReportSection({ periodTotals }: Props = {}) {
   const { transactions, config } = useTransactions();
   const { caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
   const patrimony = usePatrimony();
