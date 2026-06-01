@@ -56,8 +56,8 @@ export default function UsersPage() {
     try {
       const data = await callManageUsers("list");
       setUsers(data);
-    } catch (e: any) {
-      toast.error("Erro ao carregar usuários: " + e.message);
+    } catch (e: unknown) {
+      toast.error("Erro ao carregar usuários: " + errorMessage(e));
     }
     setLoading(false);
   }, []);
@@ -70,8 +70,8 @@ export default function UsersPage() {
       toast.success("Usuário criado com sucesso");
       setCreateOpen(false);
       fetchUsers();
-    } catch (e: any) {
-      toast.error("Erro: " + e.message);
+    } catch (e: unknown) {
+      toast.error("Erro: " + errorMessage(e));
     }
   };
 
@@ -80,8 +80,8 @@ export default function UsersPage() {
       await callManageUsers("update_role", { user_id: userId, role });
       toast.success("Perfil atualizado");
       fetchUsers();
-    } catch (e: any) {
-      toast.error("Erro: " + e.message);
+    } catch (e: unknown) {
+      toast.error("Erro: " + errorMessage(e));
     }
   };
 
@@ -90,8 +90,8 @@ export default function UsersPage() {
       await callManageUsers("delete", { user_id: userId });
       toast.success("Usuário removido");
       fetchUsers();
-    } catch (e: any) {
-      toast.error("Erro: " + e.message);
+    } catch (e: unknown) {
+      toast.error("Erro: " + errorMessage(e));
     }
   };
 
@@ -101,8 +101,8 @@ export default function UsersPage() {
       toast.success("Senha atualizada");
       setResetOpen(false);
       setSelectedUser(null);
-    } catch (e: any) {
-      toast.error("Erro: " + e.message);
+    } catch (e: unknown) {
+      toast.error("Erro: " + errorMessage(e));
     }
   };
 
