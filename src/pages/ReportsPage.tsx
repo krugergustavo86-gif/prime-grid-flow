@@ -492,6 +492,8 @@ export default function ReportsPage() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          <PatrimonialReportSection />
         </div>
       </div>
     </div>
