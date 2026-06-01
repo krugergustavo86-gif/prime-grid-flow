@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Transaction, TransactionType } from "@/types";
 import { getCategoriesByType } from "@/utils/categories";
+import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +29,9 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const { categories: customCats, addCategory } = useCustomCategories();
 
   useEffect(() => {
     if (editTransaction) {
@@ -47,7 +51,18 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     }
   }, [editTransaction, open]);
 
-  const categories = getCategoriesByType(type);
+  const builtIn = getCategoriesByType(type);
+  const custom = customCats.filter(c => c.type === type).map(c => c.name);
+  const categories = Array.from(new Set([...builtIn, ...custom]));
+
+  const handleAddCategory = async () => {
+    const created = await addCategory(newCatName, type);
+    if (created) {
+      setCategory(created.name);
+      setNewCatName("");
+      setAdding(false);
+    }
+  };
 
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
@@ -123,17 +138,35 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
           </div>
 
           <div>
-            <Label>Categoria</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label>Categoria</Label>
+              <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setAdding(v => !v)}>
+                <Plus className="h-3 w-3 mr-1" /> {adding ? "Cancelar" : "Nova"}
+              </Button>
+            </div>
+            {adding ? (
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="Nome da nova categoria"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCategory(); } }}
+                  autoFocus
+                />
+                <Button type="button" onClick={handleAddCategory} disabled={!newCatName.trim()}>Criar</Button>
+              </div>
+            ) : (
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div>
