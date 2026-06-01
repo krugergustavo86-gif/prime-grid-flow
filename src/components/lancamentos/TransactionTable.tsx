@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
