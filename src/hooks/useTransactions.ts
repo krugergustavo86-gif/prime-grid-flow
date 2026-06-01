@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Transaction } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { LOCKED_MONTHS } from "@/utils/lockedMonths";
 import { getMonthFromDate } from "@/utils/formatters";
 import { useAppConfig } from "@/hooks/useAppConfig";
