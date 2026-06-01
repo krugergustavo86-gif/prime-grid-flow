@@ -302,11 +302,27 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
               </BarChart>
             </ResponsiveContainer>
           )}
+          {vencSemanas.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">Vencimentos por semana</p>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={vencSemanas}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {vencSemanas.map((d, i) => <Cell key={i} fill={d.name === "Vencidas" ? "#A32D2D" : "#0F6E56"} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Descrição</TableHead>
-                <TableHead>Responsável</TableHead>
+                <TableHead>Fornecedor</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
@@ -315,17 +331,25 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
             <TableBody>
               {payables.filter(p => p.status !== "Pago").length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Sem contas pendentes</TableCell></TableRow>
-              ) : payables.filter(p => p.status !== "Pago").map(p => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.description}</TableCell>
-                  <TableCell>{p.responsible || "—"}</TableCell>
-                  <TableCell>{p.dueDate || "—"}</TableCell>
-                  <TableCell>{p.status}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(p.value)}</TableCell>
-                </TableRow>
-              ))}
+              ) : payables.filter(p => p.status !== "Pago").map(p => {
+                const vencida = p.dueDate && p.dueDate < today;
+                return (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.description}</TableCell>
+                    <TableCell>{p.responsible || "—"}</TableCell>
+                    <TableCell className={vencida ? "text-chart-saida font-semibold" : ""}>{p.dueDate || "—"}</TableCell>
+                    <TableCell>
+                      <span className={vencida ? "text-chart-saida font-semibold" : "text-chart-entrada font-semibold"}>
+                        {vencida ? "Vencida" : "A vencer"}
+                      </span>
+                    </TableCell>
+                    <TableCell className={`text-right tabular-nums ${vencida ? "text-chart-saida" : ""}`}>{formatCurrency(p.value)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
+
         </CardContent>
       </Card>
 
