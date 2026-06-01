@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -7,7 +8,7 @@ interface MonthSummaryCardsProps {
   balanco: number;
 }
 
-export function MonthSummaryCards({ entradas, saidas, balanco }: MonthSummaryCardsProps) {
+function MonthSummaryCardsInner({ entradas, saidas, balanco }: MonthSummaryCardsProps) {
   return (
     <div className="grid grid-cols-3 gap-3">
       <div className="bg-card rounded-lg border p-3">
