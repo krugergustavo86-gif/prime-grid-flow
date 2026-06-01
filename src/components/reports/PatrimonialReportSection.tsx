@@ -32,15 +32,22 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
   const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual);
   const { assets, receivables, doubtfulCredits, loans, payables } = patrimony;
 
-  // Composição patrimonial
+  // Composição patrimonial - totais por tipo
   const compAssets = useMemo(() => {
-    const m: Record<string, number> = {};
-    assets.forEach(a => { m[a.group] = (m[a.group] || 0) + a.valueMarket; });
-    const arr = Object.entries(m).map(([name, value]) => ({ name, value }));
-    arr.push({ name: "Caixa/Invest.", value: kpis.cashAvailable });
-    arr.push({ name: "A Receber", value: kpis.totalReceivables });
+    const m: Record<string, { value: number; count: number }> = {};
+    assets.forEach(a => {
+      const g = a.group || "Outros";
+      if (!m[g]) m[g] = { value: 0, count: 0 };
+      m[g].value += a.valueMarket;
+      m[g].count += 1;
+    });
+    const arr = Object.entries(m).map(([name, data]) => ({ name, value: data.value, count: data.count }));
+    arr.push({ name: "Caixa/Invest.", value: kpis.cashAvailable, count: 1 });
+    arr.push({ name: "A Receber", value: kpis.totalReceivables, count: receivables.filter(r => r.status !== "Recebido").length });
     return arr.filter(d => d.value > 0).sort((a, b) => b.value - a.value);
-  }, [assets, kpis]);
+  }, [assets, kpis, receivables]);
+
+  const totalAtivos = compAssets.reduce((s, a) => s + a.value, 0);
 
   // Empréstimos
   const loanStats = useMemo(() => {
@@ -195,25 +202,33 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Grupo</TableHead>
-                <TableHead>Placa</TableHead>
-                <TableHead className="text-right">FIPE</TableHead>
-                <TableHead className="text-right">Valor Mercado</TableHead>
+                <TableHead>Tipo de Ativo</TableHead>
+                <TableHead className="text-right">Unidades</TableHead>
+                <TableHead className="text-right">Valor Total</TableHead>
+                <TableHead className="text-right">% do Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {assets.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Sem ativos</TableCell></TableRow>
-              ) : assets.map(a => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-medium">{a.description}</TableCell>
-                  <TableCell>{a.group}</TableCell>
-                  <TableCell>{a.plate || "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{a.valueFipe ? formatCurrency(a.valueFipe) : "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(a.valueMarket)}</TableCell>
-                </TableRow>
-              ))}
+              {compAssets.length === 0 ? (
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Sem ativos</TableCell></TableRow>
+              ) : (
+                <>
+                  {compAssets.map(a => (
+                    <TableRow key={a.name}>
+                      <TableCell className="font-medium">{a.name}</TableCell>
+                      <TableCell className="text-right tabular-nums">{a.count}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatCurrency(a.value)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{totalAtivos > 0 ? ((a.value / totalAtivos) * 100).toFixed(1) : "0.0"}%</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold border-t-2">
+                    <TableCell>Total Patrimônio</TableCell>
+                    <TableCell className="text-right tabular-nums">{compAssets.reduce((s, a) => s + a.count, 0)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(totalAtivos)}</TableCell>
+                    <TableCell className="text-right tabular-nums">100%</TableCell>
+                  </TableRow>
+                </>
+              )}
             </TableBody>
           </Table>
         </CardContent>
