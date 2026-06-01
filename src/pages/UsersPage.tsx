@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Trash2, KeyRound, UserCog, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { errorMessage } from "@/utils/errors";
 
 interface UserItem {
   id: string;
