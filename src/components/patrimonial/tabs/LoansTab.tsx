@@ -172,22 +172,17 @@ export function LoansTab({ loans, addLoan, updateLoan, deleteLoan, readOnly, onP
                     {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
-                                disabled={l.paidInstallments >= l.totalInstallments}
-                                onClick={() => handlePayClick(l)}
-                              >
-                                <CheckCircle className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{isBoleto(l) ? "Pagar boleto (valor manual)" : "Pagar parcela"}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-success/40 text-success hover:text-success hover:bg-success/10"
+                          disabled={l.paidInstallments >= l.totalInstallments}
+                          onClick={() => handlePayClick(l)}
+                          aria-label={isBoleto(l) ? "Pagar boleto" : "Pagar parcela"}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          Pagar
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(l); setModalOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
