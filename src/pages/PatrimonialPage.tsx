@@ -35,7 +35,8 @@ export default function PatrimonialPage() {
     });
   }, [addTransaction]);
   const patrimony = usePatrimony();
-  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual);
+  const { totalValue: stockTotal } = useStock();
+  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
 
   return (
     <div className="flex flex-col h-full">
