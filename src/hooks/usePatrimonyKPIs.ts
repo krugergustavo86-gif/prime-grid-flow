@@ -48,7 +48,8 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       totalAssets,
       totalLoanBalance,
       totalPayables,
+      stockTotal,
       debtRate,
     };
-  }, [assets, receivables, doubtfulCredits, cashEntries, loans, payables, numSocios, caixaAtual]);
+  }, [assets, receivables, doubtfulCredits, cashEntries, loans, payables, numSocios, caixaAtual, stockTotal]);
 }
