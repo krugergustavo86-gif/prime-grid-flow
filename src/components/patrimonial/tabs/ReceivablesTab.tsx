@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { StockRotativoSection } from "@/components/patrimonial/StockRotativoSection";
 
 interface Props {
   receivables: Receivable[];
@@ -215,6 +216,9 @@ export function ReceivablesTab(props: Props) {
           </table>
         </div>
       </div>
+
+      {/* Estoque Rotativo */}
+      <StockRotativoSection readOnly={readOnly} />
 
       {/* Doubtful Credits */}
       <div className="bg-warning/30 rounded-lg border border-warning-foreground/20">

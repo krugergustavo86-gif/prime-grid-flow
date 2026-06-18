@@ -481,6 +481,71 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_quantity: number
+          old_quantity: number
+          stock_item_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_quantity: number
+          old_quantity: number
+          stock_item_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_quantity?: number
+          old_quantity?: number
+          stock_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_history_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          quantity: number
+          unit_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          quantity?: number
+          unit_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          quantity?: number
+          unit_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           category: string

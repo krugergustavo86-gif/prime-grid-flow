@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
+import { useStock } from "@/hooks/useStock";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +35,8 @@ export default function PatrimonialPage() {
     });
   }, [addTransaction]);
   const patrimony = usePatrimony();
-  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual);
+  const { totalValue: stockTotal } = useStock();
+  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
 
   return (
     <div className="flex flex-col h-full">

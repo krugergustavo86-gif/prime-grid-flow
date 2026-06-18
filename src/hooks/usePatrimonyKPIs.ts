@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { PatrimonyData } from "@/types";
 
-export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number) {
+export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number, stockTotal: number = 0) {
   const { assets, receivables, doubtfulCredits, cashEntries, loans, payables } = data;
   return useMemo(() => {
     const totalAssets = assets.reduce((s, a) => s + a.valueMarket, 0);
@@ -31,7 +31,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       .filter(p => p.status !== "Pago")
       .reduce((s, p) => s + p.value, 0);
 
-    const grossPatrimony = totalAssets + totalReceivables + totalCash;
+    const grossPatrimony = totalAssets + totalReceivables + totalCash + stockTotal;
     const totalAPagar = totalLoanBalance + totalPayables;
     const netPatrimony = grossPatrimony - totalAPagar;
     const perPartner = numSocios > 0 ? netPatrimony / numSocios : netPatrimony;
@@ -48,7 +48,8 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       totalAssets,
       totalLoanBalance,
       totalPayables,
+      stockTotal,
       debtRate,
     };
-  }, [assets, receivables, doubtfulCredits, cashEntries, loans, payables, numSocios, caixaAtual]);
+  }, [assets, receivables, doubtfulCredits, cashEntries, loans, payables, numSocios, caixaAtual, stockTotal]);
 }
