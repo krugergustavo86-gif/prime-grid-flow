@@ -217,6 +217,9 @@ export function ReceivablesTab(props: Props) {
         </div>
       </div>
 
+      {/* Estoque Rotativo */}
+      <StockRotativoSection readOnly={readOnly} />
+
       {/* Doubtful Credits */}
       <div className="bg-warning/30 rounded-lg border border-warning-foreground/20">
         <div className="flex items-center justify-between p-4 border-b border-warning-foreground/20">
