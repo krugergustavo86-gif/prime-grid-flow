@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
+import { useStock } from "@/hooks/useStock";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { useAuth } from "@/hooks/useAuth";
