@@ -31,7 +31,7 @@ export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAt
       .filter(p => p.status !== "Pago")
       .reduce((s, p) => s + p.value, 0);
 
-    const grossPatrimony = totalAssets + totalReceivables + totalCash;
+    const grossPatrimony = totalAssets + totalReceivables + totalCash + stockTotal;
     const totalAPagar = totalLoanBalance + totalPayables;
     const netPatrimony = grossPatrimony - totalAPagar;
     const perPartner = numSocios > 0 ? netPatrimony / numSocios : netPatrimony;
