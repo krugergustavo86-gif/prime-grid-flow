@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { PatrimonyData } from "@/types";
 
-export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number) {
+export function usePatrimonyKPIs(data: PatrimonyData, numSocios: number, caixaAtual?: number, stockTotal: number = 0) {
   const { assets, receivables, doubtfulCredits, cashEntries, loans, payables } = data;
   return useMemo(() => {
     const totalAssets = assets.reduce((s, a) => s + a.valueMarket, 0);
