@@ -19,7 +19,7 @@ export function PatrimonyKPICards({ grossPatrimony, netPatrimony, perPartner, to
     { label: "PATRIMÔNIO LÍQUIDO", value: formatCurrency(netPatrimony), icon: TrendingUp, accent: "text-chart-entrada" },
     { label: "POR SÓCIO", value: formatCurrency(perPartner), icon: Users, accent: "text-chart-blue-medium" },
     { label: "TOTAL A PAGAR", value: formatCurrency(totalAPagar), icon: TrendingDown, accent: "text-destructive" },
-    { label: "CAIXA DISPONÍVEL", value: formatCurrency(cashAvailable), icon: CreditCard, accent: "text-primary" },
+    { label: "CAIXA DISPONÍVEL", value: formatCurrency(cashAvailable), icon: CreditCard, accent: "text-primary", sub: "saldo operacional (conta)" },
     { label: "TAXA ENDIVIDAMENTO", value: `${debtPct}%`, icon: Percent, accent: debtColor, sub: "meta: ≤ 28%" },
   ];
 
