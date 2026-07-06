@@ -21,6 +21,7 @@ interface Props {
   readOnly?: boolean;
   cashAndInvestments?: number;
   receivables?: number;
+  stockTotal?: number;
   totalLoans?: number;
   totalPayables?: number;
 }
