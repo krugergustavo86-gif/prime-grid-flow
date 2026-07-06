@@ -105,6 +105,7 @@ export default function PatrimonialPage() {
               updateAsset={patrimony.updateAsset}
               deleteAsset={patrimony.deleteAsset}
               readOnly={readOnly}
+              stockTotal={kpis.stockTotal}
               cashAndInvestments={kpis.cashAvailable + patrimony.cashEntries.filter(c => !c.description.toLowerCase().includes("saldo em conta")).reduce((s, c) => s + c.balance, 0)}
               receivables={kpis.totalReceivables}
               totalLoans={kpis.totalLoanBalance}
