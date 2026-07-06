@@ -40,7 +40,7 @@ const CHART_COLORS = [
   "hsl(180, 60%, 35%)", "hsl(280, 45%, 45%)",
 ];
 
-export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly, cashAndInvestments = 0, receivables = 0, totalLoans = 0, totalPayables = 0 }: Props) {
+export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly, cashAndInvestments = 0, receivables = 0, stockTotal = 0, totalLoans = 0, totalPayables = 0 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [defaultGroup, setDefaultGroup] = useState<AssetGroup>("Veículos");
@@ -54,10 +54,11 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly
     ...assetGroupTotals,
     ...(cashAndInvestments > 0 ? [{ name: "💰 Caixa e Investimentos", value: cashAndInvestments }] : []),
     ...(receivables > 0 ? [{ name: "📥 Contas a Receber", value: receivables }] : []),
+    ...(stockTotal > 0 ? [{ name: "📦 Estoque Rotativo", value: stockTotal }] : []),
   ];
 
   const totalPhysical = assets.reduce((s, a) => s + a.valueMarket, 0);
-  const totalBruto = totalPhysical + cashAndInvestments + receivables;
+  const totalBruto = totalPhysical + cashAndInvestments + receivables + stockTotal;
   const totalLiquido = totalBruto - totalLoans - totalPayables;
 
   const handleSave = (data: Omit<Asset, "id">) => {
