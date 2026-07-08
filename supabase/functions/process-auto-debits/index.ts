@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
 
         // Create the transaction
         const description = `[Auto] ${loan.contract}${loan.bank_account ? ` - ${loan.bank_account}` : ""}`;
-        const category = loan.debit_category || "Empréstimos/Financiamentos";
+
 
         const { data: txData, error: txErr } = await supabase
           .from("transactions")
