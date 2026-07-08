@@ -119,6 +119,23 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Anti-duplicate: skip if a manual transaction with same month/value/category already exists
+        const category = loan.debit_category || "Empréstimos/Financiamentos";
+        const { data: manualDup } = await supabase
+          .from("transactions")
+          .select("id")
+          .eq("month", monthKey)
+          .eq("value", loan.installment_value)
+          .eq("category", category)
+          .eq("type", "Saída")
+          .not("description", "ilike", "[Auto]%")
+          .limit(1);
+
+        if (manualDup && manualDup.length > 0) {
+          results.skipped++;
+          continue;
+        }
+
         // Create the transaction
         const description = `[Auto] ${loan.contract}${loan.bank_account ? ` - ${loan.bank_account}` : ""}`;
         const category = loan.debit_category || "Empréstimos/Financiamentos";
