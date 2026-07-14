@@ -1,1 +1,4 @@
 project_id = "nwnfqsjxyqbleikbgvqz"
+
+[functions.ops-ingest]
+verify_jwt = false
