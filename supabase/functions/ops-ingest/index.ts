@@ -39,7 +39,10 @@ Deno.serve(async (req) => {
       cliente,
       area,
       forma_pagamento,
+      data_vencimento,
+      pendente,
     } = body ?? {};
+
 
     const valueNum = Number(valor);
     if (!Number.isFinite(valueNum) || valueNum <= 0) {
