@@ -71,7 +71,9 @@ export default function LancamentosPage() {
           <TabsList>
             <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
             <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
+            <TabsTrigger value="boletos">Boletos Pendentes</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="lancamentos" className="space-y-4 mt-4">
             <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
