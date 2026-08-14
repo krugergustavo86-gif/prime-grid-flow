@@ -10,6 +10,8 @@ import { DonutCharts } from "@/components/lancamentos/DonutCharts";
 import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
+import { PendingBoletosTab } from "@/components/lancamentos/PendingBoletosTab";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
