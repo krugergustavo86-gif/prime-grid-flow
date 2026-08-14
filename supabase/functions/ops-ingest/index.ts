@@ -94,6 +94,42 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Boletos NÃO entram direto no fluxo: ficam pendentes até confirmação manual no Cash
+    const isBoleto = String(forma_pagamento ?? "").toLowerCase().includes("boleto");
+    const isPending = pendente === true || (isBoleto && normalizedType === "Entrada");
+
+    if (isPending) {
+      const { data: pendingRow, error: pendingError } = await supabase
+        .from("pending_boletos")
+        .insert({
+          os_number: origem_os ? String(origem_os) : null,
+          client_name: cliente ? String(cliente) : null,
+          area: area ? String(area) : null,
+          value: valueNum,
+          due_date: typeof data_vencimento === "string" && data_vencimento.length > 0 ? data_vencimento : data,
+          entry_date: data,
+          payment_method: forma_pagamento ? String(forma_pagamento) : null,
+          description: finalDescription,
+          category: finalCategory,
+          notes,
+          status: "pendente",
+        })
+        .select()
+        .single();
+
+      if (pendingError) {
+        return new Response(JSON.stringify({ error: pendingError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, status: "pendente", pending_boleto: pendingRow }),
+        { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { data: inserted, error } = await supabase
       .from("transactions")
       .insert({
@@ -116,10 +152,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, transaction: inserted }), {
+    return new Response(JSON.stringify({ success: true, status: "confirmado", transaction: inserted }), {
       status: 201,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
