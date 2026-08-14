@@ -442,6 +442,74 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_boletos: {
+        Row: {
+          area: string | null
+          category: string
+          client_name: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          entry_date: string
+          id: string
+          notes: string | null
+          os_number: string | null
+          payment_method: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          os_number?: string | null
+          payment_method?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          area?: string | null
+          category?: string
+          client_name?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          os_number?: string | null
+          payment_method?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_boletos_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receivables: {
         Row: {
           created_at: string
