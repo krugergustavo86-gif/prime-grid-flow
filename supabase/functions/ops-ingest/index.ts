@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
       forma_pagamento,
       data_vencimento,
       pendente,
+      status,
     } = body ?? {};
+
 
 
     const valueNum = Number(valor);
