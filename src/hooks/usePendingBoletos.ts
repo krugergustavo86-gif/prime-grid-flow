@@ -127,8 +127,9 @@ export function usePendingBoletos() {
   const rejectBoleto = useCallback(async (id: string) => {
     const { error } = await supabase
       .from("pending_boletos")
-      .update({ status: "rejeitado" })
+      .delete()
       .eq("id", id);
+
     if (error) {
       console.error(error);
       toast.error("Erro ao rejeitar boleto");
