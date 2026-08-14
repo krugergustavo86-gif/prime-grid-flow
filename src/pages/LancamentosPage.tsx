@@ -10,6 +10,8 @@ import { DonutCharts } from "@/components/lancamentos/DonutCharts";
 import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
+import { PendingBoletosTab } from "@/components/lancamentos/PendingBoletosTab";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
@@ -69,7 +71,9 @@ export default function LancamentosPage() {
           <TabsList>
             <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
             <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
+            <TabsTrigger value="boletos">Boletos Pendentes</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="lancamentos" className="space-y-4 mt-4">
             <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
@@ -86,7 +90,12 @@ export default function LancamentosPage() {
               readOnly={readOnly}
             />
           </TabsContent>
+
+          <TabsContent value="boletos" className="mt-4">
+            <PendingBoletosTab readOnly={readOnly} />
+          </TabsContent>
         </Tabs>
+
       </div>
 
       {!readOnly && (
