@@ -104,13 +104,16 @@ export function PendingBoletosTab({ readOnly }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     {b.osNumber && <Badge variant="outline">OS #{b.osNumber}</Badge>}
                     {b.area && <Badge variant="secondary">{b.area}</Badge>}
+                    {b.category && <Badge variant="secondary">{b.category}</Badge>}
                     <Badge>Pendente</Badge>
                   </div>
                   <p className="font-medium text-foreground mt-2 truncate">{b.clientName || b.description}</p>
+                  <p className="text-xs text-muted-foreground truncate">{b.description}</p>
                   <p className="text-xs text-muted-foreground">
                     Vencimento: {b.dueDate ? formatDateBR(b.dueDate) : "—"}
                     {b.paymentMethod ? ` · ${b.paymentMethod}` : ""}
                   </p>
+
                 </div>
                 <p className="font-semibold text-success whitespace-nowrap">{formatCurrency(b.value)}</p>
               </div>
