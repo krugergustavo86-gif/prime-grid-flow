@@ -17,10 +17,16 @@ export function PendingBoletosTab({ readOnly }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [area, setArea] = useState("all");
+  const [category, setCategory] = useState("all");
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const areas = useMemo(
     () => Array.from(new Set(boletos.map(b => b.area).filter((a): a is string => Boolean(a)))).sort(),
+    [boletos]
+  );
+
+  const categories = useMemo(
+    () => Array.from(new Set(boletos.map(b => b.category).filter(Boolean))).sort(),
     [boletos]
   );
 
@@ -29,8 +35,9 @@ export function PendingBoletosTab({ readOnly }: Props) {
     if (from && ref < from) return false;
     if (to && ref > to) return false;
     if (area !== "all" && b.area !== area) return false;
+    if (category !== "all" && b.category !== category) return false;
     return true;
-  }), [boletos, from, to, area]);
+  }), [boletos, from, to, area, category]);
 
   const total = filtered.reduce((s, b) => s + b.value, 0);
 
@@ -46,7 +53,7 @@ export function PendingBoletosTab({ readOnly }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-card border rounded-lg p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-card border rounded-lg p-4">
         <div className="space-y-1">
           <Label htmlFor="boleto-from">De</Label>
           <Input id="boleto-from" type="date" value={from} onChange={e => setFrom(e.target.value)} />
@@ -65,7 +72,18 @@ export function PendingBoletosTab({ readOnly }: Props) {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1">
+          <Label>Categoria</Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">{filtered.length} boleto(s) aguardando confirmação</span>
@@ -86,13 +104,16 @@ export function PendingBoletosTab({ readOnly }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     {b.osNumber && <Badge variant="outline">OS #{b.osNumber}</Badge>}
                     {b.area && <Badge variant="secondary">{b.area}</Badge>}
+                    {b.category && <Badge variant="secondary">{b.category}</Badge>}
                     <Badge>Pendente</Badge>
                   </div>
                   <p className="font-medium text-foreground mt-2 truncate">{b.clientName || b.description}</p>
+                  <p className="text-xs text-muted-foreground truncate">{b.description}</p>
                   <p className="text-xs text-muted-foreground">
                     Vencimento: {b.dueDate ? formatDateBR(b.dueDate) : "—"}
                     {b.paymentMethod ? ` · ${b.paymentMethod}` : ""}
                   </p>
+
                 </div>
                 <p className="font-semibold text-success whitespace-nowrap">{formatCurrency(b.value)}</p>
               </div>

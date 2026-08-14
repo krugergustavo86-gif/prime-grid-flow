@@ -41,7 +41,9 @@ Deno.serve(async (req) => {
       forma_pagamento,
       data_vencimento,
       pendente,
+      status,
     } = body ?? {};
+
 
 
     const valueNum = Number(valor);
@@ -96,7 +98,10 @@ Deno.serve(async (req) => {
 
     // Boletos NÃO entram direto no fluxo: ficam pendentes até confirmação manual no Cash
     const isBoleto = String(forma_pagamento ?? "").toLowerCase().includes("boleto");
-    const isPending = pendente === true || (isBoleto && normalizedType === "Entrada");
+    const statusStr = String(status ?? "").toLowerCase();
+    const isPending = statusStr === "pendente" || statusStr === "a_confirmar" ||
+      pendente === true || (isBoleto && normalizedType === "Entrada");
+
 
     if (isPending) {
       const { data: pendingRow, error: pendingError } = await supabase
