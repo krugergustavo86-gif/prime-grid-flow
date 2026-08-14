@@ -90,7 +90,12 @@ export default function LancamentosPage() {
               readOnly={readOnly}
             />
           </TabsContent>
+
+          <TabsContent value="boletos" className="mt-4">
+            <PendingBoletosTab readOnly={readOnly} />
+          </TabsContent>
         </Tabs>
+
       </div>
 
       {!readOnly && (
