@@ -23,12 +23,43 @@ interface Props {
 }
 
 export function PendingBoletosTab({ readOnly }: Props) {
-  const { boletos, loading, confirmBoleto, rejectBoleto } = usePendingBoletos();
+  const { boletos, loading, confirmBoleto, rejectBoleto, splitBoleto } = usePendingBoletos();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [area, setArea] = useState("all");
   const [category, setCategory] = useState("all");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [splitTarget, setSplitTarget] = useState<PendingBoleto | null>(null);
+  const [dueDates, setDueDates] = useState<string[]>([]);
+  const [splitting, setSplitting] = useState(false);
+
+  const openSplit = (b: PendingBoleto) => {
+    const start = b.dueDate || b.entryDate;
+    setSplitTarget(b);
+    setDueDates([start, addMonths(start, 1)]);
+  };
+
+  const setCount = (n: number) => {
+    if (!splitTarget || n < 2 || n > 36) return;
+    const start = splitTarget.dueDate || splitTarget.entryDate;
+    setDueDates(prev => Array.from({ length: n }, (_, i) => prev[i] || addMonths(start, i)));
+  };
+
+  const parcelValues = useMemo(() => {
+    if (!splitTarget) return [];
+    const n = dueDates.length;
+    const total = Math.round(splitTarget.value * 100);
+    const base = Math.floor(total / n);
+    return Array.from({ length: n }, (_, i) => (i === n - 1 ? total - base * (n - 1) : base) / 100);
+  }, [splitTarget, dueDates]);
+
+  const handleSplit = async () => {
+    if (!splitTarget) return;
+    setSplitting(true);
+    const ok = await splitBoleto(splitTarget, dueDates);
+    setSplitting(false);
+    if (ok) setSplitTarget(null);
+  };
 
   const areas = useMemo(
     () => Array.from(new Set(boletos.map(b => b.area).filter((a): a is string => Boolean(a)))).sort(),
