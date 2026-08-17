@@ -160,10 +160,10 @@ export function PendingBoletosTab({ readOnly }: Props) {
               </div>
 
               {!readOnly && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 min-w-[140px]"
                     disabled={busyId === b.id}
                     onClick={() => handle(b.id, () => confirmBoleto(b))}
                   >
@@ -171,8 +171,17 @@ export function PendingBoletosTab({ readOnly }: Props) {
                   </Button>
                   <Button
                     size="sm"
+                    variant="outline"
+                    className="flex-1 min-w-[100px]"
+                    disabled={busyId === b.id}
+                    onClick={() => openSplit(b)}
+                  >
+                    <Split className="h-4 w-4 mr-1" /> Parcelar
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="destructive"
-                    className="flex-1"
+                    className="flex-1 min-w-[100px]"
                     disabled={busyId === b.id}
                     onClick={() => handle(b.id, () => rejectBoleto(b.id))}
                   >
@@ -184,6 +193,56 @@ export function PendingBoletosTab({ readOnly }: Props) {
           ))}
         </div>
       )}
+
+      <Dialog open={!!splitTarget} onOpenChange={o => !o && setSplitTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Parcelar boleto</DialogTitle>
+          </DialogHeader>
+          {splitTarget && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {splitTarget.clientName || splitTarget.description} · Total{" "}
+                <span className="font-semibold text-foreground">{formatCurrency(splitTarget.value)}</span>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="parcelas">Número de parcelas</Label>
+                <Input
+                  id="parcelas"
+                  type="number"
+                  min={2}
+                  max={36}
+                  value={dueDates.length}
+                  onChange={e => setCount(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {dueDates.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs w-20 shrink-0 text-muted-foreground">
+                      Parcela {i + 1}/{dueDates.length}
+                    </span>
+                    <Input
+                      type="date"
+                      value={d}
+                      onChange={e =>
+                        setDueDates(prev => prev.map((v, idx) => (idx === i ? e.target.value : v)))
+                      }
+                    />
+                    <span className="text-xs w-24 text-right shrink-0">{formatCurrency(parcelValues[i] ?? 0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSplitTarget(null)}>Cancelar</Button>
+            <Button onClick={handleSplit} disabled={splitting}>
+              {splitting && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Criar parcelas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
