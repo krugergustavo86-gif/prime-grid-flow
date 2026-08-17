@@ -6,7 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, Loader2, XCircle, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { CheckCircle, Loader2, XCircle, FileText, Split } from "lucide-react";
+import type { PendingBoleto } from "@/hooks/usePendingBoletos";
+
+function addMonths(dateStr: string, months: number) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const base = new Date(y, m - 1 + months, 1);
+  const last = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+  base.setDate(Math.min(d, last));
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
+}
 
 interface Props {
   readOnly?: boolean;
