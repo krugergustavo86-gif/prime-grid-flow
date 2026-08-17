@@ -6,19 +6,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, Loader2, XCircle, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { CheckCircle, Loader2, XCircle, FileText, Split } from "lucide-react";
+import type { PendingBoleto } from "@/hooks/usePendingBoletos";
+
+function addMonths(dateStr: string, months: number) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const base = new Date(y, m - 1 + months, 1);
+  const last = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+  base.setDate(Math.min(d, last));
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
+}
 
 interface Props {
   readOnly?: boolean;
 }
 
 export function PendingBoletosTab({ readOnly }: Props) {
-  const { boletos, loading, confirmBoleto, rejectBoleto } = usePendingBoletos();
+  const { boletos, loading, confirmBoleto, rejectBoleto, splitBoleto } = usePendingBoletos();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [area, setArea] = useState("all");
   const [category, setCategory] = useState("all");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [splitTarget, setSplitTarget] = useState<PendingBoleto | null>(null);
+  const [dueDates, setDueDates] = useState<string[]>([]);
+  const [splitting, setSplitting] = useState(false);
+
+  const openSplit = (b: PendingBoleto) => {
+    const start = b.dueDate || b.entryDate;
+    setSplitTarget(b);
+    setDueDates([start, addMonths(start, 1)]);
+  };
+
+  const setCount = (n: number) => {
+    if (!splitTarget || n < 2 || n > 36) return;
+    const start = splitTarget.dueDate || splitTarget.entryDate;
+    setDueDates(prev => Array.from({ length: n }, (_, i) => prev[i] || addMonths(start, i)));
+  };
+
+  const parcelValues = useMemo(() => {
+    if (!splitTarget) return [];
+    const n = dueDates.length;
+    const total = Math.round(splitTarget.value * 100);
+    const base = Math.floor(total / n);
+    return Array.from({ length: n }, (_, i) => (i === n - 1 ? total - base * (n - 1) : base) / 100);
+  }, [splitTarget, dueDates]);
+
+  const handleSplit = async () => {
+    if (!splitTarget) return;
+    setSplitting(true);
+    const ok = await splitBoleto(splitTarget, dueDates);
+    setSplitting(false);
+    if (ok) setSplitTarget(null);
+  };
 
   const areas = useMemo(
     () => Array.from(new Set(boletos.map(b => b.area).filter((a): a is string => Boolean(a)))).sort(),
@@ -119,10 +160,10 @@ export function PendingBoletosTab({ readOnly }: Props) {
               </div>
 
               {!readOnly && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 min-w-[140px]"
                     disabled={busyId === b.id}
                     onClick={() => handle(b.id, () => confirmBoleto(b))}
                   >
@@ -130,8 +171,17 @@ export function PendingBoletosTab({ readOnly }: Props) {
                   </Button>
                   <Button
                     size="sm"
+                    variant="outline"
+                    className="flex-1 min-w-[100px]"
+                    disabled={busyId === b.id}
+                    onClick={() => openSplit(b)}
+                  >
+                    <Split className="h-4 w-4 mr-1" /> Parcelar
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="destructive"
-                    className="flex-1"
+                    className="flex-1 min-w-[100px]"
                     disabled={busyId === b.id}
                     onClick={() => handle(b.id, () => rejectBoleto(b.id))}
                   >
@@ -143,6 +193,56 @@ export function PendingBoletosTab({ readOnly }: Props) {
           ))}
         </div>
       )}
+
+      <Dialog open={!!splitTarget} onOpenChange={o => !o && setSplitTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Parcelar boleto</DialogTitle>
+          </DialogHeader>
+          {splitTarget && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {splitTarget.clientName || splitTarget.description} · Total{" "}
+                <span className="font-semibold text-foreground">{formatCurrency(splitTarget.value)}</span>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="parcelas">Número de parcelas</Label>
+                <Input
+                  id="parcelas"
+                  type="number"
+                  min={2}
+                  max={36}
+                  value={dueDates.length}
+                  onChange={e => setCount(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {dueDates.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs w-20 shrink-0 text-muted-foreground">
+                      Parcela {i + 1}/{dueDates.length}
+                    </span>
+                    <Input
+                      type="date"
+                      value={d}
+                      onChange={e =>
+                        setDueDates(prev => prev.map((v, idx) => (idx === i ? e.target.value : v)))
+                      }
+                    />
+                    <span className="text-xs w-24 text-right shrink-0">{formatCurrency(parcelValues[i] ?? 0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSplitTarget(null)}>Cancelar</Button>
+            <Button onClick={handleSplit} disabled={splitting}>
+              {splitting && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Criar parcelas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
