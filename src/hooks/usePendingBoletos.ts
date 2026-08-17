@@ -124,6 +124,55 @@ export function usePendingBoletos() {
     return true;
   }, []);
 
+  const splitBoleto = useCallback(async (boleto: PendingBoleto, dueDates: string[]) => {
+    const n = dueDates.length;
+    if (n < 2) {
+      toast.error("Informe pelo menos 2 parcelas");
+      return false;
+    }
+    const totalCents = Math.round(boleto.value * 100);
+    const base = Math.floor(totalCents / n);
+    const baseName = boleto.clientName || boleto.description;
+
+    const rows = dueDates.map((due, i) => {
+      const cents = i === n - 1 ? totalCents - base * (n - 1) : base;
+      return {
+        os_number: boleto.osNumber,
+        client_name: `${baseName} - Parcela ${i + 1}/${n}`,
+        area: boleto.area,
+        value: cents / 100,
+        due_date: due,
+        entry_date: boleto.entryDate,
+        payment_method: boleto.paymentMethod,
+        description: `${baseName} - Parcela ${i + 1}/${n}`,
+        category: boleto.category,
+        notes: boleto.notes,
+        status: "pendente",
+      };
+    });
+
+    const { data, error } = await supabase.from("pending_boletos").insert(rows).select();
+    if (error) {
+      console.error(error);
+      toast.error("Erro ao parcelar boleto");
+      return false;
+    }
+
+    const { error: delError } = await supabase.from("pending_boletos").delete().eq("id", boleto.id);
+    if (delError) {
+      console.error(delError);
+      toast.error("Erro ao remover boleto original");
+      return false;
+    }
+
+    setBoletos(prev => [
+      ...prev.filter(b => b.id !== boleto.id),
+      ...((data ?? []) as Row[]).map(mapRow),
+    ].sort((a, b) => (a.dueDate || "") < (b.dueDate || "") ? -1 : 1));
+    toast.success(`Boleto dividido em ${n} parcelas`);
+    return true;
+  }, []);
+
   const rejectBoleto = useCallback(async (id: string) => {
     const { error } = await supabase
       .from("pending_boletos")
@@ -140,5 +189,5 @@ export function usePendingBoletos() {
     return true;
   }, []);
 
-  return { boletos, loading, reload: load, confirmBoleto, rejectBoleto };
+  return { boletos, loading, reload: load, confirmBoleto, rejectBoleto, splitBoleto };
 }
