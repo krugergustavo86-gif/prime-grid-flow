@@ -10,6 +10,7 @@ export interface Transaction {
   created_at?: string; // ISO timestamp
   created_by?: string | null;
   forma_pagamento?: string | null;
+  conta_id?: string | null;
 }
 
 export interface AppConfig {

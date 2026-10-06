@@ -28,6 +28,7 @@ import { Loader2 } from "lucide-react";
 
 
 function AppRoutes() {
+  useEffect(() => { if (session) void loadLockedMonths(); }, [session]);
   const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador, isContabilidade } = useAuth();
   useAutoDebitCatchUp(Boolean(session && isAdmin));
 
