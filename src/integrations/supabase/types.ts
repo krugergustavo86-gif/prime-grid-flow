@@ -549,6 +549,45 @@ export type Database = {
         }
         Relationships: []
       }
+      regras_categoria: {
+        Row: {
+          categoria: string
+          categoria_origem: string | null
+          created_at: string
+          created_by: string | null
+          forma_pagamento: string | null
+          id: string
+          modo: string
+          prioridade: number
+          texto_contem: string
+          tipo: string
+        }
+        Insert: {
+          categoria: string
+          categoria_origem?: string | null
+          created_at?: string
+          created_by?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          modo?: string
+          prioridade?: number
+          texto_contem: string
+          tipo: string
+        }
+        Update: {
+          categoria?: string
+          categoria_origem?: string | null
+          created_at?: string
+          created_by?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          modo?: string
+          prioridade?: number
+          texto_contem?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       stock_history: {
         Row: {
           changed_at: string
@@ -616,41 +655,50 @@ export type Database = {
       }
       transactions: {
         Row: {
+          categoria_original: string | null
           category: string
           created_at: string
           created_by: string | null
           date: string
           description: string
+          forma_pagamento: string | null
           id: string
           locked: boolean
           month: string
           notes: string | null
+          regra_aplicada: string | null
           type: string
           value: number
         }
         Insert: {
+          categoria_original?: string | null
           category: string
           created_at?: string
           created_by?: string | null
           date: string
           description: string
+          forma_pagamento?: string | null
           id?: string
           locked?: boolean
           month: string
           notes?: string | null
+          regra_aplicada?: string | null
           type: string
           value: number
         }
         Update: {
+          categoria_original?: string | null
           category?: string
           created_at?: string
           created_by?: string | null
           date?: string
           description?: string
+          forma_pagamento?: string | null
           id?: string
           locked?: boolean
           month?: string
           notes?: string | null
+          regra_aplicada?: string | null
           type?: string
           value?: number
         }
@@ -690,6 +738,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      norm_txt: { Args: { t: string }; Returns: string }
     }
     Enums: {
       app_role:
