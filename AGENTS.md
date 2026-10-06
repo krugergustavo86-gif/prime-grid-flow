@@ -5,3 +5,4 @@
 - Supplier rules live in regras_categoria (normalized lowercase/no-accent text, priority order); used to prefill category in TransactionModal and by the Fornecedores screen.
 - Transaction pagination must order by a unique tiebreaker (date, id) — non-unique ordering duplicates/skips rows across pages.
 - Patrimony KPIs: always call usePatrimonyKPIs with stock total (useStock) on every screen so Dashboard and Patrimonial match.
+- Bank statement import (ImportExtratoDialog + utils/bankStatement.ts) writes nothing before user review; dedupe by (conta_id, fitid) or import_key unique indexes; "A classificar" (either type) is the single source for the Pendências queue.
