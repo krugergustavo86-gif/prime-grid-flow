@@ -35,6 +35,7 @@ export const PLANO_DE_CONTAS: CategoryGroup[] = [
   { tipo: "Saída", grupo: "Investimentos/Patrimônio", operacional: false, categorias: [
     "Imóveis e terrenos", "Veículos e máquinas", "Equipamentos",
   ] },
+  { tipo: "Saída", grupo: "A classificar", operacional: true, categorias: ["A classificar"] },
   { tipo: "Saída", grupo: "Não operacional", operacional: false, categorias: [
     "Doações", "Distribuição/retirada de sócios", "Transferência entre contas",
     "Ajuste de implantação (planilha)", "Ajuste de conciliação",
@@ -65,3 +66,5 @@ export function getCategoriesByType(type: "Saída" | "Entrada"): string[] {
 export function normTxt(s: string): string {
   return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
+
+export const A_CLASSIFICAR = "A classificar";
