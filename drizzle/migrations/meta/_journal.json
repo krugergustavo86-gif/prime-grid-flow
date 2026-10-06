@@ -15,6 +15,13 @@
       "when": 1791321712079,
       "tag": "0001_plano_de_contas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791321835765,
+      "tag": "0002_categoria_original_default",
+      "breakpoints": true
     }
   ]
 }

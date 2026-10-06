@@ -92,6 +92,7 @@ export function usePendingBoletos() {
         notes: boleto.notes || "",
         month: getMonthFromDate(date),
         created_by: user?.id ?? null,
+        forma_pagamento: "Boleto",
       })
       .select()
       .single();
