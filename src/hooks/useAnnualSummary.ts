@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { Transaction, MonthSummary } from "@/types";
-import { isMonthLocked } from "@/utils/lockedMonths";
+import { isMonthLocked, useLockedMonthsVersion } from "@/utils/lockedMonths";
 import { MONTH_LABELS } from "@/utils/formatters";
 import { computeMonthlyTotals, toMonthKey } from "@/utils/monthlyTotals";
 
 export function useAnnualSummary(transactions: Transaction[], saldoAnterior: number, ano: number) {
+  const lv = useLockedMonthsVersion();
   return useMemo(() => {
     const totals = computeMonthlyTotals(transactions);
     const months: MonthSummary[] = [];
@@ -34,5 +35,5 @@ export function useAnnualSummary(transactions: Transaction[], saldoAnterior: num
     const caixaAtual = saldoAnterior + acumuladoAno;
 
     return { months, totalEntradas, totalSaidas, acumuladoAno, caixaAtual };
-  }, [transactions, saldoAnterior, ano]);
+  }, [transactions, saldoAnterior, ano, lv]);
 }

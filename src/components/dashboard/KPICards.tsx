@@ -7,11 +7,12 @@ interface KPICardsProps {
   totalEntradas: number;
   totalSaidas: number;
   acumuladoAno: number;
+  caixaNota?: string;
 }
 
-function KPICardsInner({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno }: KPICardsProps) {
+function KPICardsInner({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno, caixaNota }: KPICardsProps) {
   const cards = [
-    { label: "CAIXA ATUAL", value: caixaAtual, icon: Wallet, accent: "text-primary" },
+    { label: "CAIXA ATUAL", value: caixaAtual, icon: Wallet, accent: "text-primary", note: caixaNota },
     { label: "TOTAL ENTRADAS 2026", value: totalEntradas, icon: TrendingUp, accent: "text-chart-entrada" },
     { label: "TOTAL SAÍDAS 2026", value: totalSaidas, icon: TrendingDown, accent: "text-chart-saida" },
     { label: "ACUMULADO 2026", value: acumuladoAno, icon: DollarSign, accent: acumuladoAno >= 0 ? "text-chart-entrada" : "text-chart-saida" },
@@ -30,6 +31,7 @@ function KPICardsInner({ caixaAtual, totalEntradas, totalSaidas, acumuladoAno }:
           <p className={`text-lg md:text-xl font-bold tabular-nums ${card.accent}`}>
             {formatCurrency(card.value)}
           </p>
+          {"note" in card && card.note && <p className="text-[11px] text-muted-foreground mt-1">{card.note}</p>}
         </div>
       ))}
     </div>

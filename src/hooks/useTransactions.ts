@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Transaction } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { isMonthKeyLocked, isMonthLocked as isLockedFor } from "@/utils/lockedMonths";
+import { isMonthKeyLocked, isMonthLocked as isLockedFor, useLockedMonthsVersion } from "@/utils/lockedMonths";
 import { getMonthFromDate } from "@/utils/formatters";
 import { filterByMonth } from "@/utils/monthlyTotals";
 import { useAppConfig } from "@/hooks/useAppConfig";
@@ -15,6 +15,7 @@ export function useTransactions() {
   const { config, setConfig, loading: configLoading } = useAppConfig();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const lv = useLockedMonthsVersion();
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +47,7 @@ export function useTransactions() {
           created_at: r.created_at,
           created_by: r.created_by ?? null,
           forma_pagamento: r.forma_pagamento ?? null,
+          conta_id: r.conta_id ?? null,
         })));
 
         if (data.length < TRANSACTIONS_PAGE_SIZE) break;
@@ -85,6 +87,7 @@ export function useTransactions() {
         month,
         created_by: user?.id ?? null,
         forma_pagamento: tx.forma_pagamento ?? null,
+        conta_id: tx.conta_id ?? null,
       })
       .select()
       .single();
@@ -108,6 +111,7 @@ export function useTransactions() {
         created_at: data.created_at,
         created_by: data.created_by ?? null,
         forma_pagamento: data.forma_pagamento ?? null,
+        conta_id: data.conta_id ?? null,
       }]);
     }
     return true;
@@ -152,7 +156,8 @@ export function useTransactions() {
 
   const isMonthLocked = useCallback((monthNum: string) => {
     return isLockedFor(monthNum, config.ano);
-  }, [config.ano]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.ano, lv]);
 
   return {
     transactions, config, setConfig, loading: loading || configLoading,

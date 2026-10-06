@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Lock } from "lucide-react";
 import { MONTH_LABELS_SHORT } from "@/utils/formatters";
-import { isMonthLocked } from "@/utils/lockedMonths";
+import { isMonthLocked, useLockedMonthsVersion } from "@/utils/lockedMonths";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MonthSelectorProps {
@@ -11,6 +11,7 @@ interface MonthSelectorProps {
 }
 
 function MonthSelectorInner({ selectedMonth, onSelect, year }: MonthSelectorProps) {
+  useLockedMonthsVersion();
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
       {MONTH_LABELS_SHORT.map((label, i) => {

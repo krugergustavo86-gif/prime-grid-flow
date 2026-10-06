@@ -1,5 +1,7 @@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
+import { useCaixaContas } from "@/hooks/useCaixaContas";
+import { formatDateBR as fmtDataConc } from "@/utils/formatters";
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useStock } from "@/hooks/useStock";
@@ -20,7 +22,10 @@ const CHART_COLORS = [
 
 export default function DashboardPage() {
   const { transactions, config } = useTransactions();
-  const { months, totalEntradas, totalSaidas, acumuladoAno, caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
+  const { months, totalEntradas, totalSaidas, acumuladoAno, caixaAtual: caixaMeses } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
+  const caixaContas = useCaixaContas(transactions, config.saldoAnterior);
+  const caixaAtual = caixaContas.total ?? caixaMeses;
+  const caixaNota = caixaContas.ultimaConciliacao ? `Soma das contas · conciliado em ${fmtDataConc(caixaContas.ultimaConciliacao)}` : "Soma das contas · sem conciliação";
   const patrimony = usePatrimony();
   const { totalValue: stockTotal } = useStock();
   const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
@@ -71,7 +76,7 @@ export default function DashboardPage() {
         {/* Bloco 1 — Caixa */}
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Módulo de Caixa</h2>
-          <KPICards caixaAtual={caixaAtual} totalEntradas={totalEntradas} totalSaidas={totalSaidas} acumuladoAno={acumuladoAno} />
+          <KPICards caixaAtual={caixaAtual} totalEntradas={totalEntradas} totalSaidas={totalSaidas} acumuladoAno={acumuladoAno} caixaNota={caixaNota} />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <BarChartMensal months={months} />

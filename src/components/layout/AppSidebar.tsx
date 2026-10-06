@@ -1,4 +1,4 @@
-import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut, Users, Activity, PieChart, ClipboardCheck, Tags, Inbox } from "lucide-react";
+import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut, Users, Activity, PieChart, ClipboardCheck, Tags, Inbox, Scale } from "lucide-react";
 import logoPrimegrid from "@/assets/logo-primegrid.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,7 @@ export function AppSidebar() {
     { title: "Dashboard", url: "/", icon: LayoutDashboard, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Boletos Pendentes", url: "/boletos", icon: ClipboardCheck, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
+    { title: "Conciliação", url: "/conciliacao", icon: Scale, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Pendências", url: "/pendencias", icon: Inbox, visible: isAdmin || isGerencia || isLancamentos || isContabilidade, badge: pendCount },
 
     { title: "Resumo Anual", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia || isContabilidade },
