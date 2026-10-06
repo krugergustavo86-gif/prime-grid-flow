@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Transaction, TransactionType } from "@/types";
-import { getCategoriesByType } from "@/utils/categories";
+import { getCategoriesByType, FORMAS_PAGAMENTO } from "@/utils/categories";
+import { useCategoryRules } from "@/hooks/useCategoryRules";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,10 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [forma, setForma] = useState<string>("");
+  const [catTouched, setCatTouched] = useState(false);
+  const [ruleHint, setRuleHint] = useState<string | null>(null);
+  const { findRule } = useCategoryRules();
   const [adding, setAdding] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const { categories: customCats, addCategory } = useCustomCategories();
@@ -44,6 +49,9 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       setDescription(editTransaction.description);
       setValue(editTransaction.value.toFixed(2).replace(".", ","));
       setNotes(editTransaction.notes || "");
+      setForma(editTransaction.forma_pagamento || "");
+      setCatTouched(true);
+      setRuleHint(null);
       return;
     }
     // Novo lançamento: tenta restaurar rascunho
@@ -71,7 +79,24 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     setDescription("");
     setValue("");
     setNotes("");
+    setForma("");
+    setCatTouched(false);
+    setRuleHint(null);
   }, [editTransaction, open]);
+
+  // Regra por fornecedor: preenche categoria (editável) ao digitar a descrição
+  useEffect(() => {
+    if (!open || editTransaction || catTouched) return;
+    const r = findRule(type, description);
+    if (r) {
+      setCategory(r.categoria);
+      if (r.forma_pagamento && !forma) setForma(r.forma_pagamento);
+      setRuleHint(r.texto_contem);
+    } else if (ruleHint) {
+      setRuleHint(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description, type, open, editTransaction, catTouched, findRule]);
 
   // Auto-save rascunho (apenas para novos)
   useEffect(() => {
@@ -100,6 +125,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
     setCategory("");
+    setCatTouched(false);
   };
 
   const parseValue = (): number => {
@@ -190,7 +216,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
                 <Button type="button" onClick={handleAddCategory} disabled={!newCatName.trim()}>Criar</Button>
               </div>
             ) : (
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(v) => { setCategory(v); setCatTouched(true); setRuleHint(null); }}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
@@ -201,6 +227,18 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
                 </SelectContent>
               </Select>
             )}
+            {ruleHint && <p className="text-xs text-muted-foreground mt-1">Sugerida pela regra "{ruleHint}" — pode alterar.</p>}
+          </div>
+
+          <div>
+            <Label>Forma de pagamento</Label>
+            <Select value={forma || "none"} onValueChange={(v) => setForma(v === "none" ? "" : v)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Não informada" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não informada</SelectItem>
+                {FORMAS_PAGAMENTO.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
