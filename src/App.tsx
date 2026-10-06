@@ -17,6 +17,7 @@ import NFControlPage from "./pages/NFControlPage";
 import UsersPage from "./pages/UsersPage";
 import AtividadesPage from "./pages/AtividadesPage";
 import BoletosPendentesPage from "./pages/BoletosPendentesPage";
+import PendenciasPage from "./pages/PendenciasPage";
 import FornecedoresCategoriasPage from "./pages/FornecedoresCategoriasPage";
 
 import LoginPage from "./pages/LoginPage";
@@ -99,6 +100,7 @@ function AppRoutes() {
             <Route path="/nf" element={canAccessNF ? <NFControlPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/usuarios" element={isAdmin ? <UsersPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/atividades" element={(isAdmin || isGerencia) ? <AtividadesPage /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/pendencias" element={canAccessLancamentos ? <PendenciasPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/fornecedores" element={(isAdmin || isGerencia) ? <FornecedoresCategoriasPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/configuracoes" element={canAccessConfig ? <ConfiguracoesPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />

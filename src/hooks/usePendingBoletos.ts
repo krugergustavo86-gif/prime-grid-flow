@@ -77,8 +77,11 @@ export function usePendingBoletos() {
     return () => { cancelled = true; };
   }, [load]);
 
-  const confirmBoleto = useCallback(async (boleto: PendingBoleto) => {
-    const date = new Date().toISOString().split("T")[0];
+  const confirmBoleto = useCallback(async (
+    boleto: PendingBoleto,
+    opts?: { date?: string; contaId?: string | null; silent?: boolean; extra?: Record<string, unknown> },
+  ) => {
+    const date = opts?.date || new Date().toISOString().split("T")[0];
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data: tx, error: txError } = await supabase
@@ -93,6 +96,9 @@ export function usePendingBoletos() {
         month: getMonthFromDate(date),
         created_by: user?.id ?? null,
         forma_pagamento: "Boleto",
+        cliente: boleto.clientName,
+        conta_id: opts?.contaId ?? null,
+        ...(opts?.extra ?? {}),
       })
       .select()
       .single();
@@ -120,7 +126,7 @@ export function usePendingBoletos() {
     }
 
     setBoletos(prev => prev.filter(b => b.id !== boleto.id));
-    toast.success("Pagamento confirmado e lançado no fluxo");
+    if (!opts?.silent) toast.success("Pagamento confirmado e lançado no fluxo");
     return true;
   }, []);
 

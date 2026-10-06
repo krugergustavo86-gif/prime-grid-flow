@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { usePendingBoletos } from "@/hooks/usePendingBoletos";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { CheckCircle, Loader2, XCircle, FileText, Split } from "lucide-react";
 import type { PendingBoleto } from "@/hooks/usePendingBoletos";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useContasBancarias } from "@/hooks/useContasBancarias";
+import { isMonthKeyLocked } from "@/utils/lockedMonths";
+import { getMonthFromDate } from "@/utils/formatters";
 
 function addMonths(dateStr: string, months: number) {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -32,6 +37,28 @@ export function PendingBoletosTab({ readOnly }: Props) {
   const [splitTarget, setSplitTarget] = useState<PendingBoleto | null>(null);
   const [dueDates, setDueDates] = useState<string[]>([]);
   const [splitting, setSplitting] = useState(false);
+  const contas = useContasBancarias();
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [receive, setReceive] = useState<PendingBoleto[] | null>(null);
+  const [recDate, setRecDate] = useState(new Date().toISOString().slice(0, 10));
+  const [recConta, setRecConta] = useState("");
+  const [receiving, setReceiving] = useState(false);
+
+  const toggleSel = (id: string) => setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const doReceive = async () => {
+    if (!receive || !recConta) return;
+    if (isMonthKeyLocked(getMonthFromDate(recDate))) return;
+    setReceiving(true);
+    let ok = 0;
+    for (const b of receive) {
+      if (await confirmBoleto(b, { date: recDate, contaId: recConta, silent: true })) ok++;
+    }
+    setReceiving(false);
+    setSel(new Set());
+    setReceive(null);
+    toast.success(`${ok} boleto(s) recebido(s) e lançado(s) no caixa`);
+  };
 
   const openSplit = (b: PendingBoleto) => {
     const start = b.dueDate || b.entryDate;
@@ -126,8 +153,20 @@ export function PendingBoletosTab({ readOnly }: Props) {
       </div>
 
 
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-sm gap-2 flex-wrap">
         <span className="text-muted-foreground">{filtered.length} boleto(s) aguardando confirmação</span>
+        {!readOnly && filtered.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1 text-muted-foreground">
+              <Checkbox checked={sel.size > 0 && filtered.every(b => sel.has(b.id))}
+                onCheckedChange={() => setSel(prev => filtered.every(b => prev.has(b.id)) ? new Set() : new Set(filtered.map(b => b.id)))} />
+              Todos
+            </label>
+            <Button size="sm" disabled={sel.size === 0} onClick={() => setReceive(filtered.filter(b => sel.has(b.id)))}>
+              <CheckCircle className="h-4 w-4 mr-1" /> Marcar recebidos ({sel.size})
+            </Button>
+          </div>
+        )}
         <span className="font-semibold text-foreground">{formatCurrency(total)}</span>
       </div>
 
@@ -143,6 +182,7 @@ export function PendingBoletosTab({ readOnly }: Props) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    {!readOnly && <Checkbox checked={sel.has(b.id)} onCheckedChange={() => toggleSel(b.id)} aria-label="Selecionar boleto" />}
                     {b.osNumber && <Badge variant="outline">OS #{b.osNumber}</Badge>}
                     {b.area && <Badge variant="secondary">{b.area}</Badge>}
                     {b.category && <Badge variant="secondary">{b.category}</Badge>}
@@ -165,9 +205,9 @@ export function PendingBoletosTab({ readOnly }: Props) {
                     size="sm"
                     className="flex-1 min-w-[140px]"
                     disabled={busyId === b.id}
-                    onClick={() => handle(b.id, () => confirmBoleto(b))}
+                    onClick={() => setReceive([b])}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" /> Confirmar Pagamento
+                    <CheckCircle className="h-4 w-4 mr-1" /> Recebido
                   </Button>
                   <Button
                     size="sm"
@@ -193,6 +233,34 @@ export function PendingBoletosTab({ readOnly }: Props) {
           ))}
         </div>
       )}
+
+      <Dialog open={!!receive} onOpenChange={o => !o && setReceive(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Marcar como recebido</DialogTitle></DialogHeader>
+          {receive && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {receive.length} boleto(s) · {formatCurrency(receive.reduce((s, b) => s + b.value, 0))}. Cada um vira uma entrada com cliente, categoria e forma Boleto.
+              </p>
+              <div><Label>Data do recebimento</Label><Input className="mt-1" type="date" value={recDate} onChange={e => setRecDate(e.target.value)} /></div>
+              {isMonthKeyLocked(getMonthFromDate(recDate)) && <p className="text-xs text-destructive">Este mês está fechado.</p>}
+              <div>
+                <Label>Conta</Label>
+                <Select value={recConta} onValueChange={setRecConta}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+                  <SelectContent>{contas.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReceive(null)}>Cancelar</Button>
+            <Button onClick={doReceive} disabled={receiving || !recConta || isMonthKeyLocked(getMonthFromDate(recDate))}>
+              {receiving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}Confirmar recebimento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!splitTarget} onOpenChange={o => !o && setSplitTarget(null)}>
         <DialogContent className="max-w-md">

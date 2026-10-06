@@ -22,6 +22,13 @@
       "when": 1791321835765,
       "tag": "0002_categoria_original_default",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791322147674,
+      "tag": "0003_contas_bancarias_importacao",
+      "breakpoints": true
     }
   ]
 }

@@ -185,6 +185,30 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_bancarias: {
+        Row: {
+          ativo: boolean
+          banco: string | null
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          banco?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          banco?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       custom_categories: {
         Row: {
           created_at: string
@@ -657,12 +681,16 @@ export type Database = {
         Row: {
           categoria_original: string | null
           category: string
+          cliente: string | null
+          conta_id: string | null
           created_at: string
           created_by: string | null
           date: string
           description: string
+          fitid: string | null
           forma_pagamento: string | null
           id: string
+          import_key: string | null
           locked: boolean
           month: string
           notes: string | null
@@ -673,12 +701,16 @@ export type Database = {
         Insert: {
           categoria_original?: string | null
           category: string
+          cliente?: string | null
+          conta_id?: string | null
           created_at?: string
           created_by?: string | null
           date: string
           description: string
+          fitid?: string | null
           forma_pagamento?: string | null
           id?: string
+          import_key?: string | null
           locked?: boolean
           month: string
           notes?: string | null
@@ -689,12 +721,16 @@ export type Database = {
         Update: {
           categoria_original?: string | null
           category?: string
+          cliente?: string | null
+          conta_id?: string | null
           created_at?: string
           created_by?: string | null
           date?: string
           description?: string
+          fitid?: string | null
           forma_pagamento?: string | null
           id?: string
+          import_key?: string | null
           locked?: boolean
           month?: string
           notes?: string | null
@@ -702,7 +738,15 @@ export type Database = {
           type?: string
           value?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

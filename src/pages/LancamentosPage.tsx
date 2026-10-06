@@ -10,10 +10,11 @@ import { DonutCharts } from "@/components/lancamentos/DonutCharts";
 import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
+import { ImportExtratoDialog } from "@/components/lancamentos/ImportExtratoDialog";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Transaction } from "@/types";
 
@@ -22,6 +23,7 @@ export default function LancamentosPage() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonthNum);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { canManageLancamentos, isGerencia } = useAuth();
 
   const { addTransaction, updateTransaction, deleteTransaction, getTransactionsByMonth, config } = useTransactions();
@@ -67,10 +69,17 @@ export default function LancamentosPage() {
       <Header title="Lançamentos" />
       <div className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 space-y-4">
         <Tabs defaultValue="lancamentos">
-          <TabsList>
-            <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
-            <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <TabsList>
+              <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
+              <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
+            </TabsList>
+            {!readOnly && (
+              <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4 mr-1" /> Importar extrato
+              </Button>
+            )}
+          </div>
 
 
           <TabsContent value="lancamentos" className="space-y-4 mt-4">
@@ -99,6 +108,7 @@ export default function LancamentosPage() {
         </Button>
       )}
 
+      <ImportExtratoDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => window.location.reload()} />
       <TransactionModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} editTransaction={editTx} />
     </div>
   );
