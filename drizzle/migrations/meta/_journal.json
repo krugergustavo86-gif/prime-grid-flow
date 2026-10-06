@@ -29,6 +29,13 @@
       "when": 1791322147674,
       "tag": "0003_contas_bancarias_importacao",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791322557134,
+      "tag": "0004_conciliacao_fechamento",
+      "breakpoints": true
     }
   ]
 }

@@ -185,27 +185,83 @@ export type Database = {
         }
         Relationships: []
       }
+      conciliacoes: {
+        Row: {
+          ajuste_transaction_id: string | null
+          conta_id: string
+          created_at: string
+          created_by: string | null
+          data: string
+          diferenca: number
+          id: string
+          saldo_banco: number
+          saldo_sistema: number
+        }
+        Insert: {
+          ajuste_transaction_id?: string | null
+          conta_id: string
+          created_at?: string
+          created_by?: string | null
+          data: string
+          diferenca: number
+          id?: string
+          saldo_banco: number
+          saldo_sistema: number
+        }
+        Update: {
+          ajuste_transaction_id?: string | null
+          conta_id?: string
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          diferenca?: number
+          id?: string
+          saldo_banco?: number
+          saldo_sistema?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conciliacoes_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contas_bancarias: {
         Row: {
           ativo: boolean
           banco: string | null
           created_at: string
+          data_abertura: string | null
+          historico: boolean
           id: string
           nome: string
+          saldo_abertura: number
+          tipo: string
         }
         Insert: {
           ativo?: boolean
           banco?: string | null
           created_at?: string
+          data_abertura?: string | null
+          historico?: boolean
           id?: string
           nome: string
+          saldo_abertura?: number
+          tipo?: string
         }
         Update: {
           ativo?: boolean
           banco?: string | null
           created_at?: string
+          data_abertura?: string | null
+          historico?: boolean
           id?: string
           nome?: string
+          saldo_abertura?: number
+          tipo?: string
         }
         Relationships: []
       }
@@ -257,6 +313,24 @@ export type Database = {
           notes?: string | null
           responsible?: string | null
           value?: number
+        }
+        Relationships: []
+      }
+      fechamentos_mensais: {
+        Row: {
+          fechado_em: string
+          fechado_por: string | null
+          month: string
+        }
+        Insert: {
+          fechado_em?: string
+          fechado_por?: string | null
+          month: string
+        }
+        Update: {
+          fechado_em?: string
+          fechado_por?: string | null
+          month?: string
         }
         Relationships: []
       }
@@ -771,6 +845,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aplicar_conciliacao: {
+        Args: { _data: string; _diferenca: number; _saldos: Json }
+        Returns: string
+      }
+      fechar_mes: { Args: { _month: string }; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -783,6 +862,7 @@ export type Database = {
         Returns: boolean
       }
       norm_txt: { Args: { t: string }; Returns: string }
+      reabrir_mes: { Args: { _month: string }; Returns: undefined }
     }
     Enums: {
       app_role:
