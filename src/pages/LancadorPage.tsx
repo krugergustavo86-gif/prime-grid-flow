@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types";
-import { LOCKED_MONTHS } from "@/utils/lockedMonths";
+import { isMonthKeyLocked } from "@/utils/lockedMonths";
 import { getMonthFromDate } from "@/utils/formatters";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,7 @@ export default function LancadorPage() {
 
   const handleSave = async (data: Omit<Transaction, "id" | "month">) => {
     const month = getMonthFromDate(data.date);
-    const monthNum = month.split("/")[0];
-    if (LOCKED_MONTHS.includes(monthNum)) {
+    if (isMonthKeyLocked(month)) {
       toast.error("Este mês está fechado");
       return;
     }
@@ -68,7 +67,7 @@ export default function LancadorPage() {
     } else {
       const { error } = await supabase
         .from("transactions")
-        .insert({ ...data, month, locked: false, created_by: user?.id ?? null });
+        .insert({ ...data, month, created_by: user?.id ?? null });
       if (error) { toast.error("Erro ao salvar"); return; }
       toast.success("Lançamento salvo");
     }

@@ -1,0 +1,1 @@
+- Closed months: single source is LOCKED_BALANCES in src/utils/lockedMonths.ts keyed "MM/YYYY"; transactions.locked column is deprecated and never read/written — avoids two conflicting sources and makes locks year-specific.

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Transaction } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { LOCKED_MONTHS } from "@/utils/lockedMonths";
+import { isMonthKeyLocked, isMonthLocked as isLockedFor } from "@/utils/lockedMonths";
 import { getMonthFromDate } from "@/utils/formatters";
 import { useAppConfig } from "@/hooks/useAppConfig";
 import { toast } from "sonner";
@@ -66,8 +66,7 @@ export function useTransactions() {
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id" | "month">) => {
     const month = getMonthFromDate(tx.date);
-    const monthNum = month.split("/")[0];
-    if (LOCKED_MONTHS.includes(monthNum)) return false;
+    if (isMonthKeyLocked(month)) return false;
 
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -81,7 +80,6 @@ export function useTransactions() {
         value: tx.value,
         notes: tx.notes || "",
         month,
-        locked: false,
         created_by: user?.id ?? null,
       })
       .select()
@@ -144,12 +142,12 @@ export function useTransactions() {
   }, []);
 
   const getTransactionsByMonth = useCallback((monthNum: string) => {
-    return transactions.filter(t => t.month.startsWith(monthNum + "/"));
-  }, [transactions]);
+    return transactions.filter(t => t.month === `${monthNum}/${config.ano}`);
+  }, [transactions, config.ano]);
 
   const isMonthLocked = useCallback((monthNum: string) => {
-    return LOCKED_MONTHS.includes(monthNum);
-  }, []);
+    return isLockedFor(monthNum, config.ano);
+  }, [config.ano]);
 
   return {
     transactions, config, setConfig, loading: loading || configLoading,
