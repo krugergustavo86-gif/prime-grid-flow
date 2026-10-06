@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
+import { isOperational } from "@/utils/monthlyTotals";
 import { Progress } from "@/components/ui/progress";
 
 interface TopSaidasListProps {
@@ -9,7 +10,7 @@ interface TopSaidasListProps {
 }
 
 function TopSaidasListInner({ transactions, currentMonth }: TopSaidasListProps) {
-  const saidas = transactions.filter(t => t.type === "Saída" && t.month.startsWith(currentMonth + "/"));
+  const saidas = transactions.filter(t => t.type === "Saída" && isOperational(t) && t.date.slice(5, 7) === currentMonth && t.date.slice(0, 4) === String(new Date().getFullYear()));
   const totalSaidas = saidas.reduce((s, t) => s + t.value, 0);
 
   const byCategory: Record<string, number> = {};

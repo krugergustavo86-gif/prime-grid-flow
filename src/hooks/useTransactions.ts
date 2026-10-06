@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { isMonthKeyLocked, isMonthLocked as isLockedFor } from "@/utils/lockedMonths";
 import { getMonthFromDate } from "@/utils/formatters";
+import { filterByMonth } from "@/utils/monthlyTotals";
 import { useAppConfig } from "@/hooks/useAppConfig";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export function useTransactions() {
           .from("transactions")
           .select("*")
           .order("date", { ascending: true })
+          .order("id", { ascending: true }) // desempate estável: evita linhas repetidas/puladas entre páginas
           .range(from, from + TRANSACTIONS_PAGE_SIZE - 1);
 
         if (error) throw error;
@@ -142,7 +144,7 @@ export function useTransactions() {
   }, []);
 
   const getTransactionsByMonth = useCallback((monthNum: string) => {
-    return transactions.filter(t => t.month === `${monthNum}/${config.ano}`);
+    return filterByMonth(transactions, monthNum, config.ano);
   }, [transactions, config.ano]);
 
   const isMonthLocked = useCallback((monthNum: string) => {

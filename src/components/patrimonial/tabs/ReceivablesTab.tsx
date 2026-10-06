@@ -58,7 +58,7 @@ export function ReceivablesTab(props: Props) {
   // Build effective cash entries: override "Saldo em Conta" with caixaAtual when available
   const effectiveCashEntries = cashEntries.map(c => {
     if (caixaAtual !== undefined && c.description.toLowerCase().includes("saldo em conta")) {
-      return { ...c, balance: caixaAtual };
+      return { ...c, balance: caixaAtual, refDate: new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) };
     }
     return c;
   });
