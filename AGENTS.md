@@ -1,1 +1,5 @@
-- Closed months: single source is LOCKED_BALANCES in src/utils/lockedMonths.ts keyed "MM/YYYY"; transactions.locked column is deprecated and never read/written — avoids two conflicting sources and makes locks year-specific.
+- Monthly cash totals: single source is src/utils/monthlyTotals.ts, grouped by transaction `date` (never the `month` column); every screen must use it — avoids divergent totals between screens.
+- Closed months: src/utils/lockedMonths.ts only blocks editing; it never overrides balances (balance is always entradas - saídas). transactions.locked column is deprecated and never read/written.
+- Non-operational categories (NON_OPERATIONAL_CATEGORIES in monthlyTotals.ts) count in cash but are excluded from category charts, DRE-like reports and projections.
+- Transaction pagination must order by a unique tiebreaker (date, id) — non-unique ordering duplicates/skips rows across pages.
+- Patrimony KPIs: always call usePatrimonyKPIs with stock total (useStock) on every screen so Dashboard and Patrimonial match.
