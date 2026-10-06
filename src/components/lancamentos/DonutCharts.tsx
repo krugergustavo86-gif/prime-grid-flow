@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { isOperational } from "@/utils/monthlyTotals";
 import { supabase } from "@/integrations/supabase/client";
 
 const SAIDA_COLORS = ["#A32D2D", "#C44D4D", "#D46A6A", "#E08888", "#EBA5A5", "#D45C2E", "#E07A4E", "#CC3333", "#B54040", "#993333", "#CC6633", "#DD8855", "#AA4422", "#BB6644", "#CC8866", "#DD9977"];
@@ -64,8 +65,8 @@ function DonutChart({ data, colors, title, onSelect }: { data: { name: string; v
 }
 
 export function DonutCharts({ transactions }: DonutChartsProps) {
-  const saidas = groupByCategory(transactions.filter(t => t.type === "Saída"));
-  const entradas = groupByCategory(transactions.filter(t => t.type === "Entrada"));
+  const saidas = groupByCategory(transactions.filter(t => t.type === "Saída" && isOperational(t)));
+  const entradas = groupByCategory(transactions.filter(t => t.type === "Entrada" && isOperational(t)));
   const [selected, setSelected] = useState<{ type: "Saída" | "Entrada"; category: string } | null>(null);
   const [users, setUsers] = useState<Record<string, string>>({});
 

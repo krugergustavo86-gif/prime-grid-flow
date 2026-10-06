@@ -2,6 +2,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { usePatrimony } from "@/hooks/usePatrimony";
 import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
+import { useStock } from "@/hooks/useStock";
 import { KPICards } from "@/components/dashboard/KPICards";
 import { BarChartMensal } from "@/components/dashboard/BarChartMensal";
 import { LineChartCaixa } from "@/components/dashboard/LineChartCaixa";
@@ -21,11 +22,8 @@ export default function DashboardPage() {
   const { transactions, config } = useTransactions();
   const { months, totalEntradas, totalSaidas, acumuladoAno, caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
   const patrimony = usePatrimony();
-  const kpis = usePatrimonyKPIs(
-    { assets: patrimony.assets, receivables: patrimony.receivables, doubtfulCredits: patrimony.doubtfulCredits, cashEntries: patrimony.cashEntries, loans: patrimony.loans, payables: patrimony.payables },
-    config.numSocios,
-    caixaAtual
-  );
+  const { totalValue: stockTotal } = useStock();
+  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
 
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
 

@@ -18,6 +18,7 @@ import { Download, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { isOperational } from "@/utils/monthlyTotals";
 import { PatrimonialReportSection } from "@/components/reports/PatrimonialReportSection";
 
 type PeriodType = "month" | "quarter" | "semester" | "year" | "custom";
@@ -114,8 +115,8 @@ export default function ReportsPage() {
     });
   }, [filtered]);
 
-  const saidasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Saída")), [filtered]);
-  const entradasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Entrada")), [filtered]);
+  const saidasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Saída" && isOperational(t))), [filtered]);
+  const entradasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Entrada" && isOperational(t))), [filtered]);
 
   // Compare current vs previous month
   const comparison = useMemo(() => {

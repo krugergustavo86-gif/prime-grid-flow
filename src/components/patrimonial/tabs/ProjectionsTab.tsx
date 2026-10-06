@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { isOperational } from "@/utils/monthlyTotals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -89,7 +90,8 @@ function computeBaseline(transactions: Transaction[]): Baseline {
     });
   }
   for (const t of transactions) {
-    const b = buckets.get(t.month);
+    if (!isOperational(t)) continue;
+    const b = buckets.get(`${t.date.slice(5, 7)}/${t.date.slice(0, 4)}`);
     if (!b) continue;
     if (t.type === "Entrada") {
       b.entradas += t.value;

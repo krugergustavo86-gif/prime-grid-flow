@@ -1,23 +1,22 @@
 import { useMemo } from "react";
 import { Transaction, MonthSummary } from "@/types";
-import { isMonthLocked, getLockedBalance } from "@/utils/lockedMonths";
+import { isMonthLocked } from "@/utils/lockedMonths";
 import { MONTH_LABELS } from "@/utils/formatters";
+import { computeMonthlyTotals, toMonthKey } from "@/utils/monthlyTotals";
 
 export function useAnnualSummary(transactions: Transaction[], saldoAnterior: number, ano: number) {
   return useMemo(() => {
+    const totals = computeMonthlyTotals(transactions);
     const months: MonthSummary[] = [];
     let acumulado = saldoAnterior;
 
     for (let i = 0; i < 12; i++) {
       const monthNum = String(i + 1).padStart(2, "0");
-      const monthKey = `${monthNum}/${ano}`;
-      const monthTxns = transactions.filter(t => t.month === monthKey);
-      const entradas = monthTxns.filter(t => t.type === "Entrada").reduce((s, t) => s + t.value, 0);
-      const saidas = monthTxns.filter(t => t.type === "Saída").reduce((s, t) => s + t.value, 0);
-      const isLocked = isMonthLocked(monthNum, ano);
-      const balanco = isLocked ? (getLockedBalance(monthNum, ano) as number) : entradas - saidas;
+      const t = totals[toMonthKey(monthNum, ano)];
+      const entradas = t?.entradas ?? 0;
+      const saidas = t?.saidas ?? 0;
+      const balanco = t?.balanco ?? 0;
       acumulado += balanco;
-
       months.push({
         month: monthNum,
         label: MONTH_LABELS[i],
@@ -25,7 +24,7 @@ export function useAnnualSummary(transactions: Transaction[], saldoAnterior: num
         saidas,
         balanco,
         saldoAcumulado: acumulado,
-        locked: isLocked,
+        locked: isMonthLocked(monthNum, ano),
       });
     }
 
