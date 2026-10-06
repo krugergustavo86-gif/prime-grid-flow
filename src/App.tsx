@@ -24,12 +24,15 @@ import LoginPage from "./pages/LoginPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { loadLockedMonths } from "@/utils/lockedMonths";
+import ConciliacaoPage from "./pages/ConciliacaoPage";
 
 
 
 function AppRoutes() {
-  useEffect(() => { if (session) void loadLockedMonths(); }, [session]);
   const { session, loading, role, isAdmin, isGerencia, isLancamentos, isNfControl, isLancador, isContabilidade } = useAuth();
+  useEffect(() => { if (session) void loadLockedMonths(); }, [session]);
   useAutoDebitCatchUp(Boolean(session && isAdmin));
 
   if (loading) {
@@ -101,6 +104,7 @@ function AppRoutes() {
             <Route path="/nf" element={canAccessNF ? <NFControlPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/usuarios" element={isAdmin ? <UsersPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/atividades" element={(isAdmin || isGerencia) ? <AtividadesPage /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/conciliacao" element={(isAdmin || isGerencia || isLancamentos || isContabilidade) ? <ConciliacaoPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/pendencias" element={canAccessLancamentos ? <PendenciasPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/fornecedores" element={(isAdmin || isGerencia) ? <FornecedoresCategoriasPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/configuracoes" element={canAccessConfig ? <ConfiguracoesPage /> : <Navigate to={defaultRoute} replace />} />
