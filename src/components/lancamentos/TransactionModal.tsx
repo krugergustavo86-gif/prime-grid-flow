@@ -3,6 +3,7 @@ import { Transaction, TransactionType } from "@/types";
 import { getCategoriesByType, FORMAS_PAGAMENTO } from "@/utils/categories";
 import { useCategoryRules } from "@/hooks/useCategoryRules";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
+import { useContasBancarias } from "@/hooks/useContasBancarias";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,8 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
   const [forma, setForma] = useState<string>("");
+  const [contaId, setContaId] = useState<string>("");
+  const contas = useContasBancarias();
   const [catTouched, setCatTouched] = useState(false);
   const [ruleHint, setRuleHint] = useState<string | null>(null);
   const { findRule } = useCategoryRules();
@@ -50,6 +53,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       setValue(editTransaction.value.toFixed(2).replace(".", ","));
       setNotes(editTransaction.notes || "");
       setForma(editTransaction.forma_pagamento || "");
+      setContaId(editTransaction.conta_id || "");
       setCatTouched(true);
       setRuleHint(null);
       return;
@@ -80,6 +84,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     setValue("");
     setNotes("");
     setForma("");
+    setContaId("");
     setCatTouched(false);
     setRuleHint(null);
   }, [editTransaction, open]);
@@ -133,9 +138,14 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     return parseFloat(cleaned) || 0;
   };
 
+  // Novo lançamento exige conta; edição de lançamento antigo (histórico) pode manter a conta original
+  const editIsHist = !!editTransaction && !contas.some(c => c.id === editTransaction.conta_id);
+  const contaOk = !!contaId && contas.some(c => c.id === contaId);
+  const isValid = !!description.trim() && !!category && parseValue() > 0 && (contaOk || editIsHist && contaId === (editTransaction?.conta_id ?? ""));
+
   const handleSave = () => {
     const numValue = parseValue();
-    if (!description.trim() || !category || numValue <= 0) return;
+    if (!isValid) return;
 
     const dateStr = format(date, "yyyy-MM-dd");
     onSave({
@@ -146,12 +156,13 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       value: numValue,
       notes: notes.trim() || undefined,
       forma_pagamento: forma || null,
+      ...(contaOk && contaId ? { conta_id: contaId } : {}),
     });
     try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     onClose();
   };
 
-  const isValid = description.trim() && category && parseValue() > 0;
+
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -229,6 +240,16 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
               </Select>
             )}
             {ruleHint && <p className="text-xs text-muted-foreground mt-1">Sugerida pela regra "{ruleHint}" — pode alterar.</p>}
+          </div>
+
+          <div>
+            <Label>Conta *</Label>
+            <Select value={contaId || undefined} onValueChange={setContaId}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder={editIsHist ? "Histórico consolidado" : "Selecione a conta"} /></SelectTrigger>
+              <SelectContent>
+                {contas.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
