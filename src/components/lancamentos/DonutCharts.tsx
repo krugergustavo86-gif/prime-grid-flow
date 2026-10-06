@@ -36,9 +36,9 @@ function DonutChart({ data, colors, title, onSelect }: { data: { name: string; v
       <ResponsiveContainer width="100%" height={180}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={2}
-            onClick={(d: { name?: string }) => d?.name && onSelect(d.name)} className="cursor-pointer">
-            {data.map((_, i) => (
-              <Cell key={i} fill={colors[i % colors.length]} className="cursor-pointer" />
+            className="cursor-pointer">
+            {data.map((d, i) => (
+              <Cell key={i} fill={colors[i % colors.length]} className="cursor-pointer" onClick={() => onSelect(d.name)} />
             ))}
           </Pie>
           <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
