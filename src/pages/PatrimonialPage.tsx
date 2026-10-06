@@ -4,10 +4,13 @@ import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
 import { useStock } from "@/hooks/useStock";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
+import { useCaixaContas } from "@/hooks/useCaixaContas";
+import { formatDateBR as fmtDataConc } from "@/utils/formatters";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
 import { Loan } from "@/types";
+import { formatCurrency as formatCurrencyP } from "@/utils/formatters";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceivablesTab } from "@/components/patrimonial/tabs/ReceivablesTab";
@@ -19,7 +22,10 @@ import { ProjectionsTab } from "@/components/patrimonial/tabs/ProjectionsTab";
 
 export default function PatrimonialPage() {
   const { transactions, config, addTransaction } = useTransactions();
-  const { caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
+  const { caixaAtual: caixaMeses } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
+  const caixaContas = useCaixaContas(transactions, config.saldoAnterior);
+  const caixaAtual = caixaContas.total ?? caixaMeses;
+  const caixaNota = caixaContas.ultimaConciliacao ? `Soma das contas · conciliado em ${fmtDataConc(caixaContas.ultimaConciliacao)}` : "Soma das contas · sem conciliação";
   const { isAdmin } = useAuth();
   const readOnly = !isAdmin;
 
@@ -50,6 +56,7 @@ export default function PatrimonialPage() {
           cashAvailable={kpis.cashAvailable}
           debtRate={kpis.debtRate}
         />
+        <p className="text-xs text-muted-foreground -mt-4">Caixa Atual {formatCurrencyP(caixaAtual)} — {caixaNota}</p>
 
         <Tabs defaultValue="receivables">
           <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full h-auto">
