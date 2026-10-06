@@ -67,7 +67,7 @@ export default function PendenciasPage() {
     const blocked = selected.filter(r => isMonthKeyLocked(getMonthFromDate(r.date)));
     const ids = selected.filter(r => !blocked.includes(r)).map(r => r.id);
     setBusy(true);
-    const patch: Record<string, unknown> = { category: cat, regra_aplicada: "pendencias: manual" };
+    const patch: { category: string; regra_aplicada: string; cliente?: string; forma_pagamento?: string } = { category: cat, regra_aplicada: "pendencias: manual" };
     if (cliente.trim()) patch.cliente = cliente.trim();
     if (forma) patch.forma_pagamento = forma;
     for (let i = 0; i < ids.length; i += 200) {
