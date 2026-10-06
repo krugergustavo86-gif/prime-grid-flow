@@ -29,7 +29,7 @@ export default function PatrimonialPage() {
       date: today,
       description: `Parcela ${loan.paidInstallments + 1}/${loan.totalInstallments} - ${loan.contract}`,
       type: "Saída",
-      category: "Empréstimos/Financiamentos",
+      category: "Parcelas de empréstimos/financiamentos/consórcios",
       value: paidValue,
       notes: `Lançamento automático - ${loan.institution || loan.type}`,
     });
