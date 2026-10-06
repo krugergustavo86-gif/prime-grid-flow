@@ -91,7 +91,6 @@ export function usePendingBoletos() {
         value: boleto.value,
         notes: boleto.notes || "",
         month: getMonthFromDate(date),
-        locked: false,
         created_by: user?.id ?? null,
       })
       .select()

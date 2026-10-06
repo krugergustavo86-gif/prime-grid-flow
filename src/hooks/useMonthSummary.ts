@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import { Transaction } from "@/types";
-import { LOCKED_MONTHS, LOCKED_BALANCES } from "@/utils/lockedMonths";
+import { isMonthLocked, getLockedBalance } from "@/utils/lockedMonths";
 
-export function useMonthSummary(monthTxns: Transaction[], monthNum: string) {
+export function useMonthSummary(monthTxns: Transaction[], monthNum: string, year: number) {
   return useMemo(() => {
     const entradas = monthTxns.filter(t => t.type === "Entrada").reduce((s, t) => s + t.value, 0);
     const saidas = monthTxns.filter(t => t.type === "Saída").reduce((s, t) => s + t.value, 0);
-    const isLocked = LOCKED_MONTHS.includes(monthNum);
-    const balanco = isLocked ? LOCKED_BALANCES[monthNum] : entradas - saidas;
+    const isLocked = isMonthLocked(monthNum, year);
+    const balanco = isLocked ? (getLockedBalance(monthNum, year) as number) : entradas - saidas;
     return { entradas, saidas, balanco, isLocked };
-  }, [monthTxns, monthNum]);
+  }, [monthTxns, monthNum, year]);
 }

@@ -10,7 +10,6 @@ import { DonutCharts } from "@/components/lancamentos/DonutCharts";
 import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
-import { PendingBoletosTab } from "@/components/lancamentos/PendingBoletosTab";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,9 +24,9 @@ export default function LancamentosPage() {
   const [editTx, setEditTx] = useState<Transaction | null>(null);
   const { canManageLancamentos, isGerencia } = useAuth();
 
-  const { addTransaction, updateTransaction, deleteTransaction, getTransactionsByMonth } = useTransactions();
+  const { addTransaction, updateTransaction, deleteTransaction, getTransactionsByMonth, config } = useTransactions();
   const monthTxns = getTransactionsByMonth(selectedMonth);
-  const { entradas, saidas, balanco, isLocked } = useMonthSummary(monthTxns, selectedMonth);
+  const { entradas, saidas, balanco, isLocked } = useMonthSummary(monthTxns, selectedMonth, config.ano);
   const { autoTxns, loading: autoLoading, reverseAutoTransaction } = useAutoTransactions();
 
   const readOnly = isGerencia || (!canManageLancamentos);
@@ -71,12 +70,11 @@ export default function LancamentosPage() {
           <TabsList>
             <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
             <TabsTrigger value="automaticos">Automáticos</TabsTrigger>
-            <TabsTrigger value="boletos">Boletos Pendentes</TabsTrigger>
           </TabsList>
 
 
           <TabsContent value="lancamentos" className="space-y-4 mt-4">
-            <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
+            <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} year={config.ano} />
             <MonthSummaryCards entradas={entradas} saidas={saidas} balanco={balanco} />
             <DonutCharts transactions={monthTxns} />
             <TransactionTable transactions={monthTxns} locked={isLocked || readOnly} onEdit={handleEdit} onDelete={handleDelete} />
@@ -91,9 +89,6 @@ export default function LancamentosPage() {
             />
           </TabsContent>
 
-          <TabsContent value="boletos" className="mt-4">
-            <PendingBoletosTab readOnly={readOnly} />
-          </TabsContent>
         </Tabs>
 
       </div>
