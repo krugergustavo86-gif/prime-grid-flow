@@ -31,6 +31,7 @@ const ACTION_META: Record<string, { label: string; color: string; Icon: typeof P
   UPDATE: { label: "Edição", color: "text-chart-saida bg-chart-saida/10", Icon: Pencil },
   DELETE: { label: "Exclusão", color: "text-destructive bg-destructive/10", Icon: Trash2 },
   LOGIN: { label: "Login", color: "text-primary bg-primary/10", Icon: LogIn },
+  ACESSO: { label: "Acesso", color: "text-primary bg-primary/10", Icon: LogIn },
   LOGOUT: { label: "Logout", color: "text-muted-foreground bg-muted", Icon: LogOut },
 };
 
