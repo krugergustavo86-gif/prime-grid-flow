@@ -16,7 +16,9 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    sessionStorage.setItem("primegrid_just_logged_in", "1");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) sessionStorage.removeItem("primegrid_just_logged_in");
     setLoading(false);
     if (error) {
       toast.error("Erro ao entrar: " + error.message);

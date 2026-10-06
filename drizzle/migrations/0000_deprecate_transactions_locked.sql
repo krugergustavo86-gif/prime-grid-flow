@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.transactions.locked IS 'DEPRECATED: meses fechados são definidos em src/utils/lockedMonths.ts (LOCKED_BALANCES). Coluna não é lida nem escrita pelo app.';

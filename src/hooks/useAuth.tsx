@@ -71,19 +71,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Registra no máximo 1 evento de acesso por usuário por dia neste navegador.
+    // Cobre logins novos e sessões que continuam abertas (o caso mais comum).
+    const logAccess = (u: User, isLogin: boolean) => {
+      const day = new Date().toISOString().slice(0, 10);
+      const k = `primegrid_access_logged_${u.id}`;
+      if (!isLogin && localStorage.getItem(k) === day) return;
+      localStorage.setItem(k, day);
+      setTimeout(async () => {
+        const { error } = await supabase.from("audit_log").insert({
+          user_id: u.id,
+          user_email: u.email ?? null,
+          action: isLogin ? "LOGIN" : "ACESSO",
+          entity: "auth",
+          description: `${isLogin ? "Login" : "Acesso"}: ${u.email ?? u.id}`,
+        });
+        if (error) {
+          console.error("[useAuth] failed to log access", error);
+          localStorage.removeItem(k);
+        }
+      }, 0);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       void syncAuthState(nextSession);
-      if (event === "SIGNED_IN" && nextSession?.user) {
-        const u = nextSession.user;
-        setTimeout(() => {
-          void supabase.from("audit_log").insert({
-            user_id: u.id,
-            user_email: u.email ?? null,
-            action: "LOGIN",
-            entity: "auth",
-            description: `Login: ${u.email ?? u.id}`,
-          });
-        }, 0);
+      if (nextSession?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        const fresh = event === "SIGNED_IN" && sessionStorage.getItem("primegrid_just_logged_in") === "1";
+        if (fresh) sessionStorage.removeItem("primegrid_just_logged_in");
+        logAccess(nextSession.user, fresh);
       }
     });
 
