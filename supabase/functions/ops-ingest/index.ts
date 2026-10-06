@@ -82,9 +82,23 @@ Deno.serve(async (req) => {
       ? String(descricao)
       : descParts.join(" ");
 
-    const finalCategory = categoria && String(categoria).trim().length > 0
-      ? String(categoria)
+    // Plano de contas: categorias antigas/" - Boleto" viram a categoria-base
+    const CATEGORY_MAP: Record<string, string> = {
+      "Energia Solar": "Energia Solar/BESS",
+      "Caminhão/Redes": "Redes, Padrões e Caminhão",
+      "Padrões/Redes/Caminhão": "Redes, Padrões e Caminhão",
+      "Emergências/Socorro": "Emergência e Socorro",
+      "Outros": "A classificar",
+      "Recebimentos": "A classificar",
+    };
+    const rawCategory = categoria && String(categoria).trim().length > 0
+      ? String(categoria).replace(/\s*-\s*Boleto\s*$/i, "").trim()
       : "Receita de Serviços";
+    const finalCategory = CATEGORY_MAP[rawCategory] ?? rawCategory;
+    const fp = String(forma_pagamento ?? "").toLowerCase();
+    const formaPagamento = fp.includes("pix") ? "PIX" : fp.includes("boleto") ? "Boleto"
+      : fp.includes("dinheiro") ? "Dinheiro" : fp.includes("cart") ? "Cartão"
+      : fp.includes("cheque") ? "Cheque" : (fp.includes("transf") || fp.includes("ted")) ? "Transferência" : null;
 
     const notesParts: string[] = [];
     if (forma_pagamento) notesParts.push(`Forma: ${forma_pagamento}`);
@@ -146,6 +160,8 @@ Deno.serve(async (req) => {
         notes,
         month,
         locked: false,
+        forma_pagamento: formaPagamento,
+        categoria_original: finalCategory,
       })
       .select()
       .single();

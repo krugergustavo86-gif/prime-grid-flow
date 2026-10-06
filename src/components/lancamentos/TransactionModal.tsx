@@ -145,6 +145,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
       category,
       value: numValue,
       notes: notes.trim() || undefined,
+      forma_pagamento: forma || null,
     });
     try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     onClose();
