@@ -46,9 +46,9 @@ const HORIZON_OPTIONS = [
 type CostKey = "folha" | "materiais" | "operacional" | "impostos" | "comissoes" | "outros";
 
 const COST_GROUPS: { key: CostKey; label: string; match: (cat: string) => boolean }[] = [
-  { key: "folha", label: "Folha de pagamento", match: c => c.includes("salário") || c.includes("salario") || c.includes("folha") || c.includes("reserva") || c.includes("décimo") || c.includes("decimo") || c.includes("férias") || c.includes("ferias") },
-  { key: "materiais", label: "Materiais", match: c => c.includes("materia") || c.includes("solar kit") },
-  { key: "operacional", label: "Custos operacionais", match: c => c.includes("custos fixos") || c.includes("custo operacional") || c.includes("combustível") || c.includes("combustivel") || c.includes("manutenç") },
+  { key: "folha", label: "Folha de pagamento", match: c => c.includes("salário") || c.includes("salario") || c.includes("folha") || c.includes("pró-labore") || c.includes("terceiriz") || c.includes("encargos") || c.includes("provisão") || c.includes("reserva") || c.includes("décimo") || c.includes("decimo") || c.includes("férias") || c.includes("ferias") },
+  { key: "materiais", label: "Materiais", match: c => c.includes("materia") || c.includes("solar kit") || c.includes("kits solar") || c.includes("geradores (") || c.includes("redes e caminh") || c.includes("taxas t") },
+  { key: "operacional", label: "Custos operacionais", match: c => c.includes("custos fixos") || c.includes("custo operacional") || c.includes("combustível") || c.includes("combustivel") || c.includes("manutenç") || c.includes("despesas gerais") || c.includes("centro comercial") },
   { key: "impostos", label: "Impostos/Contabilidade", match: c => c.includes("imposto") || c.includes("contabil") },
   { key: "comissoes", label: "Comissões/Marketing", match: c => c.includes("comiss") || c.includes("marketing") },
   { key: "outros", label: "Outros custos", match: () => false },

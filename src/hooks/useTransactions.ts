@@ -45,6 +45,7 @@ export function useTransactions() {
           month: r.month,
           created_at: r.created_at,
           created_by: r.created_by ?? null,
+          forma_pagamento: r.forma_pagamento ?? null,
         })));
 
         if (data.length < TRANSACTIONS_PAGE_SIZE) break;
@@ -83,6 +84,7 @@ export function useTransactions() {
         notes: tx.notes || "",
         month,
         created_by: user?.id ?? null,
+        forma_pagamento: tx.forma_pagamento ?? null,
       })
       .select()
       .single();
@@ -105,6 +107,7 @@ export function useTransactions() {
         month: data.month,
         created_at: data.created_at,
         created_by: data.created_by ?? null,
+        forma_pagamento: data.forma_pagamento ?? null,
       }]);
     }
     return true;

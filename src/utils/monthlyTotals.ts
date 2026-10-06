@@ -1,4 +1,5 @@
 import { Transaction } from "@/types";
+import { NON_OPERATIONAL_LIST } from "./categories";
 
 /**
  * FONTE ÚNICA dos totais mensais do caixa.
@@ -7,8 +8,9 @@ import { Transaction } from "@/types";
  * tabela (pending_boletos) e nunca entram aqui.
  */
 
-/** Categorias não operacionais: contam no caixa, mas ficam fora de DRE, relatórios por categoria e indicadores. */
-export const NON_OPERATIONAL_CATEGORIES = ["Ajuste de implantação (planilha)"];
+/** Categorias não operacionais (grupos Não operacional e Investimentos/Patrimônio do plano de contas):
+ * contam no caixa, mas ficam fora de DRE, relatórios por categoria e indicadores. */
+export const NON_OPERATIONAL_CATEGORIES = NON_OPERATIONAL_LIST;
 
 export function isOperational(t: Pick<Transaction, "category">): boolean {
   return !NON_OPERATIONAL_CATEGORIES.includes(t.category);

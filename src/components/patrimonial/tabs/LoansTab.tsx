@@ -1,3 +1,4 @@
+import { CATEGORIAS_SAIDA } from "@/utils/categories";
 import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loan, LoanType } from "@/types";
@@ -248,7 +249,7 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
   const [debitStartDate, setDebitStartDate] = useState(initial?.debitStartDate || "");
   const [debitEndDate, setDebitEndDate] = useState(initial?.debitEndDate || "");
   const [bankAccount, setBankAccount] = useState(initial?.bankAccount || "");
-  const [debitCategory, setDebitCategory] = useState(initial?.debitCategory || "Empréstimos/Financiamentos");
+  const [debitCategory, setDebitCategory] = useState(initial?.debitCategory || "Parcelas de empréstimos/financiamentos/consórcios");
 
   useEffect(() => {
     if (open) {
@@ -265,7 +266,7 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
       setDebitStartDate(initial?.debitStartDate || "");
       setDebitEndDate(initial?.debitEndDate || "");
       setBankAccount(initial?.bankAccount || "");
-      setDebitCategory(initial?.debitCategory || "Empréstimos/Financiamentos");
+      setDebitCategory(initial?.debitCategory || "Parcelas de empréstimos/financiamentos/consórcios");
     }
   }, [open, initial]);
 
@@ -288,12 +289,6 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
     });
   };
 
-  const CATEGORIAS_SAIDA = [
-    "Materiais", "Custos Fixos", "Custo Operacional/Cartões", "Combustível",
-    "Impostos/Contabilidade", "Reserva/Décimos/Férias", "Manutenções", "Investimentos",
-    "Salários", "Perdas", "Marketing", "Solar Kits", "Comissões/Vendedores",
-    "Geradores", "Centro Comercial", "Caminhões Padrões/Redes", "Empréstimos/Financiamentos",
-  ];
 
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
