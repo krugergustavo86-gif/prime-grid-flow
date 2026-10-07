@@ -494,7 +494,7 @@ export default function ReportsPage() {
             </TabsContent>
           </Tabs>
 
-          <PatrimonialReportSection periodTotals={totals} />
+          <PatrimonialReportSection periodo={dateRange} />
         </div>
       </div>
     </div>

@@ -1,8 +1,6 @@
 import { useMemo } from "react";
-import { usePatrimony } from "@/hooks/usePatrimony";
-import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
+import { usePosicaoPatrimonial, margemOperacional } from "@/hooks/usePosicaoPatrimonial";
 import { useTransactions } from "@/hooks/useTransactions";
-import { useAnnualSummary } from "@/hooks/useAnnualSummary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/formatters";
@@ -22,14 +20,13 @@ function Kpi({ title, value, color = "text-foreground" }: { title: string; value
 }
 
 interface Props {
-  periodTotals?: { entradas: number; saidas: number; lucro: number };
+  periodo?: { start: string; end: string };
 }
 
-export function PatrimonialReportSection({ periodTotals }: Props = {}) {
+export function PatrimonialReportSection({ periodo }: Props = {}) {
   const { transactions, config } = useTransactions();
-  const { caixaAtual } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
-  const patrimony = usePatrimony();
-  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual);
+  const pos = usePosicaoPatrimonial(transactions, config);
+  const { patrimony, kpis, stockTotal } = pos;
   const { assets, receivables, doubtfulCredits, loans, payables } = patrimony;
 
   // Composição patrimonial - totais por tipo
@@ -43,9 +40,10 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
     });
     const arr = Object.entries(m).map(([name, data]) => ({ name, value: data.value, count: data.count }));
     arr.push({ name: "Caixa/Invest.", value: kpis.cashAvailable, count: 1 });
+    arr.push({ name: "Estoque Rotativo", value: stockTotal, count: 1 });
     arr.push({ name: "A Receber", value: kpis.totalReceivables, count: receivables.filter(r => r.status !== "Recebido").length });
     return arr.filter(d => d.value > 0).sort((a, b) => b.value - a.value);
-  }, [assets, kpis, receivables]);
+  }, [assets, kpis, receivables, stockTotal]);
 
   const totalAtivos = compAssets.reduce((s, a) => s + a.value, 0);
 
@@ -108,10 +106,12 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
 
   // Indicadores financeiros
   const debtRate = ativoTotal > 0 ? (passivoTotal / ativoTotal) * 100 : 0;
-  const ativoCirculante = kpis.cashAvailable + kpis.totalReceivables;
-  const passivoCirculante = payables.filter(p => p.status !== "Pago").reduce((s, p) => s + p.value, 0);
-  const liquidez = passivoCirculante > 0 ? ativoCirculante / passivoCirculante : 0;
-  const margem = periodTotals && periodTotals.entradas > 0 ? (periodTotals.lucro / periodTotals.entradas) * 100 : null;
+  const liquidez = pos.liquidezCorrente;
+  const liquidezImediata = pos.liquidezImediata;
+  const per = periodo ?? { start: `${config.ano}-01-01`, end: `${config.ano}-12-31` };
+  const mo = margemOperacional(transactions, per.start, per.end);
+  const margem = mo.margem;
+  const fmtD = (d: string) => d.split("-").reverse().join("/");
 
   const debtColor = debtRate < 50 ? "text-chart-entrada" : debtRate <= 70 ? "text-yellow-500" : "text-chart-saida";
   const liqColor = liquidez >= 1.5 ? "text-chart-entrada" : liquidez >= 1 ? "text-yellow-500" : "text-chart-saida";
@@ -166,13 +166,15 @@ export function PatrimonialReportSection({ periodTotals }: Props = {}) {
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Liquidez Corrente</p>
               <p className={`text-2xl font-bold tabular-nums ${liqColor}`}>{liquidez.toFixed(2)}</p>
               <p className="text-[10px] text-muted-foreground mt-1">Caixa+Receber / A Pagar · {liquidez >= 1.5 ? "Forte" : liquidez >= 1 ? "Adequada" : "Insuficiente"}</p>
+              <p className="text-xs mt-2"><span className="text-muted-foreground">Liquidez imediata:</span> <span className="font-semibold tabular-nums">{liquidezImediata.toFixed(2)}</span></p>
+              <p className="text-[10px] text-muted-foreground">Caixa / A Pagar em até 90 dias (sem recebíveis)</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Margem de Lucro</p>
               <p className={`text-2xl font-bold tabular-nums ${margemColor}`}>{margem === null ? "—" : `${margem.toFixed(1)}%`}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Lucro / Receita do período</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Só operacional · {fmtD(per.start)} a {fmtD(per.end)}</p>
             </CardContent>
           </Card>
         </CardContent>

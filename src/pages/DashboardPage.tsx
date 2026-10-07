@@ -1,10 +1,6 @@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useAnnualSummary } from "@/hooks/useAnnualSummary";
-import { useCaixaContas } from "@/hooks/useCaixaContas";
-import { formatDateBR as fmtDataConc } from "@/utils/formatters";
-import { usePatrimony } from "@/hooks/usePatrimony";
-import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
-import { useStock } from "@/hooks/useStock";
+import { usePosicaoPatrimonial } from "@/hooks/usePosicaoPatrimonial";
 import { KPICards } from "@/components/dashboard/KPICards";
 import { BarChartMensal } from "@/components/dashboard/BarChartMensal";
 import { LineChartCaixa } from "@/components/dashboard/LineChartCaixa";
@@ -22,13 +18,8 @@ const CHART_COLORS = [
 
 export default function DashboardPage() {
   const { transactions, config } = useTransactions();
-  const { months, totalEntradas, totalSaidas, acumuladoAno, caixaAtual: caixaMeses } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
-  const caixaContas = useCaixaContas(transactions, config.saldoAnterior);
-  const caixaAtual = caixaContas.total ?? caixaMeses;
-  const caixaNota = caixaContas.ultimaConciliacao ? `Soma das contas · conciliado em ${fmtDataConc(caixaContas.ultimaConciliacao)}` : "Soma das contas · sem conciliação";
-  const patrimony = usePatrimony();
-  const { totalValue: stockTotal } = useStock();
-  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
+  const { months, totalEntradas, totalSaidas, acumuladoAno } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
+  const { caixaAtual, caixaNota, patrimony, kpis } = usePosicaoPatrimonial(transactions, config);
 
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
 

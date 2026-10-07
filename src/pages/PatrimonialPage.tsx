@@ -1,11 +1,6 @@
 import { useCallback } from "react";
-import { usePatrimony } from "@/hooks/usePatrimony";
-import { usePatrimonyKPIs } from "@/hooks/usePatrimonyKPIs";
-import { useStock } from "@/hooks/useStock";
 import { useTransactions } from "@/hooks/useTransactions";
-import { useAnnualSummary } from "@/hooks/useAnnualSummary";
-import { useCaixaContas } from "@/hooks/useCaixaContas";
-import { formatDateBR as fmtDataConc } from "@/utils/formatters";
+import { usePosicaoPatrimonial } from "@/hooks/usePosicaoPatrimonial";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/layout/Header";
 import { PatrimonyKPICards } from "@/components/patrimonial/PatrimonyKPICards";
@@ -22,10 +17,7 @@ import { ProjectionsTab } from "@/components/patrimonial/tabs/ProjectionsTab";
 
 export default function PatrimonialPage() {
   const { transactions, config, addTransaction } = useTransactions();
-  const { caixaAtual: caixaMeses } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
-  const caixaContas = useCaixaContas(transactions, config.saldoAnterior);
-  const caixaAtual = caixaContas.total ?? caixaMeses;
-  const caixaNota = caixaContas.ultimaConciliacao ? `Soma das contas · conciliado em ${fmtDataConc(caixaContas.ultimaConciliacao)}` : "Soma das contas · sem conciliação";
+  const { caixaAtual, caixaNota, patrimony, kpis } = usePosicaoPatrimonial(transactions, config);
   const { isAdmin } = useAuth();
   const readOnly = !isAdmin;
 
@@ -40,9 +32,6 @@ export default function PatrimonialPage() {
       notes: `Lançamento automático - ${loan.institution || loan.type}`,
     });
   }, [addTransaction]);
-  const patrimony = usePatrimony();
-  const { totalValue: stockTotal } = useStock();
-  const kpis = usePatrimonyKPIs(patrimony, config.numSocios, caixaAtual, stockTotal);
 
   return (
     <div className="flex flex-col h-full">
