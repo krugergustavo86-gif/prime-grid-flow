@@ -43,6 +43,13 @@
       "when": 1791322576049,
       "tag": "0005_conciliacao_fix_order",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791369950308,
+      "tag": "0006_ordens_servico",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,7 @@ export interface MesCusto {
   despOp: number;
   custoOp: number;
   custoFixo: number;
+  kits: number;
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -33,15 +34,16 @@ export function custosPorMes(txns: Transaction[]): Record<string, MesCusto> {
     const custoDireto = r2(g["Saída|Custo direto"] ?? 0);
     const pessoal = r2(g["Saída|Pessoal (folha)"] ?? 0);
     const despOp = r2(g["Saída|Despesas operacionais"] ?? 0);
+    const kits = r2(m.byCategory["Saída|Kits Solar/BESS"]?.value ?? 0);
     out[key] = {
       key, receita: r2(g[`Entrada|${GRUPO_RECEITA}`] ?? 0), custoDireto, pessoal, despOp,
-      custoOp: r2(custoDireto + pessoal + despOp), custoFixo: r2(pessoal + despOp),
+      custoOp: r2(custoDireto + pessoal + despOp), custoFixo: r2(pessoal + despOp), kits,
     };
   }
   return out;
 }
 
-const vazio = (key: string): MesCusto => ({ key, receita: 0, custoDireto: 0, pessoal: 0, despOp: 0, custoOp: 0, custoFixo: 0 });
+const vazio = (key: string): MesCusto => ({ key, receita: 0, custoDireto: 0, pessoal: 0, despOp: 0, custoOp: 0, custoFixo: 0, kits: 0 });
 
 export function mesKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
