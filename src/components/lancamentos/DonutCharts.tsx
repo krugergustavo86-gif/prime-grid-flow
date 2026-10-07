@@ -1,22 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { GroupDetailSheet, ViewModeToggle, totalsBy, type ViewMode, type DetailSelection } from "@/components/lancamentos/GroupDetailSheet";
 import { isOperational } from "@/utils/monthlyTotals";
-import { supabase } from "@/integrations/supabase/client";
 
 const SAIDA_COLORS = ["#A32D2D", "#C44D4D", "#D46A6A", "#E08888", "#EBA5A5", "#D45C2E", "#E07A4E", "#CC3333", "#B54040", "#993333", "#CC6633", "#DD8855", "#AA4422", "#BB6644", "#CC8866", "#DD9977"];
 const ENTRADA_COLORS = ["#0F6E56", "#1A8A6E", "#25A686", "#30C29E", "#4DD4B0", "#0A5C47", "#147A60", "#1E9878", "#28B690", "#32D4A8"];
 
 interface DonutChartsProps {
   transactions: Transaction[];
-}
-
-function groupByCategory(txns: Transaction[]): { name: string; value: number }[] {
-  const map: Record<string, number> = {};
-  txns.forEach(t => { map[t.category] = (map[t.category] || 0) + t.value; });
-  return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 }
 
 function DonutChart({ data, colors, title, onSelect }: { data: { name: string; value: number }[]; colors: string[]; title: string; onSelect: (name: string) => void }) {
@@ -65,64 +58,20 @@ function DonutChart({ data, colors, title, onSelect }: { data: { name: string; v
 }
 
 export function DonutCharts({ transactions }: DonutChartsProps) {
-  const saidas = groupByCategory(transactions.filter(t => t.type === "Saída" && isOperational(t)));
-  const entradas = groupByCategory(transactions.filter(t => t.type === "Entrada" && isOperational(t)));
-  const [selected, setSelected] = useState<{ type: "Saída" | "Entrada"; category: string } | null>(null);
-  const [users, setUsers] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!selected) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase.from("audit_log").select("user_id,user_email").not("user_id", "is", null).not("user_email", "is", null).limit(1000);
-      if (cancelled || !data) return;
-      const map: Record<string, string> = {};
-      data.forEach(r => { if (r.user_id && r.user_email) map[r.user_id] = r.user_email; });
-      setUsers(map);
-    })();
-    return () => { cancelled = true; };
-  }, [selected]);
-
-  const list = useMemo(() => {
-    if (!selected) return [];
-    return transactions
-      .filter(t => t.type === selected.type && t.category === selected.category)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  }, [selected, transactions]);
-  const total = list.reduce((s, t) => s + t.value, 0);
+  const [mode, setMode] = useState<ViewMode>("grupo");
+  const saidas = totalsBy(transactions.filter(t => t.type === "Saída" && isOperational(t)), mode);
+  const entradas = totalsBy(transactions.filter(t => t.type === "Entrada" && isOperational(t)), mode);
+  const [selected, setSelected] = useState<DetailSelection | null>(null);
+  const label = mode === "grupo" ? "Grupo" : "Categoria";
 
   return (
     <>
+      <div className="flex justify-end mb-2"><ViewModeToggle mode={mode} onChange={setMode} /></div>
       <div className="flex flex-col sm:flex-row gap-4">
-        <DonutChart data={saidas} colors={SAIDA_COLORS} title="Saídas por Categoria" onSelect={c => setSelected({ type: "Saída", category: c })} />
-        <DonutChart data={entradas} colors={ENTRADA_COLORS} title="Entradas por Categoria" onSelect={c => setSelected({ type: "Entrada", category: c })} />
+        <DonutChart data={saidas} colors={SAIDA_COLORS} title={`Saídas por ${label}`} onSelect={c => setSelected({ type: "Saída", name: c, mode })} />
+        <DonutChart data={entradas} colors={ENTRADA_COLORS} title={`Entradas por ${label}`} onSelect={c => setSelected({ type: "Entrada", name: c, mode })} />
       </div>
-      <Sheet open={!!selected} onOpenChange={o => !o && setSelected(null)}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{selected?.category}</SheetTitle>
-            <SheetDescription>
-              {selected?.type === "Saída" ? "Saídas" : "Entradas"} · {list.length} lançamento(s) · Total{" "}
-              <span className={selected?.type === "Saída" ? "text-destructive font-semibold" : "text-chart-entrada font-semibold"}>{formatCurrency(total)}</span>
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-4 divide-y" data-testid="category-tx-list">
-            {list.map(t => (
-              <div key={t.id} className="py-2 flex items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground break-words">{t.description}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {new Date(t.date + "T12:00:00").toLocaleDateString("pt-BR")}
-                    {" · "}
-                    {t.created_by ? (users[t.created_by] ?? "Usuário") : "Sistema/importação"}
-                  </p>
-                </div>
-                <p className="text-sm font-medium tabular-nums shrink-0">{formatCurrency(t.value)}</p>
-              </div>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <GroupDetailSheet transactions={transactions} selected={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

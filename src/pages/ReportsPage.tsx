@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { isOperational } from "@/utils/monthlyTotals";
+import { GroupDetailSheet, ViewModeToggle, totalsBy, type ViewMode, type DetailSelection } from "@/components/lancamentos/GroupDetailSheet";
 import { PatrimonialReportSection } from "@/components/reports/PatrimonialReportSection";
 
 type PeriodType = "month" | "quarter" | "semester" | "year" | "custom";
@@ -115,8 +116,11 @@ export default function ReportsPage() {
     });
   }, [filtered]);
 
-  const saidasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Saída" && isOperational(t))), [filtered]);
-  const entradasPorCategoria = useMemo(() => groupCategory(filtered.filter(t => t.type === "Entrada" && isOperational(t))), [filtered]);
+  const [viewMode, setViewMode] = useState<ViewMode>("grupo");
+  const [detail, setDetail] = useState<DetailSelection | null>(null);
+  const saidasPorCategoria = useMemo(() => totalsBy(filtered.filter(t => t.type === "Saída" && isOperational(t)), viewMode), [filtered, viewMode]);
+  const entradasPorCategoria = useMemo(() => totalsBy(filtered.filter(t => t.type === "Entrada" && isOperational(t)), viewMode), [filtered, viewMode]);
+  const porLabel = viewMode === "grupo" ? "Grupo" : "Categoria";
 
   // Compare current vs previous month
   const comparison = useMemo(() => {
@@ -378,17 +382,18 @@ export default function ReportsPage() {
                 </CardContent>
               </Card>
 
+              <div className="flex justify-end"><ViewModeToggle mode={viewMode} onChange={setViewMode} /></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
-                  <CardHeader className="pb-2"><CardTitle className="text-base">Despesas por Categoria</CardTitle></CardHeader>
+                  <CardHeader className="pb-2"><CardTitle className="text-base">Despesas por {porLabel}</CardTitle></CardHeader>
                   <CardContent>
-                    <PieBlock data={saidasPorCategoria} />
+                    <PieBlock data={saidasPorCategoria} onSelect={n => setDetail({ type: "Saída", name: n, mode: viewMode })} />
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader className="pb-2"><CardTitle className="text-base">Receitas por Categoria</CardTitle></CardHeader>
+                  <CardHeader className="pb-2"><CardTitle className="text-base">Receitas por {porLabel}</CardTitle></CardHeader>
                   <CardContent>
-                    <PieBlock data={entradasPorCategoria} />
+                    <PieBlock data={entradasPorCategoria} onSelect={n => setDetail({ type: "Entrada", name: n, mode: viewMode })} />
                   </CardContent>
                 </Card>
               </div>
@@ -417,8 +422,9 @@ export default function ReportsPage() {
             </TabsContent>
 
             <TabsContent value="tables" className="space-y-4">
-              <CategoryTable title="Despesas por Categoria" data={saidasPorCategoria} />
-              <CategoryTable title="Receitas por Categoria" data={entradasPorCategoria} />
+              <div className="flex justify-end"><ViewModeToggle mode={viewMode} onChange={setViewMode} /></div>
+              <CategoryTable title={`Despesas por ${porLabel}`} data={saidasPorCategoria} onSelect={n => setDetail({ type: "Saída", name: n, mode: viewMode })} />
+              <CategoryTable title={`Receitas por ${porLabel}`} data={entradasPorCategoria} onSelect={n => setDetail({ type: "Entrada", name: n, mode: viewMode })} />
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-base">Resumo Mensal</CardTitle></CardHeader>
                 <CardContent>
@@ -495,6 +501,7 @@ export default function ReportsPage() {
           </Tabs>
 
           <PatrimonialReportSection periodo={dateRange} />
+          <GroupDetailSheet transactions={filtered} selected={detail} onClose={() => setDetail(null)} />
         </div>
       </div>
     </div>
@@ -541,7 +548,7 @@ function CompareRow({ label, pct, positiveIsGood }: { label: string; pct: number
   );
 }
 
-function PieBlock({ data }: { data: { name: string; value: number }[] }) {
+function PieBlock({ data, onSelect }: { data: { name: string; value: number }[]; onSelect?: (name: string) => void }) {
   if (data.length === 0) return <div className="text-center text-sm text-muted-foreground py-8">Sem dados</div>;
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
@@ -549,14 +556,14 @@ function PieBlock({ data }: { data: { name: string; value: number }[] }) {
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2}>
-            {data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+            {data.map((d, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} className="cursor-pointer" onClick={() => onSelect?.(d.name)} />)}
           </Pie>
           <Tooltip formatter={(v: number) => formatCurrency(v)} />
         </PieChart>
       </ResponsiveContainer>
       <div className="space-y-1 mt-2 max-h-40 overflow-y-auto">
         {data.map((d, i) => (
-          <div key={d.name} className="flex items-center gap-2 text-xs">
+          <div key={d.name} className="flex items-center gap-2 text-xs cursor-pointer rounded px-1 hover:bg-muted" onClick={() => onSelect?.(d.name)}>
             <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
             <span className="truncate flex-1">{d.name}</span>
             <span className="tabular-nums text-muted-foreground">{formatCurrency(d.value)}</span>
@@ -568,7 +575,7 @@ function PieBlock({ data }: { data: { name: string; value: number }[] }) {
   );
 }
 
-function CategoryTable({ title, data }: { title: string; data: { name: string; value: number }[] }) {
+function CategoryTable({ title, data, onSelect }: { title: string; data: { name: string; value: number }[]; onSelect?: (name: string) => void }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
     <Card>
@@ -577,7 +584,7 @@ function CategoryTable({ title, data }: { title: string; data: { name: string; v
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="text-right w-20">%</TableHead>
             </TableRow>
@@ -586,7 +593,7 @@ function CategoryTable({ title, data }: { title: string; data: { name: string; v
             {data.length === 0 ? (
               <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Sem dados</TableCell></TableRow>
             ) : data.map(d => (
-              <TableRow key={d.name}>
+              <TableRow key={d.name} className="cursor-pointer" onClick={() => onSelect?.(d.name)}>
                 <TableCell className="font-medium">{d.name}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatCurrency(d.value)}</TableCell>
                 <TableCell className="text-right tabular-nums">{total > 0 ? ((d.value / total) * 100).toFixed(1) : 0}%</TableCell>
