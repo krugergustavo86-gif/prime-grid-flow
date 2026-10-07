@@ -471,6 +471,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ordens_servico: {
+        Row: {
+          area: string | null
+          atualizado_em: string
+          cliente: string | null
+          data_abertura: string | null
+          data_execucao: string | null
+          numero: string
+          payload: Json | null
+          status: string | null
+          valor: number | null
+        }
+        Insert: {
+          area?: string | null
+          atualizado_em?: string
+          cliente?: string | null
+          data_abertura?: string | null
+          data_execucao?: string | null
+          numero: string
+          payload?: Json | null
+          status?: string | null
+          valor?: number | null
+        }
+        Update: {
+          area?: string | null
+          atualizado_em?: string
+          cliente?: string | null
+          data_abertura?: string | null
+          data_execucao?: string | null
+          numero?: string
+          payload?: Json | null
+          status?: string | null
+          valor?: number | null
+        }
+        Relationships: []
+      }
       patrimony_snapshots: {
         Row: {
           created_at: string
