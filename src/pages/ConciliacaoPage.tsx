@@ -40,6 +40,24 @@ export default function ConciliacaoPage() {
   };
   useEffect(() => { void loadUltimas(); }, []);
 
+  // Lançamentos feitos depois da conciliação com data anterior a ela (mês aberto)
+  const [pendAjuste, setPendAjuste] = useState<{ id: string; date: string; description: string; type: string; value: number }[]>([]);
+  const loadPend = async () => {
+    const { data: rows } = await supabase.rpc("lancamentos_pos_conciliacao");
+    setPendAjuste((rows ?? []).map(r => ({ ...r, value: Number(r.value) })));
+  };
+  useEffect(() => { void loadPend(); }, []);
+  const netPend = pendAjuste.reduce((s, t) => s + (t.type === "Entrada" ? t.value : -t.value), 0);
+  const recalcular = async () => {
+    if (!window.confirm(`Esses lançamentos já estavam no saldo do banco? O ajuste de conciliação será reduzido em ${formatCurrency(netPend)} e o caixa não muda.`)) return;
+    setBusy(true);
+    const { data: novo, error } = await supabase.rpc("recalcular_ajuste_conciliacao");
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Ajuste recalculado: ${formatCurrency(Number(novo))}`);
+    setTimeout(() => window.location.reload(), 600);
+  };
+
   const sistema = useMemo(() => saldosPorConta(contas, transactions, config.saldoAnterior, data),
     [contas, transactions, config.saldoAnterior, data]);
 
@@ -84,6 +102,18 @@ export default function ConciliacaoPage() {
     <div className="flex flex-col h-full">
       <Header title="Conciliação bancária" />
       <div className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4 space-y-6">
+        {pendAjuste.length > 0 && (
+          <div className="border border-destructive/40 bg-destructive/5 rounded-lg p-4 space-y-2">
+            <p className="text-sm font-medium text-destructive">
+              {pendAjuste.length} lançamento(s) feitos depois da última conciliação com data anterior a ela ({formatCurrency(netPend)} líquido).
+              Se já estavam no saldo do banco, o caixa ficou fora do real.
+            </p>
+            <ul className="text-xs text-muted-foreground">
+              {pendAjuste.slice(0, 10).map(t => <li key={t.id}>{formatDateBR(t.date)} · {t.description} · {t.type === "Entrada" ? "+" : "−"}{formatCurrency(t.value)}</li>)}
+            </ul>
+            {canEdit && <Button size="sm" onClick={recalcular} disabled={busy}>Recalcular ajuste</Button>}
+          </div>
+        )}
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <Label>Data do saldo do banco</Label>
