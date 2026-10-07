@@ -50,6 +50,13 @@
       "when": 1791369950308,
       "tag": "0006_ordens_servico",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791371706434,
+      "tag": "0007_recalcular_ajuste_conciliacao",
+      "breakpoints": true
     }
   ]
 }
