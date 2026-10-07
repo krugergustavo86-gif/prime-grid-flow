@@ -12,6 +12,7 @@ import { isOperational } from "@/utils/monthlyTotals";
 function toISO(d?: string | null): string | null {
   if (!d) return null;
   const p = d.split("/");
+  if (p.length === 2) return `${new Date().getFullYear()}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}`; // sem ano: ano corrente
   return p.length === 3 ? `${p[2]}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}` : d.slice(0, 10);
 }
 

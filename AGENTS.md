@@ -4,6 +4,6 @@
 - Category reclassification never changes value/date; transactions.categoria_original keeps the pre-reclassification category (set by insert trigger) and regra_aplicada records which rule changed it.
 - Supplier rules live in regras_categoria (normalized lowercase/no-accent text, priority order); used to prefill category in TransactionModal and by the Fornecedores screen.
 - Transaction pagination must order by a unique tiebreaker (date, id) — non-unique ordering duplicates/skips rows across pages.
-- Patrimony KPIs: always call usePatrimonyKPIs with stock total (useStock) on every screen so Dashboard and Patrimonial match.
+- Patrimony position (Ativo incl. stock, Passivo, PL, debt rate, liquidity) and operational profit margin come only from src/hooks/usePosicaoPatrimonial.ts — screens never call usePatrimonyKPIs directly, so all screens match.
 - Bank statement import (ImportExtratoDialog + utils/bankStatement.ts) writes nothing before user review; dedupe by (conta_id, fitid) or import_key unique indexes; "A classificar" (either type) is the single source for the Pendências queue.
 - Account balances: src/utils/saldosContas.ts — account = saldo_abertura + its transactions after data_abertura; the 'Histórico consolidado' account is the residual (total cash − other accounts), so Caixa Atual = sum of accounts = monthlyTotals cash. Reconciliation adjustment + rebase via aplicar_conciliacao RPC.
