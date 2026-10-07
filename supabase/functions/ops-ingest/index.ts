@@ -29,6 +29,36 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+
+    // Evento de OS (cadastro/status/conclusão) — não gera lançamento de caixa.
+    if (body?.evento === "os" || body?.evento === "os_lote") {
+      const lista = body.evento === "os_lote" ? (body.ordens ?? []) : [body];
+      const AREAS: Record<string, string> = {
+        "adm geral": "ADM Geral", "caminhao/redes": "Caminhão/Redes", "tecnica": "Técnica",
+        "geradores": "Geradores", "emergencia": "Emergência", "solar/projetos": "Solar/Projetos",
+      };
+      const nrm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const okDate = (d: unknown) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : null;
+      const rows = [];
+      for (const o of lista) {
+        if (!o?.numero) continue;
+        const a = o.area ? String(o.area) : null;
+        rows.push({
+          numero: String(o.numero), cliente: o.cliente ?? null,
+          area: a ? (AREAS[nrm(a)] ?? a) : null, status: o.status ? String(o.status) : null,
+          data_abertura: okDate(o.data_abertura), data_execucao: okDate(o.data_execucao),
+          valor: Number.isFinite(Number(o.valor)) ? Number(o.valor) : null,
+          atualizado_em: new Date().toISOString(), payload: o,
+        });
+      }
+      if (!rows.length) {
+        return new Response(JSON.stringify({ error: "nenhuma OS com numero" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { error: e } = await sb.from("ordens_servico").upsert(rows, { onConflict: "numero" });
+      if (e) return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true, ordens: rows.length }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const {
       valor,
       tipo,
