@@ -67,7 +67,10 @@ export function indicadoresCusto(txns: Transaction[], n: number, hoje = new Date
     const k = mesKey(new Date(hoje.getFullYear(), hoje.getMonth() - i, 1));
     meses.push(pm[k] ?? vazio(k));
   }
-  const avg = (f: (m: MesCusto) => number) => r2(meses.reduce((s, m) => s + f(m), 0) / n);
+  // Meses sem nenhum lançamento (antes do início do sistema) não entram no divisor.
+  const comDados = meses.filter(m => pm[m.key]);
+  const div = Math.max(comDados.length, 1);
+  const avg = (f: (m: MesCusto) => number) => r2(comDados.reduce((s, m) => s + f(m), 0) / div);
   const receitaMedia = avg(m => m.receita);
   const custoDiretoMedio = avg(m => m.custoDireto);
   const custoFixoMedio = avg(m => m.custoFixo);
@@ -76,7 +79,7 @@ export function indicadoresCusto(txns: Transaction[], n: number, hoje = new Date
   const folga = pontoEquilibrio ? receitaMedia / pontoEquilibrio - 1 : null;
   const ak = mesKey(hoje);
   return {
-    meses, atual: pm[ak] ?? vazio(ak), custoOpMedio: avg(m => m.custoOp), custoFixoMedio,
+    meses: comDados.length ? comDados : meses, atual: pm[ak] ?? vazio(ak), custoOpMedio: avg(m => m.custoOp), custoFixoMedio,
     receitaMedia, custoDiretoMedio, margemContrib, pontoEquilibrio, folga,
   };
 }

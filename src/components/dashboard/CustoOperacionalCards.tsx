@@ -13,7 +13,8 @@ export function CustoOperacionalCards({ transactions }: { transactions: Transact
   const [n, setN] = useState(6);
   const [open, setOpen] = useState(false);
   const ind = useMemo(() => indicadoresCusto(transactions, n), [transactions, n]);
-  const periodo = `${lbl(ind.meses[0].key)} a ${lbl(ind.meses[n - 1].key)}`;
+  const nm = ind.meses.length;
+  const periodo = `${lbl(ind.meses[0].key)} a ${lbl(ind.meses[nm - 1].key)}${nm < n ? ` (só ${nm} meses com dados)` : ""}`;
   const varOp = ind.custoOpMedio > 0 ? ind.atual.custoOp / ind.custoOpMedio - 1 : null;
   const varFixo = ind.custoFixoMedio > 0 ? ind.atual.custoFixo / ind.custoFixoMedio - 1 : null;
 
@@ -72,8 +73,8 @@ export function CustoOperacionalCards({ transactions }: { transactions: Transact
             </TableHeader>
             <TableBody>
               {[...ind.meses, ind.atual].map((m, i) => (
-                <TableRow key={m.key} className={i === n ? "text-muted-foreground italic" : ""}>
-                  <TableCell>{lbl(m.key)}{i === n && " (atual, fora da média)"}</TableCell>
+                <TableRow key={m.key} className={i === nm ? "text-muted-foreground italic" : ""}>
+                  <TableCell>{lbl(m.key)}{i === nm && " (atual, fora da média)"}</TableCell>
                   {[m.receita, m.custoDireto, m.pessoal, m.despOp, m.custoFixo, m.custoOp].map((v, j) => (
                     <TableCell key={j} className="text-right tabular-nums">{formatCurrency(v)}</TableCell>
                   ))}
@@ -82,9 +83,9 @@ export function CustoOperacionalCards({ transactions }: { transactions: Transact
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell>Média {n}m</TableCell>
-                {[ind.receitaMedia, ind.custoDiretoMedio, ind.meses.reduce((s, m) => s + m.pessoal, 0) / n,
-                  ind.meses.reduce((s, m) => s + m.despOp, 0) / n, ind.custoFixoMedio, ind.custoOpMedio].map((v, j) => (
+                <TableCell>Média {nm}m</TableCell>
+                {[ind.receitaMedia, ind.custoDiretoMedio, ind.meses.reduce((s, m) => s + m.pessoal, 0) / nm,
+                  ind.meses.reduce((s, m) => s + m.despOp, 0) / nm, ind.custoFixoMedio, ind.custoOpMedio].map((v, j) => (
                   <TableCell key={j} className="text-right tabular-nums">{formatCurrency(v)}</TableCell>
                 ))}
               </TableRow>
