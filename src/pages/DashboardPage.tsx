@@ -9,6 +9,9 @@ import { Header } from "@/components/layout/Header";
 import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/formatters";
+import { groupOf } from "@/utils/categories";
+import { isOperational } from "@/utils/monthlyTotals";
+import { Users } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 const CHART_COLORS = [
@@ -22,6 +25,19 @@ export default function DashboardPage() {
   const { caixaAtual, caixaNota, patrimony, kpis } = usePosicaoPatrimonial(transactions, config);
 
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
+
+  // Folha do mês = grupo "Pessoal (folha)"
+  const folhaDe = (key: string) => transactions
+    .filter(t => t.type === "Saída" && t.date.startsWith(key) && groupOf(t.type, t.category) === "Pessoal (folha)")
+    .reduce((s, t) => s + t.value, 0);
+  const nowD = new Date();
+  const curKey = `${nowD.getFullYear()}-${currentMonth}`;
+  const prevD = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 1);
+  const prevKey = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, "0")}`;
+  const folhaMes = folhaDe(curKey);
+  const folhaAnt = folhaDe(prevKey);
+  const receitaOpMes = transactions.filter(t => t.type === "Entrada" && t.date.startsWith(curKey) && isOperational(t)).reduce((s, t) => s + t.value, 0);
+  const folhaVar = folhaAnt > 0 ? ((folhaMes - folhaAnt) / folhaAnt) * 100 : null;
 
   // Upcoming payments (loans + payables)
   const upcomingItems: { label: string; date: string; value: number; type: "loan" | "payable" }[] = [];
@@ -68,6 +84,17 @@ export default function DashboardPage() {
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Módulo de Caixa</h2>
           <KPICards caixaAtual={caixaAtual} totalEntradas={totalEntradas} totalSaidas={totalSaidas} acumuladoAno={acumuladoAno} caixaNota={caixaNota} />
+          <div className="bg-card rounded-lg border p-4 mt-4 animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-4 w-4 text-chart-saida" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Folha do mês ({currentMonth}/{nowD.getFullYear()})</span>
+            </div>
+            <p className="text-lg md:text-xl font-bold tabular-nums text-chart-saida">{formatCurrency(folhaMes)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Mês anterior {formatCurrency(folhaAnt)}{folhaVar !== null && ` (${folhaVar >= 0 ? "+" : ""}${folhaVar.toFixed(1)}%)`}
+              {" · "}{receitaOpMes > 0 ? `${((folhaMes / receitaOpMes) * 100).toFixed(1)}% da receita operacional` : "sem receita operacional no mês"}
+            </p>
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <BarChartMensal months={months} />
