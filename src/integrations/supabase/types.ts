@@ -789,6 +789,7 @@ export type Database = {
       }
       transactions: {
         Row: {
+          absorvido_conciliacao: boolean
           categoria_original: string | null
           category: string
           cliente: string | null
@@ -809,6 +810,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          absorvido_conciliacao?: boolean
           categoria_original?: string | null
           category: string
           cliente?: string | null
@@ -829,6 +831,7 @@ export type Database = {
           value: number
         }
         Update: {
+          absorvido_conciliacao?: boolean
           categoria_original?: string | null
           category?: string
           cliente?: string | null
@@ -897,8 +900,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      lancamentos_pos_conciliacao: {
+        Args: never
+        Returns: {
+          ajuste_id: string
+          conc_data: string
+          date: string
+          description: string
+          id: string
+          type: string
+          value: number
+        }[]
+      }
       norm_txt: { Args: { t: string }; Returns: string }
       reabrir_mes: { Args: { _month: string }; Returns: undefined }
+      recalcular_ajuste_conciliacao: { Args: never; Returns: number }
     }
     Enums: {
       app_role:
