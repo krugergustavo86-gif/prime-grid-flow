@@ -124,7 +124,9 @@ Deno.serve(async (req) => {
     const rawCategory = categoria && String(categoria).trim().length > 0
       ? String(categoria).replace(/\s*-\s*Boleto\s*$/i, "").trim()
       : "Receita de Serviços";
-    const finalCategory = CATEGORY_MAP[rawCategory] ?? rawCategory;
+    const finalCategory = normalizedType === "Saída" && ["Despesas gerais", "Custo Operacional/Cartões"].includes(rawCategory)
+      ? "Custo operacional"
+      : CATEGORY_MAP[rawCategory] ?? rawCategory;
     const fp = String(forma_pagamento ?? "").toLowerCase();
     const formaPagamento = fp.includes("pix") ? "PIX" : fp.includes("boleto") ? "Boleto"
       : fp.includes("dinheiro") ? "Dinheiro" : fp.includes("cart") ? "Cartão"

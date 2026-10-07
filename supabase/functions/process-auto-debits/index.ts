@@ -120,7 +120,8 @@ Deno.serve(async (req) => {
         }
 
         // Anti-duplicate: skip if a manual transaction with same month/value/category already exists
-        const category = loan.debit_category || "Parcelas de empréstimos/financiamentos/consórcios";
+        const rawCategory = loan.debit_category || "Parcelas de empréstimos/financiamentos/consórcios";
+        const category = ["Despesas gerais", "Custo Operacional/Cartões"].includes(rawCategory) ? "Custo operacional" : rawCategory;
         const { data: manualDup } = await supabase
           .from("transactions")
           .select("id")
