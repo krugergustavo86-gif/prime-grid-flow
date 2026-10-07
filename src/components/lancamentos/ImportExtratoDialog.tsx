@@ -5,6 +5,7 @@ import { usePendingBoletos, PendingBoleto } from "@/hooks/usePendingBoletos";
 import { useCategoryRules } from "@/hooks/useCategoryRules";
 import { notifyPendenciasChanged } from "@/hooks/usePendenciasCount";
 import { parseStatement, StatementLine, daysBetween, addDays } from "@/utils/bankStatement";
+import { skipsSimilarityWarning } from "@/utils/statementDuplicatePolicy";
 import { getCategoriesByType, normTxt, A_CLASSIFICAR, FORMAS_PAGAMENTO } from "@/utils/categories";
 import { formatCurrency, formatDateBR, getMonthFromDate } from "@/utils/formatters";
 import { isMonthKeyLocked } from "@/utils/lockedMonths";
@@ -102,7 +103,7 @@ export function ImportExtratoDialog({ open, onClose, onDone }: { open: boolean; 
             return { ...base, status: "boleto", boleto: b, category: b.category, cliente: b.clientName || "", forma: "Boleto" };
           }
         }
-        const dup = existing.find(t => !usedDup.has(t.id) && !t.import_key && !t.fitid && t.type === line.type &&
+        const dup = !skipsSimilarityWarning(line.type, line.description) && existing.find(t => !usedDup.has(t.id) && !t.import_key && !t.fitid && t.type === line.type &&
           Math.abs(t.value - line.value) < 0.005 && daysBetween(t.date, line.date) <= 2 && (!t.conta_id || t.conta_id === contaId));
         if (dup) { usedDup.add(dup.id); return { ...base, status: "possivel_dup", dup, action: "vincular" }; }
 
@@ -115,7 +116,7 @@ export function ImportExtratoDialog({ open, onClose, onDone }: { open: boolean; 
     } finally { setBusy(false); }
   };
 
-  const update = (key: string, patch: Partial<ReviewRow>) => setRows(prev => prev!.map(r => r.key === key ? { ...r, ...patch } : r));
+  const update = (key: string, patch: Partial<ReviewRow>) => setRows(prev => prev?.map(r => r.key === key ? { ...r, ...patch } : r) ?? null);
 
   const summary = useMemo(() => {
     const s = { inserir: 0, vincular: 0, ignorar: 0, boleto: 0, pend: 0 };
