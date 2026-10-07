@@ -38,7 +38,7 @@ export function CustoOperacionalCards({ transactions }: { transactions: Transact
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button className={card} onClick={() => setOpen(true)}>
-          <span className={tit}>Custo operacional médio/mês</span>
+          <span className={tit}>Custo total da operação (média/mês)</span>
           <p className={`${val} text-chart-saida`}>{formatCurrency(ind.custoOpMedio)}</p>
           <p className="text-xs text-muted-foreground mt-1">Mês atual até hoje {formatCurrency(ind.atual.custoOp)} ({pct(varOp)} vs média)</p>
         </button>

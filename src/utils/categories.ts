@@ -26,7 +26,7 @@ export const PLANO_DE_CONTAS: CategoryGroup[] = [
   ] },
   { tipo: "Saída", grupo: "Despesas operacionais", operacional: true, categorias: [
     "Combustível", "Manutenção de frota e equipamentos", "Custos fixos", "Contabilidade",
-    "Centro Comercial", "Despesas gerais", "Marketing", "Perdas",
+    "Centro Comercial", "Custo operacional", "Marketing", "Perdas",
   ] },
   { tipo: "Saída", grupo: "Impostos", operacional: true, categorias: ["Impostos sobre faturamento"] },
   { tipo: "Saída", grupo: "Financeiro", operacional: true, categorias: [
