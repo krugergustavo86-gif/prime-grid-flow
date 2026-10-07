@@ -64,6 +64,13 @@
       "when": 1791374341416,
       "tag": "0008_allow_exact_category_label_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791374367655,
+      "tag": "0009_restore_closed_month_guard_after_label_rename",
+      "breakpoints": true
     }
   ]
 }
