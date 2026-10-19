@@ -92,6 +92,13 @@
       "when": 1792439570862,
       "tag": "0012_individual_cheques_and_atomic_receivable_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792439617686,
+      "tag": "0013_cheque_photos_and_financial_guards",
+      "breakpoints": true
     }
   ]
 }
