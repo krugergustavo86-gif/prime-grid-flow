@@ -722,6 +722,190 @@ export type Database = {
         }
         Relationships: []
       }
+      service_invoice_attachments: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_id: string
+          name: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_id: string
+          name: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          name?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_invoice_attachments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "service_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_invoice_receipts: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_invoice_receipts_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "service_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_invoice_receipts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_invoices: {
+        Row: {
+          cofins_rate: number
+          cofins_withheld: boolean
+          competence: string
+          competence_cost: number
+          competence_cost_confirmed: boolean
+          created_at: string
+          created_by: string | null
+          customer_document: string
+          customer_name: string
+          deductions: number
+          discounts: number
+          gross_value: number
+          id: string
+          iss_base: number
+          iss_rate: number
+          iss_withheld: boolean
+          issue_date: string
+          municipality: string
+          notes: string
+          number: string
+          os_number: string | null
+          other_withholdings: number
+          other_withholdings_notes: string
+          pis_rate: number
+          pis_withheld: boolean
+          provider_document: string
+          provider_name: string
+          service_code: string
+          service_description: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cofins_rate?: number
+          cofins_withheld?: boolean
+          competence: string
+          competence_cost?: number
+          competence_cost_confirmed?: boolean
+          created_at?: string
+          created_by?: string | null
+          customer_document?: string
+          customer_name: string
+          deductions?: number
+          discounts?: number
+          gross_value?: number
+          id?: string
+          iss_base?: number
+          iss_rate?: number
+          iss_withheld?: boolean
+          issue_date: string
+          municipality?: string
+          notes?: string
+          number: string
+          os_number?: string | null
+          other_withholdings?: number
+          other_withholdings_notes?: string
+          pis_rate?: number
+          pis_withheld?: boolean
+          provider_document?: string
+          provider_name: string
+          service_code?: string
+          service_description?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cofins_rate?: number
+          cofins_withheld?: boolean
+          competence?: string
+          competence_cost?: number
+          competence_cost_confirmed?: boolean
+          created_at?: string
+          created_by?: string | null
+          customer_document?: string
+          customer_name?: string
+          deductions?: number
+          discounts?: number
+          gross_value?: number
+          id?: string
+          iss_base?: number
+          iss_rate?: number
+          iss_withheld?: boolean
+          issue_date?: string
+          municipality?: string
+          notes?: string
+          number?: string
+          os_number?: string | null
+          other_withholdings?: number
+          other_withholdings_notes?: string
+          pis_rate?: number
+          pis_withheld?: boolean
+          provider_document?: string
+          provider_name?: string
+          service_code?: string
+          service_description?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_invoices_os_number_fkey"
+            columns: ["os_number"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["numero"]
+          },
+        ]
+      }
       stock_history: {
         Row: {
           changed_at: string
@@ -912,9 +1096,34 @@ export type Database = {
           value: number
         }[]
       }
+      list_service_receipts: {
+        Args: never
+        Returns: {
+          amount: number
+          date: string
+          description: string
+          id: string
+          invoice_id: string
+          transaction_id: string
+        }[]
+      }
       norm_txt: { Args: { t: string }; Returns: string }
       reabrir_mes: { Args: { _month: string }; Returns: undefined }
       recalcular_ajuste_conciliacao: { Args: never; Returns: number }
+      search_service_receipts: {
+        Args: { _search: string }
+        Returns: {
+          available: number
+          date: string
+          description: string
+          id: string
+          value: number
+        }[]
+      }
+      service_invoice_net: {
+        Args: { i: Database["public"]["Tables"]["service_invoices"]["Row"] }
+        Returns: number
+      }
     }
     Enums: {
       app_role:

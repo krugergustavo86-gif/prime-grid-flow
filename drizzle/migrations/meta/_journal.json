@@ -71,6 +71,20 @@
       "when": 1791374367655,
       "tag": "0009_restore_closed_month_guard_after_label_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792433660066,
+      "tag": "0010_service_invoices_and_existing_receipt_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792433690112,
+      "tag": "0011_explicit_service_invoice_cost_confirmation",
+      "breakpoints": true
     }
   ]
 }

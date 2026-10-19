@@ -1,0 +1,2 @@
+ALTER TABLE public.service_invoices ADD COLUMN competence_cost_confirmed boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.service_invoices.competence_cost_confirmed IS 'Accrual margin is unavailable until every active invoice has explicitly confirmed attributed costs, including legitimate zero costs.';
