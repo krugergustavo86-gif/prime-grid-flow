@@ -99,6 +99,13 @@
       "when": 1792439617686,
       "tag": "0013_cheque_photos_and_financial_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792439930882,
+      "tag": "0014_lock_cheque_account_and_zero_settled_debt",
+      "breakpoints": true
     }
   ]
 }
