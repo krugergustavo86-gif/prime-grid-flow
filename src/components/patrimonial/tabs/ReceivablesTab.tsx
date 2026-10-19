@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus } from "@/types";
+import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus, Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowDownCircle, DollarSign, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { ReceivablePaymentDialog } from "@/components/cheques/ReceivablePaymentDialog";
 import { StockRotativoSection } from "@/components/patrimonial/StockRotativoSection";
 
 interface Props {
@@ -26,7 +27,7 @@ interface Props {
   deleteDoubtfulCredit: (id: string) => void;
   deleteCashEntry: (id: string) => void | Promise<boolean | void>;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
-  onReceivablePayment?: (receivable: Receivable, amount: number) => void;
+  transactions: Transaction[];
   readOnly?: boolean;
 }
 
@@ -43,7 +44,7 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
-  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly, onReceivablePayment } = props;
+  const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [doubtfulModalOpen, setDoubtfulModalOpen] = useState(false);
@@ -52,6 +53,7 @@ export function ReceivablesTab(props: Props) {
   const [cashAmount, setCashAmount] = useState("");
   const [paymentModal, setPaymentModal] = useState<{ receivable: Receivable; mode: "pay" | "add" } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [linkedPayment, setLinkedPayment] = useState<{receivable: Receivable; mode: "pay" | "undo"} | null>(null);
 
   const totalRemaining = receivables.reduce((s, r) => s + Math.max(0, r.value - r.paidValue), 0);
   const totalDoubtful = doubtfulCredits.reduce((s, d) => s + d.value, 0);
@@ -82,16 +84,7 @@ export function ReceivablesTab(props: Props) {
     if (isNaN(amount) || amount <= 0) { toast.error("Informe um valor válido"); return; }
     const r = paymentModal.receivable;
     const remaining = r.value - r.paidValue;
-    if (paymentModal.mode === "pay") {
-      if (amount > remaining) { toast.error("Valor excede o saldo devedor"); return; }
-      const newPaid = r.paidValue + amount;
-      const updates: Partial<Receivable> = { paidValue: newPaid };
-      if (newPaid >= r.value) updates.status = "Recebido";
-      props.updateReceivable(r.id, updates);
-      // BUG 1 fix: register cash entry so patrimony reflects the receipt
-      onReceivablePayment?.(r, amount);
-      toast.success(`Pagamento de ${formatCurrency(amount)} registrado`);
-    } else {
+    if (paymentModal.mode === "add") {
       props.updateReceivable(r.id, { value: r.value + amount });
       toast.success(`${formatCurrency(amount)} adicionado ao saldo devedor`);
     }
@@ -165,8 +158,9 @@ export function ReceivablesTab(props: Props) {
                     {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
+                        {r.chequeLegacy || r.type === "Cheque" ? <span className="text-xs text-muted-foreground">Gerenciado em Cheques</span> : <>
                         {r.status !== "Recebido" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => { setPaymentModal({ receivable: r, mode: "pay" }); setPaymentAmount(""); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => setLinkedPayment({receivable: r, mode: "pay"})}>
                             <DollarSign className="h-3.5 w-3.5" />
                           </Button>
                         )}
@@ -177,19 +171,11 @@ export function ReceivablesTab(props: Props) {
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         {r.status !== "Recebido" ? (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Marcar como recebido (total)" onClick={() => {
-                            const remainingNow = Math.max(0, r.value - r.paidValue);
-                            props.updateReceivable(r.id, { status: "Recebido", paidValue: r.value });
-                            if (remainingNow > 0) onReceivablePayment?.(r, remainingNow);
-                            toast.success("Marcado como recebido");
-                          }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Marcar como recebido (total)" onClick={() => setLinkedPayment({receivable: r, mode: "pay"})}>
                             <CheckCircle className="h-3.5 w-3.5" />
                           </Button>
-                        ) : (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Desfazer recebimento" onClick={() => { props.updateReceivable(r.id, { status: "A vencer" }); toast.success("Status revertido para A vencer"); }}>
-                            <Undo2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        ) : null}
+                        {r.paidValue > 0 && <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Desfazer recebimento" onClick={() => setLinkedPayment({receivable: r, mode: "undo"})}><Undo2 className="h-3.5 w-3.5" /></Button>}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -324,6 +310,8 @@ export function ReceivablesTab(props: Props) {
         </div>
       </div>
 
+      {linkedPayment && <ReceivablePaymentDialog receivable={linkedPayment.receivable} mode={linkedPayment.mode} transactions={props.transactions} onClose={() => setLinkedPayment(null)} />}
+
       {/* Payment / Add Value Modal */}
       <Dialog open={!!paymentModal} onOpenChange={(o) => !o && setPaymentModal(null)}>
         <DialogContent className="max-w-sm">
@@ -437,13 +425,13 @@ function ReceivableModal({ open, onClose, onSave, initial }: { open: boolean; on
           <div><Label>Descrição *</Label><Input value={description} onChange={e => setDescription(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Valor Total (R$) *</Label><Input type="number" value={value} onChange={e => setValue(e.target.value)} /></div>
-            <div><Label>Valor Pago (R$)</Label><Input type="number" value={paidValue} onChange={e => setPaidValue(e.target.value)} /></div>
+            <div><Label>Valor Pago (R$)</Label><Input type="number" value={paidValue} readOnly /></div>
           </div>
           <div><Label>Tipo</Label>
             <Select value={type} onValueChange={v => setType(v as ReceivableType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
           </div>
           <div><Label>Status</Label>
-            <Select value={status} onValueChange={v => setStatus(v as ReceivableStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
+            <Select value={status} onValueChange={v => setStatus(v as ReceivableStatus)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.filter(s => s !== "Recebido" || initial?.status === "Recebido").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
           </div>
           <div><Label>Vencimento</Label><Input value={dueDate} onChange={e => setDueDate(e.target.value)} placeholder="DD/MM/AAAA" /></div>
           <div><Label>Responsável</Label><Input value={responsible} onChange={e => setResponsible(e.target.value)} /></div>
