@@ -85,6 +85,34 @@
       "when": 1792433690112,
       "tag": "0011_explicit_service_invoice_cost_confirmation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792439570862,
+      "tag": "0012_individual_cheques_and_atomic_receivable_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792439617686,
+      "tag": "0013_cheque_photos_and_financial_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792439930882,
+      "tag": "0014_lock_cheque_account_and_zero_settled_debt",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792439953164,
+      "tag": "0015_preserve_existing_return_movements",
+      "breakpoints": true
     }
   ]
 }

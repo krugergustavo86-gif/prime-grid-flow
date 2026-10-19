@@ -7,6 +7,7 @@ import { getMonthFromDate } from "@/utils/formatters";
 import { filterByMonth } from "@/utils/monthlyTotals";
 import { useAppConfig } from "@/hooks/useAppConfig";
 import { toast } from "sonner";
+import { onQueryInvalidated } from "@/lib/queryClient";
 
 const TRANSACTIONS_PAGE_SIZE = 1000;
 const MAX_PAGES = 100;
@@ -16,6 +17,8 @@ export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const lv = useLockedMonthsVersion();
+  const [refreshTick, setRefreshTick] = useState(0);
+  useEffect(() => onQueryInvalidated(["transactions"], () => setRefreshTick(t => t + 1)), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +70,7 @@ export function useTransactions() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshTick]);
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id" | "month">) => {
     const month = getMonthFromDate(tx.date);

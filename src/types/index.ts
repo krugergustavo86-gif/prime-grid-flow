@@ -53,6 +53,7 @@ export interface Receivable {
   description: string;
   value: number;
   paidValue: number;
+  chequeLegacy?: boolean;
   dueDate?: string;
   type: ReceivableType;
   status: ReceivableStatus;

@@ -48,7 +48,7 @@ function mapAsset(r: AssetRow): Asset {
   return { id: r.id, group: r.asset_group as Asset["group"], description: r.description, plate: r.plate || undefined, valueFipe: r.value_fipe ? Number(r.value_fipe) : undefined, valueMarket: Number(r.value_market), notes: r.notes || undefined };
 }
 function mapReceivable(r: ReceivableRow): Receivable {
-  return { id: r.id, description: r.description, value: Number(r.value), paidValue: Number(r.paid_value ?? 0), dueDate: r.due_date || undefined, type: r.type as Receivable["type"], status: r.status as Receivable["status"], responsible: r.responsible || undefined, notes: r.notes || undefined };
+  return { id: r.id, description: r.description, value: Number(r.value), paidValue: Number(r.paid_value ?? 0), chequeLegacy: r.cheque_legacy, dueDate: r.due_date || undefined, type: r.type as Receivable["type"], status: r.status as Receivable["status"], responsible: r.responsible || undefined, notes: r.notes || undefined };
 }
 function mapDoubtful(r: DoubtfulRow): DoubtfulCredit {
   return { id: r.id, description: r.description, value: Number(r.value), responsible: r.responsible || undefined, notes: r.notes || undefined };
@@ -75,7 +75,7 @@ export function usePatrimony() {
     const order = { ascending: false } as const;
     const [a, r, d, c, l, p] = await Promise.all([
       supabase.from("assets").select("id, asset_group, description, plate, value_fipe, value_market, notes").order("created_at", order),
-      supabase.from("receivables").select("id, description, value, paid_value, due_date, type, status, responsible, notes").order("created_at", order),
+      supabase.from("receivables").select("id, description, value, paid_value, cheque_legacy, due_date, type, status, responsible, notes").order("created_at", order),
       supabase.from("doubtful_credits").select("id, description, value, responsible, notes").order("created_at", order),
       supabase.from("cash_entries").select("id, description, balance, ref_date, notes").order("created_at", order),
       supabase.from("loans").select("id, contract, institution, type, next_payment, total_installments, paid_installments, installment_value, notes, auto_debit, debit_day, debit_start_date, debit_end_date, bank_account, debit_category").order("created_at", order),

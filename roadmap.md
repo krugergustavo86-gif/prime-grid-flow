@@ -12,3 +12,9 @@
 - [x] Criar estrutura fiscal separada e vínculos sem movimentar o caixa.
 - [x] Implementar abas, cadastro completo, anexos, resumos e margens distintas.
 - [x] Validar exemplo de R$ 5.000/ISS retido R$ 150/líquido R$ 4.850 e fluxo autenticado sem publicar.
+
+# Controle individual de cheques
+- [x] Criar ciclo auditado, vínculos de caixa e migração gradual do saldo legado.
+- [x] Implementar aba Cheques, foto privada, histórico e ações com confirmação.
+- [x] Corrigir baixas/desfazer recebimento com vínculo e reversão segura.
+- [x] Testar regras financeiras e fluxo autenticado, remover dados temporários e não publicar.
