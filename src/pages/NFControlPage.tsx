@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, FileText, Upload, ExternalLink, Calculator, Loader2, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ServiceInvoicesTab } from "@/components/nf/ServiceInvoicesTab";
 
 interface Invoice {
   id: string;
@@ -137,8 +139,15 @@ export default function NFControlPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <Header title="Controle de NF Emitidas" />
+      <Header title="Controle NF" />
       <div className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4 space-y-4">
+        <Tabs defaultValue="produtos">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+            <TabsTrigger value="produtos">Produtos/NF-e</TabsTrigger>
+            <TabsTrigger value="servicos">Serviços/NFS-e</TabsTrigger>
+          </TabsList>
+          <TabsContent value="servicos"><ServiceInvoicesTab /></TabsContent>
+          <TabsContent value="produtos" className="space-y-4">
         {/* Month selector */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           {months.map(m => (
@@ -225,9 +234,9 @@ export default function NFControlPage() {
                       <td className="p-3 hidden md:table-cell text-muted-foreground">{new Date(inv.issue_date + "T12:00:00").toLocaleDateString("pt-BR")}</td>
                       <td className="p-3 hidden md:table-cell">
                         {inv.attachment_url ? (
-                          <button type="button" onClick={() => handleOpenAttachment(inv.attachment_url!)} className="text-primary hover:underline flex items-center gap-1 text-xs">
+                           <Button variant="link" onClick={() => { if (inv.attachment_url) void handleOpenAttachment(inv.attachment_url); }} className="p-0 h-auto flex items-center gap-1 text-xs">
                             <ExternalLink className="h-3 w-3" /> {inv.attachment_name || "Arquivo"}
-                          </button>
+                           </Button>
                         ) : <span className="text-muted-foreground text-xs">—</span>}
                       </td>
                       {canManage && (
@@ -262,6 +271,8 @@ export default function NFControlPage() {
             </div>
           )}
         </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <InvoiceModal open={modalOpen} onClose={() => { setModalOpen(false); setEditing(null); }} onSave={handleSave} initial={editing} types={types} />
