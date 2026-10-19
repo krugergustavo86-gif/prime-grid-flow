@@ -802,6 +802,7 @@ export type Database = {
           cofins_withheld: boolean
           competence: string
           competence_cost: number
+          competence_cost_confirmed: boolean
           created_at: string
           created_by: string | null
           customer_document: string
@@ -834,6 +835,7 @@ export type Database = {
           cofins_withheld?: boolean
           competence: string
           competence_cost?: number
+          competence_cost_confirmed?: boolean
           created_at?: string
           created_by?: string | null
           customer_document?: string
@@ -866,6 +868,7 @@ export type Database = {
           cofins_withheld?: boolean
           competence?: string
           competence_cost?: number
+          competence_cost_confirmed?: boolean
           created_at?: string
           created_by?: string | null
           customer_document?: string

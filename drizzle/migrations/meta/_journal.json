@@ -78,6 +78,13 @@
       "when": 1792433660066,
       "tag": "0010_service_invoices_and_existing_receipt_links",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792433690112,
+      "tag": "0011_explicit_service_invoice_cost_confirmation",
+      "breakpoints": true
     }
   ]
 }
