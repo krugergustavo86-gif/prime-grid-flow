@@ -85,6 +85,13 @@
       "when": 1792433690112,
       "tag": "0011_explicit_service_invoice_cost_confirmation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792439570862,
+      "tag": "0012_individual_cheques_and_atomic_receivable_payments",
+      "breakpoints": true
     }
   ]
 }

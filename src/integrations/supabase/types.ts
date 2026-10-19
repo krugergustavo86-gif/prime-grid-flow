@@ -185,6 +185,184 @@ export type Database = {
         }
         Relationships: []
       }
+      cheque_events: {
+        Row: {
+          cheque_id: string
+          created_at: string
+          created_by: string | null
+          event_date: string
+          from_status: string | null
+          id: string
+          payable_id: string | null
+          reason: string
+          recipient: string | null
+          to_status: string
+          transaction_id: string | null
+          user_email: string | null
+        }
+        Insert: {
+          cheque_id: string
+          created_at?: string
+          created_by?: string | null
+          event_date: string
+          from_status?: string | null
+          id?: string
+          payable_id?: string | null
+          reason?: string
+          recipient?: string | null
+          to_status: string
+          transaction_id?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          cheque_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          from_status?: string | null
+          id?: string
+          payable_id?: string | null
+          reason?: string
+          recipient?: string | null
+          to_status?: string
+          transaction_id?: string | null
+          user_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cheque_events_cheque_id_fkey"
+            columns: ["cheque_id"]
+            isOneToOne: false
+            referencedRelation: "cheques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_events_payable_id_fkey"
+            columns: ["payable_id"]
+            isOneToOne: false
+            referencedRelation: "payables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cheques: {
+        Row: {
+          account_id: string | null
+          bank: string
+          created_at: string
+          created_by: string | null
+          credited_transaction_id: string | null
+          delivered_by: string
+          due_date: string
+          id: string
+          issuer: string
+          legacy_id: string | null
+          notes: string
+          number: string
+          payable_id: string | null
+          photo_path: string | null
+          receivable_id: string
+          received_date: string
+          recipient: string | null
+          status: string
+          supplier: string | null
+          third_party_pending: boolean
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          account_id?: string | null
+          bank: string
+          created_at?: string
+          created_by?: string | null
+          credited_transaction_id?: string | null
+          delivered_by: string
+          due_date: string
+          id?: string
+          issuer: string
+          legacy_id?: string | null
+          notes?: string
+          number: string
+          payable_id?: string | null
+          photo_path?: string | null
+          receivable_id: string
+          received_date: string
+          recipient?: string | null
+          status?: string
+          supplier?: string | null
+          third_party_pending?: boolean
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          account_id?: string | null
+          bank?: string
+          created_at?: string
+          created_by?: string | null
+          credited_transaction_id?: string | null
+          delivered_by?: string
+          due_date?: string
+          id?: string
+          issuer?: string
+          legacy_id?: string | null
+          notes?: string
+          number?: string
+          payable_id?: string | null
+          photo_path?: string | null
+          receivable_id?: string
+          received_date?: string
+          recipient?: string | null
+          status?: string
+          supplier?: string | null
+          third_party_pending?: boolean
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cheques_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_credited_transaction_id_fkey"
+            columns: ["credited_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_legacy_id_fkey"
+            columns: ["legacy_id"]
+            isOneToOne: false
+            referencedRelation: "receivables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_payable_id_fkey"
+            columns: ["payable_id"]
+            isOneToOne: false
+            referencedRelation: "payables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_receivable_id_fkey"
+            columns: ["receivable_id"]
+            isOneToOne: true
+            referencedRelation: "receivables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conciliacoes: {
         Row: {
           ajuste_transaction_id: string | null
@@ -644,8 +822,64 @@ export type Database = {
           },
         ]
       }
+      receivable_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          receivable_id: string
+          reversal_transaction_id: string | null
+          reversed: boolean
+          transaction_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          receivable_id: string
+          reversal_transaction_id?: string | null
+          reversed?: boolean
+          transaction_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          receivable_id?: string
+          reversal_transaction_id?: string | null
+          reversed?: boolean
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_payments_receivable_id_fkey"
+            columns: ["receivable_id"]
+            isOneToOne: false
+            referencedRelation: "receivables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivable_payments_reversal_transaction_id_fkey"
+            columns: ["reversal_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivable_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receivables: {
         Row: {
+          cheque_legacy: boolean
           created_at: string
           description: string
           due_date: string | null
@@ -658,6 +892,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          cheque_legacy?: boolean
           created_at?: string
           description: string
           due_date?: string | null
@@ -670,6 +905,7 @@ export type Database = {
           value: number
         }
         Update: {
+          cheque_legacy?: boolean
           created_at?: string
           description?: string
           due_date?: string | null
@@ -1072,7 +1308,10 @@ export type Database = {
         Args: { _data: string; _diferenca: number; _saldos: Json }
         Returns: string
       }
+      cheque_admin: { Args: never; Returns: undefined }
+      create_cheque: { Args: { _data: Json }; Returns: string }
       fechar_mes: { Args: { _month: string }; Returns: undefined }
+      financial_open_date: { Args: { _date: string }; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1096,6 +1335,19 @@ export type Database = {
           value: number
         }[]
       }
+      link_financial_movement: {
+        Args: {
+          _account: string
+          _category: string
+          _create: boolean
+          _date: string
+          _description: string
+          _transaction: string
+          _type: string
+          _value: number
+        }
+        Returns: string
+      }
       list_service_receipts: {
         Args: never
         Returns: {
@@ -1107,7 +1359,23 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      move_cheque: {
+        Args: { _action: string; _data?: Json; _date: string; _id: string }
+        Returns: string
+      }
       norm_txt: { Args: { t: string }; Returns: string }
+      pay_receivable: {
+        Args: {
+          _account: string
+          _amount: number
+          _category?: string
+          _create?: boolean
+          _date: string
+          _id: string
+          _transaction?: string
+        }
+        Returns: string
+      }
       reabrir_mes: { Args: { _month: string }; Returns: undefined }
       recalcular_ajuste_conciliacao: { Args: never; Returns: number }
       search_service_receipts: {
@@ -1123,6 +1391,20 @@ export type Database = {
       service_invoice_net: {
         Args: { i: Database["public"]["Tables"]["service_invoices"]["Row"] }
         Returns: number
+      }
+      set_cheque_photo: {
+        Args: { _id: string; _path: string }
+        Returns: undefined
+      }
+      undo_receivable_payment: {
+        Args: {
+          _create?: boolean
+          _date: string
+          _id: string
+          _reason?: string
+          _transaction?: string
+        }
+        Returns: string
       }
     }
     Enums: {
