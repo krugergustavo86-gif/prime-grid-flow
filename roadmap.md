@@ -20,6 +20,6 @@
 - [x] Testar regras financeiras e fluxo autenticado, remover dados temporários e não publicar.
 
 # Acesso aos cheques e lançamento rápido
-- [ ] Abrir controle pelo valor em Recebíveis e retirar aba separada.
-- [ ] Confirmar lançamento rápido com vínculo existente ou entrada única, mantendo devolução segura.
-- [ ] Testar fluxo autenticado, conferir caixa antes/depois e limpar testes sem publicar.
+- [x] Abrir controle pelo valor em Recebíveis e retirar aba separada.
+- [x] Confirmar lançamento rápido com vínculo existente ou entrada única, mantendo devolução segura.
+- [x] Testar fluxo autenticado, conferir caixa antes/depois e limpar testes sem publicar.
