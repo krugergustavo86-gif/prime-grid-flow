@@ -8,7 +8,6 @@ import { Loan } from "@/types";
 import { formatCurrency as formatCurrencyP } from "@/utils/formatters";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChequesTab } from "@/components/cheques/ChequesTab";
 import { ReceivablesTab } from "@/components/patrimonial/tabs/ReceivablesTab";
 import { LoansTab } from "@/components/patrimonial/tabs/LoansTab";
 import { AssetsTab } from "@/components/patrimonial/tabs/AssetsTab";
@@ -49,9 +48,8 @@ export default function PatrimonialPage() {
         <p className="text-xs text-muted-foreground -mt-4">Caixa Atual {formatCurrencyP(caixaAtual)} — {caixaNota}</p>
 
         <Tabs defaultValue="receivables">
-          <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full h-auto">
+          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full h-auto">
             <TabsTrigger value="receivables">📥 Recebíveis</TabsTrigger>
-            <TabsTrigger value="cheques">Cheques</TabsTrigger>
             <TabsTrigger value="loans">🏦 Empréstimos</TabsTrigger>
             <TabsTrigger value="assets">🏗 Patrimônio</TabsTrigger>
             <TabsTrigger value="payables">💳 Contas</TabsTrigger>
@@ -73,11 +71,9 @@ export default function PatrimonialPage() {
               deleteCashEntry={patrimony.deleteCashEntry}
               updateCashEntry={patrimony.updateCashEntry}
               transactions={transactions}
+              payables={patrimony.payables}
               readOnly={readOnly}
             />
-          </TabsContent>
-          <TabsContent value="cheques">
-            <ChequesTab receivables={patrimony.receivables} payables={patrimony.payables} transactions={transactions} readOnly={readOnly} />
           </TabsContent>
           <TabsContent value="loans">
             <LoansTab
