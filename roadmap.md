@@ -18,3 +18,8 @@
 - [x] Implementar aba Cheques, foto privada, histórico e ações com confirmação.
 - [x] Corrigir baixas/desfazer recebimento com vínculo e reversão segura.
 - [x] Testar regras financeiras e fluxo autenticado, remover dados temporários e não publicar.
+
+# Acesso aos cheques e lançamento rápido
+- [ ] Abrir controle pelo valor em Recebíveis e retirar aba separada.
+- [ ] Confirmar lançamento rápido com vínculo existente ou entrada única, mantendo devolução segura.
+- [ ] Testar fluxo autenticado, conferir caixa antes/depois e limpar testes sem publicar.
