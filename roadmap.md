@@ -23,3 +23,8 @@
 - [x] Abrir controle pelo valor em Recebíveis e retirar aba separada.
 - [x] Confirmar lançamento rápido com vínculo existente ou entrada única, mantendo devolução segura.
 - [x] Testar fluxo autenticado, conferir caixa antes/depois e limpar testes sem publicar.
+
+# Redução aprovada das categorias de saída
+- [x] Aplicar 18 opções, preservar categorias históricas e atualizar origens automáticas/regras.
+- [x] Consolidar 2.354 lançamentos de meses abertos e 17 regras; meses fechados agrupados na leitura, sem desbloquear nem remover histórico.
+- [x] Conferir Pessoal nas duas telas (setembro R$ 256.252,19), 50 testes e integridade dos 6.659 lançamentos iniciais; nenhum movimento de teste ou publicação.

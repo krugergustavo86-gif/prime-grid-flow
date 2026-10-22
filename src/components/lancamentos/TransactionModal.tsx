@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Transaction, TransactionType } from "@/types";
-import { getCategoriesByType, FORMAS_PAGAMENTO } from "@/utils/categories";
+import { selectableCategories, canonicalCategory, FORMAS_PAGAMENTO } from "@/utils/categories";
 import { useCategoryRules } from "@/hooks/useCategoryRules";
 import { useCustomCategories } from "@/hooks/useCustomCategories";
 import { useContasBancarias } from "@/hooks/useContasBancarias";
@@ -48,7 +48,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     if (editTransaction) {
       setDate(new Date(editTransaction.date + "T12:00:00"));
       setType(editTransaction.type);
-      setCategory(editTransaction.category);
+      setCategory(canonicalCategory(editTransaction.type, editTransaction.category));
       setDescription(editTransaction.description);
       setValue(editTransaction.value.toFixed(2).replace(".", ","));
       setNotes(editTransaction.notes || "");
@@ -114,9 +114,9 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
     } catch { /* ignore */ }
   }, [open, editTransaction, date, type, category, description, value, notes]);
 
-  const builtIn = getCategoriesByType(type);
   const custom = customCats.filter(c => c.type === type).map(c => c.name);
-  const categories = Array.from(new Set([...builtIn, ...custom]));
+  const categories = selectableCategories(type, custom);
+  const historicalCategory = editTransaction && !categories.includes(category) ? category : null;
 
   const handleAddCategory = async () => {
     const created = await addCategory(newCatName, type);
@@ -212,11 +212,11 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
           <div>
             <div className="flex items-center justify-between">
               <Label>Categoria</Label>
-              <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setAdding(v => !v)}>
+              {type === "Entrada" && <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setAdding(v => !v)}>
                 <Plus className="h-3 w-3 mr-1" /> {adding ? "Cancelar" : "Nova"}
-              </Button>
+              </Button>}
             </div>
-            {adding ? (
+            {adding && type === "Entrada" ? (
               <div className="flex gap-2 mt-1">
                 <Input
                   placeholder="Nome da nova categoria"
@@ -233,6 +233,7 @@ export function TransactionModal({ open, onClose, onSave, editTransaction }: Tra
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
+                  {historicalCategory && <SelectItem value={historicalCategory} disabled>{historicalCategory} (histórico)</SelectItem>}
                   {categories.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}

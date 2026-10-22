@@ -1,3 +1,6 @@
+import { canonicalCategory, RETIRED_EXPENSE_CATEGORIES, SYSTEM_EXPENSE_CATEGORIES } from "../../supabase/functions/_shared/expenseCategories";
+export { canonicalCategory } from "../../supabase/functions/_shared/expenseCategories";
+
 /** Plano de contas: categoria pertence a um grupo. */
 export interface CategoryGroup {
   tipo: "Entrada" | "Saída";
@@ -18,26 +21,24 @@ export const PLANO_DE_CONTAS: CategoryGroup[] = [
   ] },
   { tipo: "Entrada", grupo: "A classificar", operacional: true, categorias: ["A classificar"] },
   { tipo: "Saída", grupo: "Custo direto", operacional: true, categorias: [
-    "Kits Solar/BESS", "Materiais elétricos", "Geradores (peças e equipamentos)", "Redes e Caminhão",
-    "Comissões de vendas", "Taxas técnicas",
+    "Kits Solar/BESS", "Materiais gerais", "Geradores (peças e equipamentos)", "Comissões e taxas técnicas",
   ] },
   { tipo: "Saída", grupo: "Pessoal (folha)", operacional: true, categorias: [
     "Pró-labore sócios", "Folha CLT", "Terceirizados", "Encargos (FGTS/INSS)", "Provisão 13º/Férias",
   ] },
   { tipo: "Saída", grupo: "Despesas operacionais", operacional: true, categorias: [
-    "Combustível", "Manutenção de frota e equipamentos", "Custos fixos", "Contabilidade",
-    "Centro Comercial", "Custo operacional", "Marketing", "Perdas",
+    "Combustível", "Manutenção de frota e equipamentos", "Despesas gerais", "Marketing",
   ] },
-  { tipo: "Saída", grupo: "Impostos", operacional: true, categorias: ["Impostos sobre faturamento"] },
+  { tipo: "Saída", grupo: "Impostos", operacional: true, categorias: ["Impostos"] },
   { tipo: "Saída", grupo: "Financeiro", operacional: true, categorias: [
     "Parcelas de empréstimos/financiamentos/consórcios", "Juros e tarifas bancárias",
   ] },
   { tipo: "Saída", grupo: "Investimentos/Patrimônio", operacional: false, categorias: [
-    "Imóveis e terrenos", "Veículos e máquinas", "Equipamentos",
+    "Investimentos em patrimônio",
   ] },
   { tipo: "Saída", grupo: "A classificar", operacional: true, categorias: ["A classificar"] },
   { tipo: "Saída", grupo: "Não operacional", operacional: false, categorias: [
-    "Doações", "Distribuição/retirada de sócios", "Transferência entre contas",
+    "Distribuição/retirada de sócios", "Transferência entre contas",
     "Ajuste de implantação (planilha)", "Ajuste de conciliação",
   ] },
 ];
@@ -46,7 +47,8 @@ export const LOAN_CATEGORY = "Parcelas de empréstimos/financiamentos/consórcio
 
 export const FORMAS_PAGAMENTO = ["PIX", "Dinheiro", "Boleto", "Cartão", "Cheque", "Transferência"] as const;
 
-export const CATEGORIAS_SAIDA = PLANO_DE_CONTAS.filter(g => g.tipo === "Saída").flatMap(g => g.categorias);
+export const CATEGORIAS_SAIDA = PLANO_DE_CONTAS.filter(g => g.tipo === "Saída").flatMap(g => g.categorias)
+  .filter(c => !SYSTEM_EXPENSE_CATEGORIES.includes(c) && !RETIRED_EXPENSE_CATEGORIES.includes(c));
 export const CATEGORIAS_ENTRADA = PLANO_DE_CONTAS.filter(g => g.tipo === "Entrada").flatMap(g => g.categorias);
 
 /** Categorias fora da DRE/indicadores (grupos Não operacional e Investimentos). */
@@ -55,7 +57,13 @@ export const NON_OPERATIONAL_LIST = Array.from(new Set(
 ));
 
 export function groupOf(type: "Entrada" | "Saída", category: string): string {
-  return PLANO_DE_CONTAS.find(g => g.tipo === type && g.categorias.includes(category))?.grupo ?? "Outras";
+  return PLANO_DE_CONTAS.find(g => g.tipo === type && g.categorias.includes(canonicalCategory(type, category)))?.grupo ?? "Outras";
+}
+
+/** Manual expense selection is restricted to the approved chart, including custom aliases. */
+export function selectableCategories(type: "Entrada" | "Saída", custom: string[] = []): string[] {
+  if (type === "Saída") return [...CATEGORIAS_SAIDA];
+  return Array.from(new Set([...CATEGORIAS_ENTRADA, ...custom]));
 }
 
 export function getCategoriesByType(type: "Saída" | "Entrada"): string[] {

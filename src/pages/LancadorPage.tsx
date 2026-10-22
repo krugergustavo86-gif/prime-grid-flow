@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatCurrency, formatDateBR } from "@/utils/formatters";
+import { canonicalCategory } from "@/utils/categories";
 
 function mapRow(r: {
   id: string; date: string; description: string; type: string; category: string;
@@ -20,7 +21,7 @@ function mapRow(r: {
 }): Transaction {
   return {
     id: r.id, date: r.date, description: r.description,
-    type: r.type as "Saída" | "Entrada", category: r.category,
+    type: r.type as "Saída" | "Entrada", category: canonicalCategory(r.type, r.category),
     value: Number(r.value), notes: r.notes || "", month: r.month,
     created_at: r.created_at, created_by: r.created_by,
   };

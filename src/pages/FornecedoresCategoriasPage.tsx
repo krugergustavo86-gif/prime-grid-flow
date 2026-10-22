@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategoryRules, ruleMatches, CategoryRule } from "@/hooks/useCategoryRules";
-import { getCategoriesByType, normTxt, FORMAS_PAGAMENTO } from "@/utils/categories";
+import { getCategoriesByType, normTxt, canonicalCategory, FORMAS_PAGAMENTO } from "@/utils/categories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ export default function FornecedoresCategoriasPage() {
       const { data, error } = await supabase.from("transactions")
         .select("id,description,type,category,value").order("date").order("id").range(from, from + 999);
       if (error) { console.error(error); break; }
-      out.push(...(data ?? []).map(r => ({ ...r, value: Number(r.value) })));
+      out.push(...(data ?? []).map(r => ({ ...r, category: canonicalCategory(r.type, r.category), value: Number(r.value) })));
       if (!data || data.length < 1000) break;
     }
     return out;
@@ -55,7 +55,8 @@ export default function FornecedoresCategoriasPage() {
     for (const r of rows) {
       const k = `${r.type}|${normTxt(r.description).trim()}`;
       if (!map.has(k)) map.set(k, { label: r.description.trim(), type: r.type, cats: new Map() });
-      const g = map.get(k)!;
+      const g = map.get(k);
+      if (!g) continue;
       const c = g.cats.get(r.category) ?? { count: 0, total: 0 };
       c.count++; c.total += r.value;
       g.cats.set(r.category, c);

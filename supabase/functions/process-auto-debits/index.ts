@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { canonicalCategory } from "../_shared/expenseCategories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -121,7 +122,7 @@ Deno.serve(async (req) => {
 
         // Anti-duplicate: skip if a manual transaction with same month/value/category already exists
         const rawCategory = loan.debit_category || "Parcelas de empréstimos/financiamentos/consórcios";
-        const category = ["Despesas gerais", "Custo Operacional/Cartões"].includes(rawCategory) ? "Custo operacional" : rawCategory;
+        const category = canonicalCategory("Saída", rawCategory);
         const { data: manualDup } = await supabase
           .from("transactions")
           .select("id")

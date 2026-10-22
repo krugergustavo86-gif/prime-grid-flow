@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { canonicalCategory } from "../_shared/expenseCategories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,9 +125,7 @@ Deno.serve(async (req) => {
     const rawCategory = categoria && String(categoria).trim().length > 0
       ? String(categoria).replace(/\s*-\s*Boleto\s*$/i, "").trim()
       : "Receita de Serviços";
-    const finalCategory = normalizedType === "Saída" && ["Despesas gerais", "Custo Operacional/Cartões"].includes(rawCategory)
-      ? "Custo operacional"
-      : CATEGORY_MAP[rawCategory] ?? rawCategory;
+    const finalCategory = canonicalCategory(normalizedType, CATEGORY_MAP[rawCategory] ?? rawCategory);
     const fp = String(forma_pagamento ?? "").toLowerCase();
     const formaPagamento = fp.includes("pix") ? "PIX" : fp.includes("boleto") ? "Boleto"
       : fp.includes("dinheiro") ? "Dinheiro" : fp.includes("cart") ? "Cartão"

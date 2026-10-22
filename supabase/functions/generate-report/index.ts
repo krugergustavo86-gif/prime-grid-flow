@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
+import { canonicalCategory } from "../_shared/expenseCategories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,7 +87,8 @@ Deno.serve(async (req) => {
     // Group expenses by category
     const catMap: Record<string, number> = {};
     transactions.filter((t: any) => t.type === "Saída").forEach((t: any) => {
-      catMap[t.category] = (catMap[t.category] || 0) + Number(t.value);
+      const category = canonicalCategory(t.type, t.category);
+      catMap[category] = (catMap[category] || 0) + Number(t.value);
     });
     const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
@@ -169,6 +171,8 @@ Deno.serve(async (req) => {
     kpiRow("Total de Saídas", fmtCurrency(saidas), [220, 38, 38]);
     kpiRow("Saldo do Mês", fmtCurrency(saldo), saldo >= 0 ? [22, 163, 74] : [220, 38, 38]);
     kpiRow("Nº de Lançamentos", String(transactions.length));
+    const peopleCategories = ["Folha CLT", "Terceirizados", "Pró-labore sócios", "Encargos (FGTS/INSS)", "Provisão 13º/Férias"];
+    kpiRow("Gasto em pessoas", fmtCurrency(transactions.filter((t: any) => t.type === "Saída" && peopleCategories.includes(t.category)).reduce((s: number, t: any) => s + Number(t.value), 0)));
     yPos += 4;
 
     // Top categories
