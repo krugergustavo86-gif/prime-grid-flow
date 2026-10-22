@@ -120,6 +120,13 @@
       "when": 1792666632431,
       "tag": "0016_quick_cheque_cash_confirmation",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792703709358,
+      "tag": "0017_restrict_rls_os_regras_fechamentos_contas",
+      "breakpoints": true
     }
   ]
 }
