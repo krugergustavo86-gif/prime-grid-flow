@@ -1,4 +1,5 @@
 import type { Tables } from '@/integrations/supabase/types';
+import type { Transaction } from '@/types';
 export type Cheque = Tables<'cheques'>;
 export type ChequeEvent = Tables<'cheque_events'>;
 export type ReceiptPayment = Tables<'receivable_payments'>;
@@ -22,3 +23,8 @@ export function legacyRemainder(remaining: number, amount: number): number {
   return (cents - allocation) / 100;
 }
 export function localFinancialDate() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+export function canCashCheque(status: string) { return status === 'Em carteira' || status === 'Depositado'; }
+export function nearbyCashMovements(transactions: Transaction[], amount: number, type: Transaction['type'], accountId: string, date: string) {
+ const day = Date.parse(date + 'T12:00:00Z');
+ return transactions.filter(t => t.type === type && Math.round(t.value * 100) === Math.round(amount * 100) && t.conta_id === accountId && Math.abs(Date.parse(t.date + 'T12:00:00Z') - day) <= 3 * 86400000);
+}

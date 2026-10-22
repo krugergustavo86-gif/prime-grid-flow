@@ -32,5 +32,6 @@ export function useCheques() {
  useEffect(()=>{mounted.current=true;void refresh();const unsub=onQueryInvalidated(['cheques'],()=>void refresh());return()=>{mounted.current=false;version.current++;unsub();};},[refresh]);
  const create=async(data:Json)=>{const r=await supabase.rpc('create_cheque',{_data:data});if(r.error){toast.error(r.error.message);return null;}refreshFinancialViews();return r.data;};
  const move=async(id:string,action:ChequeAction,date:string,data:Json)=>{const r=await supabase.rpc('move_cheque',{_id:id,_action:action,_date:date,_data:data});if(r.error){toast.error(r.error.message);return false;}refreshFinancialViews();return true;};
- return {cheques,events,payments,loading,error,refresh,create,move};
+ const cash=async(id:string,date:string,data:Json)=>{const r=await supabase.rpc('cash_cheque',{_id:id,_date:date,_data:data});if(r.error){toast.error(r.error.message);return false;}refreshFinancialViews();return true;};
+ return {cheques,events,payments,loading,error,refresh,create,move,cash};
 }

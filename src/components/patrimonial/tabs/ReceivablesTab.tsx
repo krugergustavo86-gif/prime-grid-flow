@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus, Transaction } from "@/types";
+import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus, Transaction, Payable } from "@/types";
+import { ChequesTab } from "@/components/cheques/ChequesTab";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ interface Props {
   deleteCashEntry: (id: string) => void | Promise<boolean | void>;
   updateCashEntry: (id: string, u: Partial<CashEntry>) => void;
   transactions: Transaction[];
+  payables: Payable[];
   readOnly?: boolean;
 }
 
@@ -46,6 +48,7 @@ function statusBadge(status: string) {
 export function ReceivablesTab(props: Props) {
   const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
+  const [chequesOpen, setChequesOpen] = useState(false);
   const [editing, setEditing] = useState<Receivable | null>(null);
   const [doubtfulModalOpen, setDoubtfulModalOpen] = useState(false);
   const [editingDoubtful, setEditingDoubtful] = useState<DoubtfulCredit | null>(null);
@@ -152,13 +155,13 @@ export function ReceivablesTab(props: Props) {
                 return (
                   <tr key={r.id} className="border-b hover:bg-muted/30">
                     <td className="p-3">{r.description}</td>
-                    <td className="p-3 text-right tabular-nums font-medium text-primary">{formatCurrency(remaining)}</td>
+                    <td className="p-3 text-right tabular-nums font-medium text-primary">{r.chequeLegacy || r.type === "Cheque" ? <Button variant="link" className="h-auto p-0 tabular-nums underline underline-offset-4" aria-label={`Abrir controle de cheques: ${r.description}`} onClick={() => setChequesOpen(true)}>{formatCurrency(remaining)}</Button> : formatCurrency(remaining)}</td>
                     <td className="p-3 hidden md:table-cell">{r.type}</td>
                     <td className="p-3">{statusBadge(r.status)}</td>
                     {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
-                        {r.chequeLegacy || r.type === "Cheque" ? <span className="text-xs text-muted-foreground">Gerenciado em Cheques</span> : <>
+                        {r.chequeLegacy || r.type === "Cheque" ? <Button variant="ghost" size="icon" title="Ver cheques" aria-label={`Ver cheques: ${r.description}`} onClick={() => setChequesOpen(true)}><DollarSign className="h-4 w-4" /></Button> : <>
                         {r.status !== "Recebido" && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => setLinkedPayment({receivable: r, mode: "pay"})}>
                             <DollarSign className="h-3.5 w-3.5" />
@@ -312,6 +315,12 @@ export function ReceivablesTab(props: Props) {
       </div>
 
       {linkedPayment && <ReceivablePaymentDialog receivable={linkedPayment.receivable} mode={linkedPayment.mode} transactions={props.transactions} onClose={() => setLinkedPayment(null)} />}
+      <Dialog open={chequesOpen} onOpenChange={setChequesOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-6xl max-h-[90dvh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Controle de cheques</DialogTitle></DialogHeader>
+          {chequesOpen && <ChequesTab receivables={receivables} payables={props.payables} transactions={props.transactions} readOnly={!!readOnly} />}
+        </DialogContent>
+      </Dialog>
 
       {/* Payment / Add Value Modal */}
       <Dialog open={!!paymentModal} onOpenChange={(o) => !o && setPaymentModal(null)}>

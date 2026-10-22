@@ -13,3 +13,4 @@
 - Cheques mirror one protected receivable each; atomic admin RPCs own lifecycle, legacy allocation, supplier settlement and cash links, so all existing patrimonial totals remain single-sourced without counting instruments twice.
 - Cheque clearance and returns keep the deposit account fixed; supplier settlements store remaining debt, and linked existing reversals are never reclassified, preserving bank evidence and preventing duplicate cash movements.
 - Receivable payments and reversals use atomic RPCs and immutable transaction links; financial invalidation reloads transactions and patrimony to prevent stale balances after server-side movements.
+- Quick cheque cash clearance uses cash_cheque to atomically deposit and clear through the existing lifecycle; account/value serialization and existing duplicate checks prevent concurrent duplicate credits.
