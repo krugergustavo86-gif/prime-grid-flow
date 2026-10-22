@@ -1,6 +1,7 @@
 - Monthly cash totals: single source is src/utils/monthlyTotals.ts, grouped by transaction `date` (never the `month` column); every screen must use it — avoids divergent totals between screens.
 - Closed months: fechamentos_mensais table (DB trigger blocks insert/update/delete; fechar_mes requires zero-difference reconciliation, reabrir_mes admin-only and audited), mirrored client-side by src/utils/lockedMonths.ts; it only blocks editing; it never overrides balances (balance is always entradas - saídas). transactions.locked column is deprecated and never read/written.
 - Chart of accounts lives in src/utils/categories.ts (PLANO_DE_CONTAS, groups with operacional flag); non-operational groups feed NON_OPERATIONAL_CATEGORIES — count in cash, excluded from category charts, DRE-like reports and projections.
+- Expense aliases are shared by frontend and edge functions through functions/_shared/expenseCategories.ts; closed historical rows are consolidated on read, never unlocked to rename categories, and manual expense selectors use only the approved chart.
 - Category reclassification never changes value/date; transactions.categoria_original keeps the pre-reclassification category (set by insert trigger) and regra_aplicada records which rule changed it.
 - Supplier rules live in regras_categoria (normalized lowercase/no-accent text, priority order); used to prefill category in TransactionModal and by the Fornecedores screen.
 - Transaction pagination must order by a unique tiebreaker (date, id) — non-unique ordering duplicates/skips rows across pages.

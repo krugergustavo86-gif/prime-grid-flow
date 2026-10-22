@@ -8,6 +8,7 @@ import { filterByMonth } from "@/utils/monthlyTotals";
 import { useAppConfig } from "@/hooks/useAppConfig";
 import { toast } from "sonner";
 import { onQueryInvalidated } from "@/lib/queryClient";
+import { canonicalCategory } from "@/utils/categories";
 
 const TRANSACTIONS_PAGE_SIZE = 1000;
 const MAX_PAGES = 100;
@@ -43,7 +44,7 @@ export function useTransactions() {
           date: r.date,
           description: r.description,
           type: r.type as "Saída" | "Entrada",
-          category: r.category,
+          category: canonicalCategory(r.type, r.category),
           value: Number(r.value),
           notes: r.notes || "",
           month: r.month,

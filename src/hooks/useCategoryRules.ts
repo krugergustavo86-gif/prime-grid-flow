@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { normTxt } from "@/utils/categories";
+import { normTxt, canonicalCategory } from "@/utils/categories";
 
 export interface CategoryRule {
   id: string;
@@ -26,13 +26,13 @@ export function useCategoryRules() {
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.from("regras_categoria").select("*").order("prioridade").order("created_at");
-    setRules((data ?? []) as CategoryRule[]);
+    setRules((data ?? []).map(r => ({ ...r, categoria: canonicalCategory(r.tipo, r.categoria) })) as CategoryRule[]);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     supabase.from("regras_categoria").select("*").order("prioridade").order("created_at")
-      .then(({ data }) => { if (!cancelled) setRules((data ?? []) as CategoryRule[]); });
+      .then(({ data }) => { if (!cancelled) setRules((data ?? []).map(r => ({ ...r, categoria: canonicalCategory(r.tipo, r.categoria) })) as CategoryRule[]); });
     return () => { cancelled = true; };
   }, []);
 

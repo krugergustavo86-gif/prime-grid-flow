@@ -1,5 +1,5 @@
 import { Transaction } from "@/types";
-import { NON_OPERATIONAL_LIST } from "./categories";
+import { NON_OPERATIONAL_LIST, canonicalCategory } from "./categories";
 
 /**
  * FONTE ÚNICA dos totais mensais do caixa.
@@ -12,8 +12,8 @@ import { NON_OPERATIONAL_LIST } from "./categories";
  * contam no caixa, mas ficam fora de DRE, relatórios por categoria e indicadores. */
 export const NON_OPERATIONAL_CATEGORIES = NON_OPERATIONAL_LIST;
 
-export function isOperational(t: Pick<Transaction, "category">): boolean {
-  return !NON_OPERATIONAL_CATEGORIES.includes(t.category);
+export function isOperational(t: Pick<Transaction, "category"> & { type?: Transaction["type"] }): boolean {
+  return !NON_OPERATIONAL_CATEGORIES.includes(canonicalCategory(t.type ?? "Saída", t.category));
 }
 
 /** "YYYY-MM" da data do lançamento. */
@@ -46,7 +46,7 @@ export function sumTotals(txns: Transaction[]): MonthTotals {
   const byCategory: MonthTotals["byCategory"] = {};
   for (const t of txns) {
     if (t.type === "Entrada") entradas += t.value; else saidas += t.value;
-    const k = `${t.type}|${t.category}`;
+    const k = `${t.type}|${canonicalCategory(t.type, t.category)}`;
     byCategory[k] = { type: t.type, value: (byCategory[k]?.value ?? 0) + t.value };
   }
   entradas = round2(entradas);
