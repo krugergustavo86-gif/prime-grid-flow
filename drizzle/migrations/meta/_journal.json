@@ -113,6 +113,13 @@
       "when": 1792439953164,
       "tag": "0015_preserve_existing_return_movements",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792666632431,
+      "tag": "0016_quick_cheque_cash_confirmation",
+      "breakpoints": true
     }
   ]
 }
