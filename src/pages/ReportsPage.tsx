@@ -18,7 +18,8 @@ import { Download, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { isOperational } from "@/utils/monthlyTotals";
+import { isOperational, sumTotals, computeMonthlyTotals } from "@/utils/monthlyTotals";
+import { PeopleExpenseTotal } from "@/components/lancamentos/PeopleExpenseTotal";
 import { GroupDetailSheet, ViewModeToggle, totalsBy, type ViewMode, type DetailSelection } from "@/components/lancamentos/GroupDetailSheet";
 import { PatrimonialReportSection } from "@/components/reports/PatrimonialReportSection";
 
@@ -81,23 +82,13 @@ export default function ReportsPage() {
 
   // Aggregates
   const totals = useMemo(() => {
-    let entradas = 0, saidas = 0;
-    filtered.forEach(t => {
-      if (t.type === "Entrada") entradas += t.value;
-      else saidas += t.value;
-    });
-    return { entradas, saidas, lucro: entradas - saidas };
+    const { entradas, saidas, balanco } = sumTotals(filtered);
+    return { entradas, saidas, lucro: balanco };
   }, [filtered]);
 
   // Monthly breakdown across selected range
   const monthlyData = useMemo(() => {
-    const map: Record<string, { entradas: number; saidas: number }> = {};
-    filtered.forEach(t => {
-      const key = t.date.slice(0, 7); // YYYY-MM
-      if (!map[key]) map[key] = { entradas: 0, saidas: 0 };
-      if (t.type === "Entrada") map[key].entradas += t.value;
-      else map[key].saidas += t.value;
-    });
+    const map = computeMonthlyTotals(filtered);
     const keys = Object.keys(map).sort();
     let acc = 0;
     return keys.map(k => {
@@ -345,6 +336,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Comparison */}
+          <PeopleExpenseTotal transactions={filtered} />
           {comparison && (
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-base">Comparativo: {comparison.curr} vs {comparison.prev}</CardTitle></CardHeader>

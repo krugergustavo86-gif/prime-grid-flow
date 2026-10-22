@@ -11,6 +11,7 @@ import { TransactionTable } from "@/components/lancamentos/TransactionTable";
 import { TransactionModal } from "@/components/lancamentos/TransactionModal";
 import { AutoTransactionsTab } from "@/components/lancamentos/AutoTransactionsTab";
 import { ImportExtratoDialog } from "@/components/lancamentos/ImportExtratoDialog";
+import { PeopleExpenseTotal } from "@/components/lancamentos/PeopleExpenseTotal";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -85,6 +86,7 @@ export default function LancamentosPage() {
           <TabsContent value="lancamentos" className="space-y-4 mt-4">
             <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} year={config.ano} />
             <MonthSummaryCards entradas={entradas} saidas={saidas} balanco={balanco} />
+            <PeopleExpenseTotal transactions={monthTxns} />
             <DonutCharts transactions={monthTxns} />
             <TransactionTable transactions={monthTxns} locked={isLocked || readOnly} onEdit={handleEdit} onDelete={handleDelete} />
           </TabsContent>

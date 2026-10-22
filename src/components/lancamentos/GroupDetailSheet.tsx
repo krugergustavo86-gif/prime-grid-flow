@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Transaction } from "@/types";
 import { formatCurrency } from "@/utils/formatters";
-import { groupOf } from "@/utils/categories";
+import { groupOf, canonicalCategory } from "@/utils/categories";
+import { sumTotals } from "@/utils/monthlyTotals";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,10 +13,11 @@ export interface DetailSelection { type: "Saída" | "Entrada"; name: string; mod
 /** Soma por grupo do plano de contas (mode "grupo") ou por subcategoria. */
 export function totalsBy(txns: Transaction[], mode: ViewMode): { name: string; value: number }[] {
   const map: Record<string, number> = {};
-  txns.forEach(t => {
-    const k = mode === "grupo" ? groupOf(t.type, t.category) : t.category;
-    map[k] = (map[k] || 0) + t.value;
-  });
+  for (const [key, { type, value }] of Object.entries(sumTotals(txns).byCategory)) {
+    const category = key.slice(key.indexOf("|") + 1);
+    const k = mode === "grupo" ? groupOf(type, category) : category;
+    map[k] = (map[k] || 0) + value;
+  }
   return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 }
 
@@ -42,12 +44,13 @@ export function GroupDetailSheet({ transactions, selected, onClose }: {
   const all = useMemo(() => {
     if (!selected) return [];
     return transactions.filter(t => t.type === selected.type &&
-      (selected.mode === "grupo" ? groupOf(t.type, t.category) === selected.name : t.category === selected.name))
+      (selected.mode === "grupo" ? groupOf(t.type, t.category) === selected.name : canonicalCategory(t.type, t.category) === selected.name))
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [selected, transactions]);
   const subs = useMemo(() => totalsBy(all, "categoria"), [all]);
-  const list = sub === "all" ? all : all.filter(t => t.category === sub);
-  const total = list.reduce((s, t) => s + t.value, 0);
+  const list = sub === "all" ? all : all.filter(t => canonicalCategory(t.type, t.category) === sub);
+  const sums = sumTotals(list);
+  const total = selected?.type === "Saída" ? sums.saidas : sums.entradas;
 
   return (
     <Sheet open={!!selected} onOpenChange={o => !o && onClose()}>
@@ -77,7 +80,7 @@ export function GroupDetailSheet({ transactions, selected, onClose }: {
                 <p className="text-sm text-foreground break-words">{t.description}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {new Date(t.date + "T12:00:00").toLocaleDateString("pt-BR")}
-                  {selected?.mode === "grupo" && ` · ${t.category}`}
+                  {selected?.mode === "grupo" && ` · ${canonicalCategory(t.type, t.category)}`}
                   {" · "}
                   {t.created_by ? (users[t.created_by] ?? "Usuário") : "Sistema/importação"}
                 </p>

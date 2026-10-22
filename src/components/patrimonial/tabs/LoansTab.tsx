@@ -1,4 +1,4 @@
-import { CATEGORIAS_SAIDA } from "@/utils/categories";
+import { CATEGORIAS_SAIDA, canonicalCategory } from "@/utils/categories";
 import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loan, LoanType } from "@/types";
@@ -266,7 +266,7 @@ function LoanModal({ open, onClose, onSave, initial }: { open: boolean; onClose:
       setDebitStartDate(initial?.debitStartDate || "");
       setDebitEndDate(initial?.debitEndDate || "");
       setBankAccount(initial?.bankAccount || "");
-      setDebitCategory(initial?.debitCategory || "Parcelas de empréstimos/financiamentos/consórcios");
+      setDebitCategory(canonicalCategory("Saída", initial?.debitCategory || "Parcelas de empréstimos/financiamentos/consórcios"));
     }
   }, [open, initial]);
 
