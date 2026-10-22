@@ -23,3 +23,8 @@
 - [x] Abrir controle pelo valor em Recebíveis e retirar aba separada.
 - [x] Confirmar lançamento rápido com vínculo existente ou entrada única, mantendo devolução segura.
 - [x] Testar fluxo autenticado, conferir caixa antes/depois e limpar testes sem publicar.
+
+# Redução aprovada das categorias de saída
+- [ ] Aplicar 18 opções, preservar categorias históricas e atualizar origens automáticas/regras.
+- [ ] Consolidar histórico autorizado sem alterar valores/datas nem remover transferências/retiradas antigas.
+- [ ] Conferir Pessoal por grupo em Lançamentos/Relatórios, testes e caixa sem publicar.
