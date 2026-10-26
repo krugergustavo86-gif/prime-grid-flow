@@ -16,6 +16,7 @@ import { chequeActions, chequeAssetValue, canCashCheque, nearbyCashMovements, AC
 import { formatCurrency, formatDateBR } from '@/utils/formatters';
 import type { Payable, Receivable, Transaction } from '@/types';
 import { FinancialMovementFields, type MovementChoice } from './FinancialMovementFields';
+import { selectableCategories } from '@/utils/categories';
 export function ChequesTab({receivables,payables,transactions,readOnly}:{receivables:Receivable[];payables:Payable[];transactions:Transaction[];readOnly:boolean}) {
  const ledger=useCheques(),accounts=useContasBancarias();
  const [newOpen,setNewOpen]=useState(false),[details,setDetails]=useState<Cheque|null>(null),[filter,setFilter]=useState('Todos'),[search,setSearch]=useState(''),[busy,setBusy]=useState(false);
@@ -25,6 +26,12 @@ export function ChequesTab({receivables,payables,transactions,readOnly}:{receiva
  const [operation,setOperation]=useState<{cheque:Cheque;action:ChequeAction;quick?:boolean}|null>(null);
  const [date,setDate]=useState(localFinancialDate()),[recipient,setRecipient]=useState(''),[supplier,setSupplier]=useState(''),[payableId,setPayableId]=useState(''),[reason,setReason]=useState(''),[back,setBack]=useState(true),[confirmed,setConfirmed]=useState(false);
  const [movement,setMovement]=useState<MovementChoice>({mode:'link',date:localFinancialDate(),accountId:'',transactionId:'',category:''});
+ const [legacyOpen,setLegacyOpen]=useState(false),[legacyValue,setLegacyValue]=useState(''),[legacyDate,setLegacyDate]=useState(localFinancialDate()),[legacyAccount,setLegacyAccount]=useState(''),[legacyCategory,setLegacyCategory]=useState(''),[legacyNotes,setLegacyNotes]=useState(''),[legacyConfirmed,setLegacyConfirmed]=useState(false);
+ const legacyDuplicate=legacyOpen&&nearbyCashMovements(transactions,Number(legacyValue||0),'Entrada',legacyAccount,legacyDate).length>0;
+ const saveLegacy=async()=>{
+  if(busy||legacyDuplicate||!legacyConfirmed||Number(legacyValue)<=0||!legacyDate||!legacyAccount||!legacyCategory){toast.error('Preencha valor, data, conta e categoria');return;}
+  setBusy(true);try{const ok=await ledger.cashLegacy(Number(legacyValue),legacyDate,legacyAccount,legacyCategory,legacyNotes);if(ok){toast.success('Baixa do saldo legado registrada');setLegacyOpen(false);setLegacyValue('');setLegacyNotes('');setLegacyConfirmed(false);await ledger.refresh();}}finally{setBusy(false);}
+ };
  const legacy=receivables.filter(r=>r.chequeLegacy);
  const totalLegacy=legacy.reduce((s,r)=>s+Math.max(0,r.value-r.paidValue),0);
  const active=ledger.cheques.filter(c=>(filter==='Todos'||c.status===filter)&&`${c.number} ${c.delivered_by} ${c.issuer} ${c.recipient||''}`.toLowerCase().includes(search.toLowerCase()));
