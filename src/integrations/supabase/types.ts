@@ -1308,6 +1308,16 @@ export type Database = {
         Args: { _data: string; _diferenca: number; _saldos: Json }
         Returns: string
       }
+      baixar_cheque_legado: {
+        Args: {
+          _account: string
+          _category: string
+          _date: string
+          _notes?: string
+          _value: number
+        }
+        Returns: string
+      }
       cash_cheque: {
         Args: { _data?: Json; _date: string; _id: string }
         Returns: string

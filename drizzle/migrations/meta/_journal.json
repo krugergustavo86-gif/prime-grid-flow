@@ -127,6 +127,20 @@
       "when": 1792703709358,
       "tag": "0017_restrict_rls_os_regras_fechamentos_contas",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793024978351,
+      "tag": "0018_baixar_cheque_legado_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793025100435,
+      "tag": "0019_fix_baixar_cheque_legado_unique_number",
+      "breakpoints": true
     }
   ]
 }

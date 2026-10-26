@@ -33,5 +33,6 @@ export function useCheques() {
  const create=async(data:Json)=>{const r=await supabase.rpc('create_cheque',{_data:data});if(r.error){toast.error(r.error.message);return null;}refreshFinancialViews();return r.data;};
  const move=async(id:string,action:ChequeAction,date:string,data:Json)=>{const r=await supabase.rpc('move_cheque',{_id:id,_action:action,_date:date,_data:data});if(r.error){toast.error(r.error.message);return false;}refreshFinancialViews();return true;};
  const cash=async(id:string,date:string,data:Json)=>{const r=await supabase.rpc('cash_cheque',{_id:id,_date:date,_data:data});if(r.error){toast.error(r.error.message);return false;}refreshFinancialViews();return true;};
- return {cheques,events,payments,loading,error,refresh,create,move,cash};
+ const cashLegacy=async(value:number,date:string,accountId:string,category:string,notes:string)=>{const r=await supabase.rpc('baixar_cheque_legado',{_value:value,_date:date,_account:accountId,_category:category,_notes:notes});if(r.error){toast.error(r.error.message);return false;}refreshFinancialViews();return true;};
+ return {cheques,events,payments,loading,error,refresh,create,move,cash,cashLegacy};
 }
