@@ -38,3 +38,7 @@
 - [x] Aplicar 18 opções, preservar categorias históricas e atualizar origens automáticas/regras.
 - [x] Consolidar 2.354 lançamentos de meses abertos e 17 regras; meses fechados agrupados na leitura, sem desbloquear nem remover histórico.
 - [x] Conferir Pessoal nas duas telas (setembro R$ 256.252,19), 50 testes e integridade dos 6.659 lançamentos iniciais; nenhum movimento de teste ou publicação.
+
+# Aviso de origem no cadastro de cheques
+- [x] Dar ao aviso "Cheque novo" o mesmo destaque laranja do aviso de individualização; conferido no preview com R$ 30.000,00.
+- [x] Publicar o formulário no site publicado; deploy agendado e a URL respondeu 200.
