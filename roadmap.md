@@ -1,4 +1,6 @@
 # Correções de origem e atualização de cheques
+- [x] Implementar Editar saldo legado para Admin, com motivo, confirmação e auditoria.
+- [x] Testar edição real R$ 145.500,00 → R$ 145.498,77 → R$ 145.500,00, bloqueios de todos os perfis não Admin e validações; 30 testes aprovados, caixa e 6.782 transações intactos, sem publicar.
 - [x] Excluir cheque de teste 13456, mantendo legado R$ 145.500,00 e caixa intacto; exclusão auditada.
 - [x] Exigir origem explícita sem opção pré-marcada no cadastro; validado na tela e em teste.
 - [x] Corrigir atualização ao retornar aos Recebíveis e testar persistência (R$ 1,23 → 2,34 → 3,45); testes limpos, 23 testes aprovados, 6.770 lançamentos intactos e sem publicação.

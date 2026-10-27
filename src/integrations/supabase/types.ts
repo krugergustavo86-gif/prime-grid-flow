@@ -1328,6 +1328,16 @@ export type Database = {
         Args: { _expected_updated_at: string; _id: string; _reason: string }
         Returns: string
       }
+      edit_legacy_cheque_balance: {
+        Args: {
+          _confirmed: boolean
+          _expected_balance: number
+          _id: string
+          _new_balance: number
+          _reason: string
+        }
+        Returns: undefined
+      }
       edit_wallet_cheque: {
         Args: { _data: Json; _expected_updated_at: string; _id: string }
         Returns: undefined
