@@ -148,6 +148,13 @@
       "when": 1793098755318,
       "tag": "0020_safe_wallet_cheque_edit_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793121010603,
+      "tag": "0021_admin_edit_legacy_cheque_balance",
+      "breakpoints": true
     }
   ]
 }
