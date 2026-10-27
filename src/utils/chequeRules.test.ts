@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { chequeActions, chequeAssetValue, legacyRemainder, canCashCheque, nearbyCashMovements } from './chequeRules';
+import { chequeActions, chequeAssetValue, legacyRemainder, canCashCheque, nearbyCashMovements, canMaintainCheque, type Cheque, type ChequeEvent, type ReceiptPayment } from './chequeRules';
 describe('Cheque lifecycle and accounting', () => {
+ const wallet = {id:'wallet',receivable_id:'mirror',status:'Em carteira',account_id:null,credited_transaction_id:null,payable_id:null,recipient:null,supplier:null,third_party_pending:false} as Cheque;
+ it('allows maintenance of an untouched wallet cheque', () => { expect(canMaintainCheque(wallet,[],[])).toBe(true); });
+ it('blocks maintenance after deposit even after returning to wallet', () => { expect(canMaintainCheque(wallet,[{cheque_id:'wallet',from_status:'Em carteira',to_status:'Depositado',transaction_id:null,payable_id:null} as ChequeEvent],[])).toBe(false); });
+ it('blocks maintenance when a cash credit is linked', () => { expect(canMaintainCheque({...wallet,credited_transaction_id:'credit'},[],[])).toBe(false); });
+ it('blocks maintenance when supplier debt is linked', () => { expect(canMaintainCheque({...wallet,payable_id:'debt'},[],[])).toBe(false); });
+ it('blocks maintenance after a receivable payment', () => { expect(canMaintainCheque(wallet,[],[{receivable_id:'mirror'} as ReceiptPayment])).toBe(false); });
+ it('blocks maintenance outside Em carteira', () => { expect(canMaintainCheque({...wallet,status:'Compensado'},[],[])).toBe(false); });
  it('allows deposit or pass only from wallet', () => { expect(chequeActions('Em carteira')).toEqual(['deposit','pass']); });
  it('allows clearance or return after deposit', () => { expect(chequeActions('Depositado')).toEqual(['clear','return']); });
  it('allows clearance or return after passing', () => { expect(chequeActions('Repassado')).toEqual(['clear','return']); });
