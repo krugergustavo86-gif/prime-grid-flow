@@ -1,3 +1,8 @@
+# Correções de origem e atualização de cheques
+- [ ] Excluir cheque de teste 13456, mantendo legado R$ 145.500,00 e caixa intacto.
+- [ ] Exigir origem explícita sem opção pré-marcada no cadastro.
+- [ ] Corrigir atualização ao retornar aos Recebíveis e testar persistência; limpar testes sem publicar.
+
 # Edição e exclusão segura de cheques
 - [x] Implementar ações atômicas para Admin em cheques Em carteira sem movimentação anterior.
 - [x] Remover cheque 123456 de R$ 30,26 restaurando o legado e registrando Atividades.
