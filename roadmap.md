@@ -1,3 +1,8 @@
+# Correção de segurança das dependências
+- [ ] Corrigir jsPDF/DOMPurify e revisar todos os avisos de dependências, sem publicar.
+- [ ] Validar testes existentes, exportações PDF e navegação autenticada no preview, sem alterar dados financeiros.
+- [ ] Reexecutar o scan e apresentar versões alteradas e eventuais avisos restantes.
+
 # Correções de origem e atualização de cheques
 - [x] Recolocar lápis para Admin no legado, com janela simples sem motivo/confirmação extra; 28 testes aprovados, edição real de R$ 1,23 revertida e conferida após recarregar; legado R$ 145.500,00, caixa e 6.789 lançamentos intactos, sem publicar.
 - [x] Implementar Editar saldo legado para Admin, com motivo, confirmação e auditoria.
