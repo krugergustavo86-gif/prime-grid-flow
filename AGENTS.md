@@ -18,3 +18,4 @@
 - Quick cheque cash clearance uses cash_cheque to atomically deposit and clear through the existing lifecycle; account/value serialization and existing duplicate checks prevent concurrent duplicate credits.
 - Cheque edit/delete uses admin-only atomic maintenance RPCs with row locks, optimistic timestamps and never-moved eligibility; mirror/legacy changes and retained audit snapshots keep cash untouched and prevent lost updates.
 - Patrimony and cheque hooks reload on browser visibility/focus, and Receivables reloads on tab mount; latest-request guards prevent stale responses replacing refreshed financial data.
+- Dependency security fixes use patched compatible releases and explicit overrides for vulnerable transitive packages; keep text lockfiles synchronized so installs and security scans resolve the same versions.
