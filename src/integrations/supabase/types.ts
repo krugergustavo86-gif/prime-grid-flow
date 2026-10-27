@@ -1324,6 +1324,14 @@ export type Database = {
       }
       cheque_admin: { Args: never; Returns: undefined }
       create_cheque: { Args: { _data: Json }; Returns: string }
+      delete_wallet_cheque: {
+        Args: { _expected_updated_at: string; _id: string; _reason: string }
+        Returns: string
+      }
+      edit_wallet_cheque: {
+        Args: { _data: Json; _expected_updated_at: string; _id: string }
+        Returns: undefined
+      }
       fechar_mes: { Args: { _month: string }; Returns: undefined }
       financial_open_date: { Args: { _date: string }; Returns: undefined }
       get_user_role: {
@@ -1419,6 +1427,39 @@ export type Database = {
           _transaction?: string
         }
         Returns: string
+      }
+      wallet_cheque_for_maintenance: {
+        Args: { _expected_updated_at: string; _id: string }
+        Returns: {
+          account_id: string | null
+          bank: string
+          created_at: string
+          created_by: string | null
+          credited_transaction_id: string | null
+          delivered_by: string
+          due_date: string
+          id: string
+          issuer: string
+          legacy_id: string | null
+          notes: string
+          number: string
+          payable_id: string | null
+          photo_path: string | null
+          receivable_id: string
+          received_date: string
+          recipient: string | null
+          status: string
+          supplier: string | null
+          third_party_pending: boolean
+          updated_at: string
+          value: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cheques"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
