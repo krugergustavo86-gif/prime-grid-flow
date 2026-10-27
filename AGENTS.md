@@ -15,3 +15,4 @@
 - Cheque clearance and returns keep the deposit account fixed; supplier settlements store remaining debt, and linked existing reversals are never reclassified, preserving bank evidence and preventing duplicate cash movements.
 - Receivable payments and reversals use atomic RPCs and immutable transaction links; financial invalidation reloads transactions and patrimony to prevent stale balances after server-side movements.
 - Quick cheque cash clearance uses cash_cheque to atomically deposit and clear through the existing lifecycle; account/value serialization and existing duplicate checks prevent concurrent duplicate credits.
+- Cheque edit/delete uses admin-only atomic maintenance RPCs with row locks, optimistic timestamps and never-moved eligibility; mirror/legacy changes and retained audit snapshots keep cash untouched and prevent lost updates.
