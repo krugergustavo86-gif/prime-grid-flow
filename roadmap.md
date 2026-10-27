@@ -1,3 +1,8 @@
+# Edição e exclusão segura de cheques
+- [ ] Implementar ações atômicas para Admin em cheques Em carteira sem movimentação anterior.
+- [ ] Remover cheque 123456 de R$ 30,26 restaurando o legado e registrando Atividades.
+- [ ] Testar edição, exclusão, bloqueios e fluxo na tela; limpar testes e conferir caixa sem publicar.
+
 # Renomeação de categoria
 - [x] Atualizar nome nos seletores e título do card sem alterar cálculo.
 - [x] Renomear registros e conferir totais mensais e Caixa Atual.
