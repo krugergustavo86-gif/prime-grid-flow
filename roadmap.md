@@ -1,7 +1,7 @@
 # Correção de segurança das dependências
-- [ ] Corrigir jsPDF/DOMPurify e revisar todos os avisos de dependências, sem publicar.
-- [ ] Validar testes existentes, exportações PDF e navegação autenticada no preview, sem alterar dados financeiros.
-- [ ] Reexecutar o scan e apresentar versões alteradas e eventuais avisos restantes.
+- [x] Corrigir jsPDF/DOMPurify e revisar todos os avisos de dependências; DOMPurify 3.4.17, ws 8.22.0, lodash 4.18.1, Router 7.18.4 e Zod 4.6.7; atualizações compatíveis adicionais, sem publicar.
+- [x] Validar 69 testes existentes, download real de PDF e navegação autenticada em Relatórios, Patrimonial, Cheques e Dashboard no preview, sem gravações financeiras; preview compilado sem erros.
+- [x] Reexecutar o scan: zero vulnerabilidades conhecidas nas 51 dependências de produção; auditoria completa ainda identifica 10 cadeias nas ferramentas de desenvolvimento (2 críticas), que exigem revisão de compatibilidade de Vite/Vitest/Drizzle; relatório mensal remoto mantém import separado de jsPDF 2.5.2, não modificado nem publicado.
 
 # Correções de origem e atualização de cheques
 - [x] Recolocar lápis para Admin no legado, com janela simples sem motivo/confirmação extra; 28 testes aprovados, edição real de R$ 1,23 revertida e conferida após recarregar; legado R$ 145.500,00, caixa e 6.789 lançamentos intactos, sem publicar.
