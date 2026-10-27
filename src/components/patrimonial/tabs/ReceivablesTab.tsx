@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Receivable, DoubtfulCredit, CashEntry, ReceivableType, ReceivableStatus, Transaction, Payable } from "@/types";
 import { ChequesTab } from "@/components/cheques/ChequesTab";
+import { LegacyBalanceEditor } from "@/components/cheques/LegacyBalanceEditor";
+import { useCheques } from "@/hooks/useCheques";
+import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,8 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
+  const { isAdmin } = useAuth();
+  const { editLegacy } = useCheques();
   useEffect(() => { queryClient.invalidateQueries({ queryKey: ["patrimony"] }); }, []);
   const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
@@ -163,6 +168,7 @@ export function ReceivablesTab(props: Props) {
                     {!readOnly && (
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
+                        {r.chequeLegacy && isAdmin && <LegacyBalanceEditor legacy={r} edit={editLegacy} iconOnly />}
                         {r.chequeLegacy || r.type === "Cheque" ? <Button variant="ghost" size="icon" title="Ver cheques" aria-label={`Ver cheques: ${r.description}`} onClick={() => setChequesOpen(true)}><DollarSign className="h-4 w-4" /></Button> : <>
                         {r.status !== "Recebido" && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => setLinkedPayment({receivable: r, mode: "pay"})}>

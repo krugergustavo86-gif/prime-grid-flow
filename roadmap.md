@@ -1,4 +1,5 @@
 # Correções de origem e atualização de cheques
+- [x] Recolocar lápis para Admin no legado, com janela simples sem motivo/confirmação extra; 28 testes aprovados, edição real de R$ 1,23 revertida e conferida após recarregar; legado R$ 145.500,00, caixa e 6.789 lançamentos intactos, sem publicar.
 - [x] Implementar Editar saldo legado para Admin, com motivo, confirmação e auditoria.
 - [x] Testar edição real R$ 145.500,00 → R$ 145.498,77 → R$ 145.500,00, bloqueios de todos os perfis não Admin e validações; 30 testes aprovados, caixa e 6.782 transações intactos, sem publicar.
 - [x] Excluir cheque de teste 13456, mantendo legado R$ 145.500,00 e caixa intacto; exclusão auditada.
