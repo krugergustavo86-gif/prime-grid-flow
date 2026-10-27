@@ -27,16 +27,18 @@ export default function LoginPage() {
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error("Erro: " + error.message);
-    } else {
-      toast.success("E-mail de recuperação enviado!");
+    try {
+      await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      toast.success("Se esse email estiver cadastrado, enviaremos um link para redefinir sua senha. Confira também o spam.");
       setMode("login");
+    } catch {
+      toast.error("Não foi possível solicitar a recuperação agora. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,13 +61,13 @@ export default function LoginPage() {
               <div>
                 <Label>Senha</Label>
                 <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" />
+                <Button type="button" variant="link" disabled={loading} className="h-auto px-0 pt-2 text-sm" onClick={() => setMode("forgot")}>
+                  Esqueci minha senha
+                </Button>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Entrar
-              </Button>
-              <Button type="button" variant="link" className="w-full text-sm" onClick={() => setMode("forgot")}>
-                Esqueci minha senha
               </Button>
             </form>
           ) : (
