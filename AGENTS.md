@@ -16,3 +16,4 @@
 - Receivable payments and reversals use atomic RPCs and immutable transaction links; financial invalidation reloads transactions and patrimony to prevent stale balances after server-side movements.
 - Quick cheque cash clearance uses cash_cheque to atomically deposit and clear through the existing lifecycle; account/value serialization and existing duplicate checks prevent concurrent duplicate credits.
 - Cheque edit/delete uses admin-only atomic maintenance RPCs with row locks, optimistic timestamps and never-moved eligibility; mirror/legacy changes and retained audit snapshots keep cash untouched and prevent lost updates.
+- Patrimony and cheque hooks reload on browser visibility/focus, and Receivables reloads on tab mount; latest-request guards prevent stale responses replacing refreshed financial data.

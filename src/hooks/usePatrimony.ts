@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { PatrimonyData, Asset, Receivable, DoubtfulCredit, CashEntry, Loan, Payable } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -70,8 +70,10 @@ function invalidatePatrimony() {
 
 export function usePatrimony() {
   const [data, setData] = useState<PatrimonyData>(EMPTY);
+  const requestVersion = useRef(0);
 
   const loadPatrimony = useCallback(async (cancelled?: () => boolean) => {
+    const version = ++requestVersion.current;
     const order = { ascending: false } as const;
     const [a, r, d, c, l, p] = await Promise.all([
       supabase.from("assets").select("id, asset_group, description, plate, value_fipe, value_market, notes").order("created_at", order),
@@ -81,7 +83,11 @@ export function usePatrimony() {
       supabase.from("loans").select("id, contract, institution, type, next_payment, total_installments, paid_installments, installment_value, notes, auto_debit, debit_day, debit_start_date, debit_end_date, bank_account, debit_category").order("created_at", order),
       supabase.from("payables").select("id, description, value, due_date, scheduled_date, responsible, status, notes").order("created_at", order),
     ]);
-    if (cancelled?.()) return;
+    if (cancelled?.() || version !== requestVersion.current) return;
+    if ([a, r, d, c, l, p].some(result => result.error)) {
+      toast.error("Não foi possível atualizar os dados patrimoniais");
+      return;
+    }
     setData({
       assets: (a.data || []).map(mapAsset),
       receivables: (r.data || []).map(mapReceivable),
@@ -94,9 +100,13 @@ export function usePatrimony() {
 
   useEffect(() => {
     let cancelled = false;
-    loadPatrimony(() => cancelled);
-    const unsubscribe = onQueryInvalidated(["patrimony"], () => loadPatrimony());
-    return () => { cancelled = true; unsubscribe(); };
+    const refresh = () => { void loadPatrimony(() => cancelled); };
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    refresh();
+    const unsubscribe = onQueryInvalidated(["patrimony"], refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => { cancelled = true; requestVersion.current++; unsubscribe(); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", onVisible); };
   }, [loadPatrimony]);
 
   // Assets

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { chequeActions, chequeAssetValue, legacyRemainder, canCashCheque, nearbyCashMovements, canMaintainCheque, type Cheque, type ChequeEvent, type ReceiptPayment } from './chequeRules';
+import { chequeActions, chequeAssetValue, legacyRemainder, canCashCheque, nearbyCashMovements, canMaintainCheque, chequeLegacyIdForOrigin, type Cheque, type ChequeEvent, type ReceiptPayment } from './chequeRules';
 describe('Cheque lifecycle and accounting', () => {
+ it('requires explicit origin without assuming a new cheque', () => { expect(() => chequeLegacyIdForOrigin('')).toThrow('Selecione a origem'); });
+ it('keeps new cheques separate and preserves the chosen legacy reference', () => { expect(chequeLegacyIdForOrigin('new')).toBe(''); expect(chequeLegacyIdForOrigin('78c4ff79-acf9-4fa0-b1ff-680062c57d26')).toBe('78c4ff79-acf9-4fa0-b1ff-680062c57d26'); });
  const wallet = {id:'wallet',receivable_id:'mirror',status:'Em carteira',account_id:null,credited_transaction_id:null,payable_id:null,recipient:null,supplier:null,third_party_pending:false} as Cheque;
  it('allows maintenance of an untouched wallet cheque', () => { expect(canMaintainCheque(wallet,[],[])).toBe(true); });
  it('blocks maintenance after deposit even after returning to wallet', () => { expect(canMaintainCheque(wallet,[{cheque_id:'wallet',from_status:'Em carteira',to_status:'Depositado',transaction_id:null,payable_id:null} as ChequeEvent],[])).toBe(false); });

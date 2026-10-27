@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, CheckCircle, AlertTriangle, ArrowUpCircle, ArrowD
 import { toast } from "sonner";
 import { ReceivablePaymentDialog } from "@/components/cheques/ReceivablePaymentDialog";
 import { StockRotativoSection } from "@/components/patrimonial/StockRotativoSection";
+import { queryClient } from "@/lib/queryClient";
 
 interface Props {
   receivables: Receivable[];
@@ -46,6 +47,7 @@ function statusBadge(status: string) {
 }
 
 export function ReceivablesTab(props: Props) {
+  useEffect(() => { queryClient.invalidateQueries({ queryKey: ["patrimony"] }); }, []);
   const { receivables, doubtfulCredits, cashEntries, caixaAtual, readOnly } = props;
   const [modalOpen, setModalOpen] = useState(false);
   const [chequesOpen, setChequesOpen] = useState(false);
