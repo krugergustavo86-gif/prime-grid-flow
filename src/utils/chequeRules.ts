@@ -23,6 +23,10 @@ export function legacyRemainder(remaining: number, amount: number): number {
   return (cents - allocation) / 100;
 }
 export function localFinancialDate() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+export function chequeLegacyIdForOrigin(origin: string): string {
+ if (!origin) throw new Error('Selecione a origem do cheque');
+ return origin === 'new' ? '' : origin;
+}
 export function canCashCheque(status: string) { return status === 'Em carteira' || status === 'Depositado'; }
 export function canMaintainCheque(c: Cheque, events: ChequeEvent[], payments: ReceiptPayment[]) {
  return c.status === 'Em carteira' && !c.account_id && !c.credited_transaction_id && !c.payable_id && !c.recipient && !c.supplier && !c.third_party_pending
