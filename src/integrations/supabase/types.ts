@@ -990,6 +990,45 @@ export type Database = {
           },
         ]
       }
+      service_invoice_os: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          os_number: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          os_number: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          os_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_invoice_os_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "service_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_invoice_os_os_number_fkey"
+            columns: ["os_number"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
+            referencedColumns: ["numero"]
+          },
+        ]
+      }
       service_invoice_receipts: {
         Row: {
           amount: number

@@ -8,6 +8,7 @@ export function useServiceInvoices() {
   const [invoices, setInvoices] = useState<ServiceInvoice[]>([]);
   const [receipts, setReceipts] = useState<ServiceReceipt[]>([]);
   const [attachments, setAttachments] = useState<Tables<"service_invoice_attachments">[]>([]);
+  const [osLinks, setOsLinks] = useState<Tables<"service_invoice_os">[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const mounted = useRef(false);
@@ -16,19 +17,20 @@ export function useServiceInvoices() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const rows: ServiceInvoice[] = [], linked: ServiceReceipt[] = [], files: Tables<"service_invoice_attachments">[] = [];
+      const rows: ServiceInvoice[] = [], linked: ServiceReceipt[] = [], files: Tables<"service_invoice_attachments">[] = [], os: Tables<"service_invoice_os">[] = [];
       for (let page = 0; page < 100; page++) {
-        const [a, b, c] = await Promise.all([
+        const [a, b, c, d] = await Promise.all([
           supabase.from("service_invoices").select("*").order("issue_date", { ascending: false }).order("id").range(page * 1000, page * 1000 + 999),
           supabase.rpc("list_service_receipts").range(page * 1000, page * 1000 + 999),
           supabase.from("service_invoice_attachments").select("*").order("id").range(page * 1000, page * 1000 + 999),
+          supabase.from("service_invoice_os").select("*").order("os_number").order("id").range(page * 1000, page * 1000 + 999),
         ]);
-        if (a.error || b.error || c.error) throw a.error || b.error || c.error;
-        rows.push(...(a.data || [])); linked.push(...(b.data || [])); files.push(...(c.data || []));
+        if (a.error || b.error || c.error || d.error) throw a.error || b.error || c.error || d.error;
+        rows.push(...(a.data || [])); linked.push(...(b.data || [])); files.push(...(c.data || [])); os.push(...(d.data || []));
         if (!mounted.current || current !== version.current) return;
-        if ((a.data?.length || 0) < 1000 && (b.data?.length || 0) < 1000 && (c.data?.length || 0) < 1000) break;
+        if ((a.data?.length || 0) < 1000 && (b.data?.length || 0) < 1000 && (c.data?.length || 0) < 1000 && (d.data?.length || 0) < 1000) break;
       }
-      if (mounted.current && current === version.current) { setInvoices(rows); setReceipts(linked); setAttachments(files); setError(false); }
+      if (mounted.current && current === version.current) { setInvoices(rows); setReceipts(linked); setAttachments(files); setOsLinks(os); setError(false); }
     } catch { if (mounted.current) { setError(true); toast.error("Não foi possível carregar as NFS-e"); } }
     finally { if (mounted.current && current === version.current) setLoading(false); }
   }, []);
@@ -44,5 +46,5 @@ export function useServiceInvoices() {
     await refresh();
     return result.data;
   };
-  return { invoices, receipts, attachments, loading, error, refresh, save };
+  return { invoices, receipts, attachments, osLinks, loading, error, refresh, save };
 }

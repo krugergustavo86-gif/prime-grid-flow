@@ -155,6 +155,13 @@
       "when": 1793121010603,
       "tag": "0021_admin_edit_legacy_cheque_balance",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793701031386,
+      "tag": "0022_service_invoice_os_links",
+      "breakpoints": true
     }
   ]
 }
