@@ -176,6 +176,13 @@
       "when": 1793991756413,
       "tag": "0024_ops_saldo_devedor_br_format",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793998659025,
+      "tag": "0025_archive_pending_boletos",
+      "breakpoints": true
     }
   ]
 }

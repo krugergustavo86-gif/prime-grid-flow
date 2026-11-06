@@ -1,0 +1,2 @@
+ALTER TABLE public.pending_boletos ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+COMMENT ON TABLE public.pending_boletos IS 'DEPRECATED: fila de boletos arquivada em 06/11/2026; mantida só como histórico (archived_at).';

@@ -803,6 +803,7 @@ export type Database = {
       }
       pending_boletos: {
         Row: {
+          archived_at: string | null
           area: string | null
           category: string
           client_name: string | null
@@ -822,6 +823,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          archived_at?: string | null
           area?: string | null
           category?: string
           client_name?: string | null
@@ -841,6 +843,7 @@ export type Database = {
           value: number
         }
         Update: {
+          archived_at?: string | null
           area?: string | null
           category?: string
           client_name?: string | null
