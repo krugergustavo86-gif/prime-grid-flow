@@ -31,6 +31,19 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
 
+    // Saldo devedor total do Financeiro do OPS — atualiza só a linha "Saldo devedor sistema OPS".
+    if (body?.evento === "saldo_devedor") {
+      const v = Number(body.valor);
+      if (!Number.isFinite(v) || v < 0) {
+        return new Response(JSON.stringify({ error: "valor inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const ref = typeof body.referencia === "string" && !isNaN(Date.parse(body.referencia)) ? new Date(body.referencia).toISOString() : null;
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: res, error: e } = await sb.rpc("ops_set_saldo_devedor", { _valor: v, _referencia: ref, _payload: body });
+      if (e) return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true, ...res }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Evento de OS (cadastro/status/conclusão) — não gera lançamento de caixa.
     if (body?.evento === "os" || body?.evento === "os_lote") {
       const lista = body.evento === "os_lote" ? (body.ordens ?? []) : [body];
