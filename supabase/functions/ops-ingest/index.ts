@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Boletos NÃO entram direto no fluxo: ficam pendentes até confirmação manual no Cash
+    // Fila de boletos descontinuada: boletos são aceitos e guardados já arquivados (só histórico, sem caixa)
     const isBoleto = String(forma_pagamento ?? "").toLowerCase().includes("boleto");
     const statusStr = String(status ?? "").toLowerCase();
     const isPending = statusStr === "pendente" || statusStr === "a_confirmar" ||
@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
           category: finalCategory,
           notes,
           status: "pendente",
+          archived_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -188,7 +189,7 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, status: "pendente", pending_boleto: pendingRow }),
+        JSON.stringify({ success: true, status: "arquivado", pending_boleto: pendingRow }),
         { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
