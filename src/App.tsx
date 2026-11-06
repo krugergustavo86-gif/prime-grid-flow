@@ -16,7 +16,6 @@ import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NFControlPage from "./pages/NFControlPage";
 import UsersPage from "./pages/UsersPage";
 import AtividadesPage from "./pages/AtividadesPage";
-import BoletosPendentesPage from "./pages/BoletosPendentesPage";
 import PendenciasPage from "./pages/PendenciasPage";
 import FornecedoresCategoriasPage from "./pages/FornecedoresCategoriasPage";
 
@@ -96,7 +95,7 @@ function AppRoutes() {
           <Routes>
             <Route path="/" element={canAccessDashboard ? <DashboardPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/lancamentos" element={canAccessLancamentos ? <LancamentosPage /> : <Navigate to={defaultRoute} replace />} />
-            <Route path="/boletos" element={canAccessLancamentos ? <BoletosPendentesPage /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/boletos" element={<Navigate to={defaultRoute} replace />} />
 
             <Route path="/resumo" element={canAccessResumo ? <ResumoPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/relatorios" element={canAccessResumo ? <ReportsPage /> : <Navigate to={defaultRoute} replace />} />

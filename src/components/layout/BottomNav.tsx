@@ -8,7 +8,6 @@ export function BottomNav() {
   const items = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
-    { title: "Boletos", url: "/boletos", icon: ClipboardCheck, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Resumo", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Patrimônio", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia || isContabilidade },
     { title: "NF", url: "/nf", icon: FileText, visible: isAdmin || isGerencia || isNfControl || isContabilidade },

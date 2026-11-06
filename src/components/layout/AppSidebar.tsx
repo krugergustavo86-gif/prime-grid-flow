@@ -18,7 +18,6 @@ export function AppSidebar() {
   const items = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
-    { title: "Boletos Pendentes", url: "/boletos", icon: ClipboardCheck, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Conciliação", url: "/conciliacao", icon: Scale, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Pendências", url: "/pendencias", icon: Inbox, visible: isAdmin || isGerencia || isLancamentos || isContabilidade, badge: pendCount },
 

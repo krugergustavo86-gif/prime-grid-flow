@@ -60,6 +60,7 @@ export function usePendingBoletos() {
       .from("pending_boletos")
       .select("*")
       .eq("status", "pendente")
+      .is("archived_at", null)
       .order("due_date", { ascending: true });
     if (error) {
       console.error("Failed to load pending boletos:", error);
