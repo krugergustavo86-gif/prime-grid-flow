@@ -54,6 +54,8 @@ export interface Receivable {
   value: number;
   paidValue: number;
   chequeLegacy?: boolean;
+  opsManaged?: boolean;
+  opsSyncedAt?: string;
   dueDate?: string;
   type: ReceivableType;
   status: ReceivableStatus;
