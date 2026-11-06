@@ -19,3 +19,4 @@
 - Cheque edit/delete uses admin-only atomic maintenance RPCs with row locks, optimistic timestamps and never-moved eligibility; mirror/legacy changes and retained audit snapshots keep cash untouched and prevent lost updates.
 - Patrimony and cheque hooks reload on browser visibility/focus, and Receivables reloads on tab mount; latest-request guards prevent stale responses replacing refreshed financial data.
 - Dependency security fixes use patched compatible releases and explicit overrides for vulnerable transitive packages; keep text lockfiles synchronized so installs and security scans resolve the same versions.
+- OPS debtor balance: only the ops_managed receivable is updated, via ops-ingest evento 'saldo_devedor' → ops_set_saldo_devedor RPC (archives manual value once, history table, audit log); DB guard blocks manual edits — keeps one automated source.

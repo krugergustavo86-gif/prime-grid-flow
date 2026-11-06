@@ -649,6 +649,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_saldo_devedor_historico: {
+        Row: {
+          created_at: string
+          descricao_anterior: string | null
+          id: string
+          notas_anteriores: string | null
+          payload: Json | null
+          receivable_id: string
+          referencia: string | null
+          tipo: string
+          valor_anterior: number
+          valor_novo: number
+        }
+        Insert: {
+          created_at?: string
+          descricao_anterior?: string | null
+          id?: string
+          notas_anteriores?: string | null
+          payload?: Json | null
+          receivable_id: string
+          referencia?: string | null
+          tipo: string
+          valor_anterior: number
+          valor_novo: number
+        }
+        Update: {
+          created_at?: string
+          descricao_anterior?: string | null
+          id?: string
+          notas_anteriores?: string | null
+          payload?: Json | null
+          receivable_id?: string
+          referencia?: string | null
+          tipo?: string
+          valor_anterior?: number
+          valor_novo?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_saldo_devedor_historico_receivable_id_fkey"
+            columns: ["receivable_id"]
+            isOneToOne: false
+            referencedRelation: "receivables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_servico: {
         Row: {
           area: string | null
@@ -885,6 +932,8 @@ export type Database = {
           due_date: string | null
           id: string
           notes: string | null
+          ops_managed: boolean
+          ops_synced_at: string | null
           paid_value: number
           responsible: string | null
           status: string
@@ -898,6 +947,8 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          ops_managed?: boolean
+          ops_synced_at?: string | null
           paid_value?: number
           responsible?: string | null
           status?: string
@@ -911,6 +962,8 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          ops_managed?: boolean
+          ops_synced_at?: string | null
           paid_value?: number
           responsible?: string | null
           status?: string
@@ -1435,6 +1488,10 @@ export type Database = {
         Returns: string
       }
       norm_txt: { Args: { t: string }; Returns: string }
+      ops_set_saldo_devedor: {
+        Args: { _payload: Json; _referencia: string; _valor: number }
+        Returns: Json
+      }
       pay_receivable: {
         Args: {
           _account: string

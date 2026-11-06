@@ -161,7 +161,7 @@ export function ReceivablesTab(props: Props) {
                 const remaining = Math.max(0, r.value - r.paidValue);
                 return (
                   <tr key={r.id} className="border-b hover:bg-muted/30">
-                    <td className="p-3">{r.description}</td>
+                    <td className="p-3">{r.description}{r.opsManaged && <span className="block text-xs text-muted-foreground">{r.opsSyncedAt ? `Atualizado pelo OPS em ${new Date(r.opsSyncedAt).toLocaleString("pt-BR")}` : "Aguardando primeiro envio do OPS"}</span>}</td>
                     <td className="p-3 text-right tabular-nums font-medium text-primary">{r.chequeLegacy || r.type === "Cheque" ? <Button variant="link" className="h-auto p-0 tabular-nums underline underline-offset-4" aria-label={`Abrir controle de cheques: ${r.description}`} onClick={() => setChequesOpen(true)}>{formatCurrency(remaining)}</Button> : formatCurrency(remaining)}</td>
                     <td className="p-3 hidden md:table-cell">{r.type}</td>
                     <td className="p-3">{statusBadge(r.status)}</td>
@@ -169,7 +169,7 @@ export function ReceivablesTab(props: Props) {
                     <td className="p-3 text-right">
                       <div className="flex gap-1 justify-end">
                         {r.chequeLegacy && isAdmin && <LegacyBalanceEditor legacy={r} edit={editLegacy} iconOnly />}
-                        {r.chequeLegacy || r.type === "Cheque" ? <Button variant="ghost" size="icon" title="Ver cheques" aria-label={`Ver cheques: ${r.description}`} onClick={() => setChequesOpen(true)}><DollarSign className="h-4 w-4" /></Button> : <>
+                        {r.opsManaged ? <span className="text-xs text-muted-foreground" title={r.opsSyncedAt ? `Última atualização: ${new Date(r.opsSyncedAt).toLocaleString("pt-BR")}` : "Aguardando primeiro envio do OPS"}>Automático (OPS)</span> : r.chequeLegacy || r.type === "Cheque" ? <Button variant="ghost" size="icon" title="Ver cheques" aria-label={`Ver cheques: ${r.description}`} onClick={() => setChequesOpen(true)}><DollarSign className="h-4 w-4" /></Button> : <>
                         {r.status !== "Recebido" && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-success" title="Registrar pagamento" onClick={() => setLinkedPayment({receivable: r, mode: "pay"})}>
                             <DollarSign className="h-3.5 w-3.5" />
