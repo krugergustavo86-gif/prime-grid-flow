@@ -169,6 +169,13 @@
       "when": 1793991701434,
       "tag": "0023_ops_saldo_devedor",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793991756413,
+      "tag": "0024_ops_saldo_devedor_br_format",
+      "breakpoints": true
     }
   ]
 }
