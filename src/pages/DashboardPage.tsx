@@ -13,6 +13,7 @@ import { groupOf } from "@/utils/categories";
 import { isOperational } from "@/utils/monthlyTotals";
 import { Users } from "lucide-react";
 import { CustoOperacionalCards } from "@/components/dashboard/CustoOperacionalCards";
+import { CustoInicioMes } from "@/components/dashboard/CustoInicioMes";
 import { OperacaoOS } from "@/components/dashboard/OperacaoOS";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -22,7 +23,7 @@ const CHART_COLORS = [
 ];
 
 export default function DashboardPage() {
-  const { transactions, config } = useTransactions();
+  const { transactions, config, loading } = useTransactions();
   const { months, totalEntradas, totalSaidas, acumuladoAno } = useAnnualSummary(transactions, config.saldoAnterior, config.ano);
   const { caixaAtual, caixaNota, patrimony, kpis } = usePosicaoPatrimonial(transactions, config);
 
@@ -82,6 +83,7 @@ export default function DashboardPage() {
     <div className="flex flex-col h-full">
       <Header title="Dashboard" />
       <div className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4 space-y-6">
+        <CustoInicioMes transactions={transactions} loading={loading} />
         <CustoOperacionalCards transactions={transactions} />
         <OperacaoOS transactions={transactions} />
         {/* Bloco 1 — Caixa */}
