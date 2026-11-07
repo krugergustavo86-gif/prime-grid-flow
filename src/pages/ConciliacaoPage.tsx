@@ -11,29 +11,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { dataConferencia, saldoDigitado } from "@/utils/conferenciaMensal";
 import { Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
-const parseBR = (s: string) => {
-  const c = s.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
-  return c === "" ? null : Number(c);
-};
 const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 
 export default function ConciliacaoPage() {
   const { isAdmin, canManageLancamentos } = useAuth();
   const canEdit = isAdmin || canManageLancamentos;
-  const { transactions, config } = useTransactions();
+  const { transactions, config, loading } = useTransactions();
   const { contas, reload } = useTodasContas();
   useLockedMonthsVersion();
   const [data, setData] = useState(today());
+  const [mes, setMes] = useState(() => today().slice(0, 7));
+  const [verHistorico, setVerHistorico] = useState(false);
+  const [verFechamento, setVerFechamento] = useState(false);
+  const [historico, setHistorico] = useState<{ id: string; conta_id: string; data: string; saldo_banco: number; saldo_sistema: number; diferenca: number; created_at: string }[]>([]);
   const [reais, setReais] = useState<Record<string, string>>({});
   const [ultimas, setUltimas] = useState<Record<string, { data: string; diferenca: number }>>({});
   const [busy, setBusy] = useState(false);
 
   const loadUltimas = async () => {
-    const { data: rows } = await supabase.from("conciliacoes").select("conta_id,data,diferenca,created_at")
+    const { data: rows, error } = await supabase.from("conciliacoes").select("id,conta_id,data,saldo_banco,saldo_sistema,diferenca,created_at")
       .order("data", { ascending: false }).order("created_at", { ascending: false });
+    if (error) { toast.error("Não foi possível carregar o histórico"); return; }
+    setHistorico((rows ?? []).map(r => ({ ...r, saldo_banco: Number(r.saldo_banco), saldo_sistema: Number(r.saldo_sistema), diferenca: Number(r.diferenca) })));
     const m: typeof ultimas = {};
     for (const r of rows ?? []) if (!m[r.conta_id]) m[r.conta_id] = { data: r.data, diferenca: Number(r.diferenca) };
     setUltimas(m);
@@ -49,7 +53,7 @@ export default function ConciliacaoPage() {
   useEffect(() => { void loadPend(); }, []);
   const netPend = pendAjuste.reduce((s, t) => s + (t.type === "Entrada" ? t.value : -t.value), 0);
   const recalcular = async () => {
-    if (!window.confirm(`Esses lançamentos já estavam no saldo do banco? O ajuste de conciliação será reduzido em ${formatCurrency(netPend)} e o caixa não muda.`)) return;
+    if (!window.confirm(`Confirme somente se esses lançamentos já estavam incluídos no saldo bancário da última conferência. O ajuste será recalculado em ${formatCurrency(netPend)}; isso altera o saldo calculado hoje para eliminar a duplicação. Continuar?`)) return;
     setBusy(true);
     const { data: novo, error } = await supabase.rpc("recalcular_ajuste_conciliacao");
     setBusy(false);
@@ -62,18 +66,21 @@ export default function ConciliacaoPage() {
     [contas, transactions, config.saldoAnterior, data]);
 
   const linhas = contas.map(c => {
-    const real = c.historico ? 0 : parseBR(reais[c.id] ?? "");
+    const real = c.historico ? 0 : saldoDigitado(reais[c.id] ?? "");
     const sys = sistema[c.id] ?? 0;
     return { c, real, sys, diff: real === null ? null : Math.round((real - sys) * 100) / 100 };
   });
-  const completas = linhas.every(l => l.real !== null);
+  const completas = linhas.length > 0 && !loading && linhas.every(l => l.real !== null);
+  const dataValida = /^\d{4}-\d{2}-\d{2}$/.test(data) && data >= `${mes}-01` && data <= dataConferencia(mes, today());
+  const preenchidas = linhas.filter(l => !l.c.historico && l.real !== null).length;
+  const divergentes = linhas.filter(l => l.diff !== null && Math.abs(l.diff) >= 0.005).length;
   const totSys = linhas.reduce((s, l) => s + l.sys, 0);
   const totReal = linhas.reduce((s, l) => s + (l.real ?? 0), 0);
   const totDiff = Math.round((totReal - totSys) * 100) / 100;
 
   const gerarAjuste = async () => {
-    if (!completas) { toast.error("Informe o saldo real de todas as contas"); return; }
-    if (!window.confirm(`Gerar UM lançamento "Ajuste de conciliação" de ${formatCurrency(totDiff)} em ${formatDateBR(data)} e iniciar cada conta com o saldo real?`)) return;
+    if (!completas || !dataValida) { toast.error("Informe a data e o saldo real de todas as contas"); return; }
+    if (!window.confirm(`Salvar conferência de ${formatDateBR(data)}? ${Math.abs(totDiff) < 0.005 ? "Sem novo lançamento de ajuste." : `Será criado UM ajuste ${totDiff > 0 ? "de entrada" : "de saída"} de ${formatCurrency(Math.abs(totDiff))}.`} Os saldos de abertura das contas serão atualizados com os saldos informados.`)) return;
     setBusy(true);
     const saldos = linhas.map(l => ({ conta_id: l.c.id, saldo_banco: l.real, saldo_sistema: l.sys }));
     const { error } = await supabase.rpc("aplicar_conciliacao", { _data: data, _saldos: saldos, _diferenca: totDiff });
@@ -100,13 +107,13 @@ export default function ConciliacaoPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <Header title="Conciliação bancária" />
+      <Header title="Conferência mensal de contas" />
       <div className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4 space-y-6">
         {pendAjuste.length > 0 && (
           <div className="border border-destructive/40 bg-destructive/5 rounded-lg p-4 space-y-2">
             <p className="text-sm font-medium text-destructive">
               {pendAjuste.length} lançamento(s) feitos depois da última conciliação com data anterior a ela ({formatCurrency(netPend)} líquido).
-              Se já estavam no saldo do banco, o caixa ficou fora do real.
+              Verifique se já estavam incluídos nos saldos bancários usados naquela conferência antes de recalcular.
             </p>
             <ul className="text-xs text-muted-foreground">
               {pendAjuste.slice(0, 10).map(t => <li key={t.id}>{formatDateBR(t.date)} · {t.description} · {t.type === "Entrada" ? "+" : "−"}{formatCurrency(t.value)}</li>)}
@@ -115,13 +122,19 @@ export default function ConciliacaoPage() {
           </div>
         )}
         <div className="flex flex-wrap items-end gap-3">
+          <div><Label>Mês da conferência</Label><Select value={mes} onValueChange={m => { setMes(m); setData(dataConferencia(m, today())); setReais({}); }}><SelectTrigger aria-label="Mês da conferência" className="mt-1 w-44"><SelectValue /></SelectTrigger><SelectContent>{Array.from({ length: 12 }, (_, i) => { const d = new Date(`${today()}T12:00:00`); d.setDate(1); d.setMonth(d.getMonth() - i); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; return <SelectItem key={k} value={k}>{d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</SelectItem>; })}</SelectContent></Select></div>
           <div>
             <Label>Data do saldo do banco</Label>
-            <Input type="date" className="mt-1 w-44" value={data} onChange={e => setData(e.target.value)} />
+            <Input aria-label="Data do saldo do banco" type="date" min={`${mes}-01`} max={dataConferencia(mes, today())} className="mt-1 w-44" value={data} onChange={e => { setData(e.target.value); setReais({}); }} />
           </div>
           {canEdit && (
-            <Button onClick={gerarAjuste} disabled={busy || !completas}>Gerar ajuste de conciliação</Button>
+            <Button onClick={gerarAjuste} disabled={busy || !completas || !dataValida}>Salvar conferência</Button>
           )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-y py-3">
+          <div><p className="text-xs text-muted-foreground">Saldo do sistema</p><p className="font-semibold tabular-nums">{loading ? "…" : formatCurrency(totSys)}</p></div>
+          <div><p className="text-xs text-muted-foreground">Saldo informado no banco</p><p className="font-semibold tabular-nums">{completas ? formatCurrency(totReal) : `${preenchidas}/${contas.filter(c => !c.historico).length} contas informadas`}</p></div>
+          <div><p className="text-xs text-muted-foreground">Diferença total</p><p className={`font-semibold tabular-nums ${completas && totDiff !== 0 ? "text-destructive" : "text-foreground"}`}>{completas ? formatCurrency(totDiff) : "—"}</p><p className="text-xs text-muted-foreground">{divergentes} conta(s) com diferença</p></div>
         </div>
 
         <div className="bg-card border rounded-lg overflow-x-auto">
@@ -145,7 +158,7 @@ export default function ConciliacaoPage() {
                   <td className="p-3 text-right tabular-nums">{formatCurrency(sys)}</td>
                   <td className="p-3 text-right">
                     {c.historico ? <span className="tabular-nums text-muted-foreground">{formatCurrency(0)}</span> : (
-                      <Input className="w-36 ml-auto text-right tabular-nums" placeholder="0,00" disabled={!canEdit}
+                      <Input aria-label={`Saldo banco ${c.nome}`} inputMode="decimal" className="w-36 ml-auto text-right tabular-nums" placeholder="0,00" disabled={!canEdit}
                         value={reais[c.id] ?? ""} onChange={e => setReais(r => ({ ...r, [c.id]: e.target.value }))} />
                     )}
                   </td>
@@ -170,7 +183,12 @@ export default function ConciliacaoPage() {
           </table>
         </div>
 
-        <div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" aria-expanded={verHistorico} onClick={() => setVerHistorico(v => !v)}>Histórico de conferências ({new Set(historico.map(r => r.data)).size})</Button>
+          <Button variant="outline" aria-expanded={verFechamento} onClick={() => setVerFechamento(v => !v)}>Fechamento mensal</Button>
+        </div>
+        {verHistorico && <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b text-left"><th className="p-3">Data</th><th className="p-3">Conta</th><th className="p-3 text-right">Sistema registrado</th><th className="p-3 text-right">Banco registrado</th><th className="p-3 text-right">Diferença registrada</th></tr></thead><tbody>{historico.map(r => <tr key={r.id} className="border-b"><td className="p-3 whitespace-nowrap">{formatDateBR(r.data)}</td><td className="p-3">{contas.find(c => c.id === r.conta_id)?.nome ?? "Conta do histórico"}</td><td className="p-3 text-right tabular-nums whitespace-nowrap">{formatCurrency(r.saldo_sistema)}</td><td className="p-3 text-right tabular-nums whitespace-nowrap">{formatCurrency(r.saldo_banco)}</td><td className="p-3 text-right tabular-nums whitespace-nowrap">{formatCurrency(r.diferenca)}</td></tr>)}</tbody></table>{!historico.length && <p className="text-sm text-muted-foreground p-3">Nenhuma conferência registrada.</p>}</div>}
+        {verFechamento && <div>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Fechamento mensal {config.ano}</h2>
           <p className="text-xs text-muted-foreground mb-3">O mês só fecha com diferença zero em todas as contas (conciliação na data final do mês ou depois). Só Admin reabre.</p>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -190,7 +208,7 @@ export default function ConciliacaoPage() {
               );
             })}
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

@@ -1,3 +1,9 @@
+# Simplificação mensal e Operação/OS
+- [x] Simplificar Conciliação com conferência mensal por conta, diferenças e histórico, preservando as operações financeiras existentes; sem publicar.
+- [x] Reduzir Operação/OS a quatro indicadores, recolher detalhes e separar OS zero das médias financeiras; sem publicar.
+- [x] Validar 13 testes e navegação autenticada desktop/mobile, histórico, saldo inválido, confirmação de ajuste cancelada; nenhuma operação financeira gravada.
+- [x] Explicar classificação dos 56 itens em meses fechados: trocar de tela não libera; sugerir classificação histórica separada ou reabertura Admin auditada, nunca ajuste financeiro artificial; Pendências e outros painéis preservados.
+
 # Custo de início de mês e diagnóstico de uso
 - [x] Implementar painel com padrão 6 meses, cinco grupos, total operacional e impostos/parcelas separados; sem publicar.
 - [x] Validar 33 testes e fluxo autenticado 3/6/12 meses, detalhes de materiais/impostos e desktop/mobile com dados reais; nenhuma gravação financeira.
