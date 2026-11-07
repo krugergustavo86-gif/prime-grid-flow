@@ -71,6 +71,7 @@ export default function ConciliacaoPage() {
     return { c, real, sys, diff: real === null ? null : Math.round((real - sys) * 100) / 100 };
   });
   const completas = linhas.length > 0 && !loading && linhas.every(l => l.real !== null);
+  const dataValida = /^\d{4}-\d{2}-\d{2}$/.test(data) && data >= `${mes}-01` && data <= dataConferencia(mes, today());
   const preenchidas = linhas.filter(l => !l.c.historico && l.real !== null).length;
   const divergentes = linhas.filter(l => l.diff !== null && Math.abs(l.diff) >= 0.005).length;
   const totSys = linhas.reduce((s, l) => s + l.sys, 0);
@@ -78,7 +79,7 @@ export default function ConciliacaoPage() {
   const totDiff = Math.round((totReal - totSys) * 100) / 100;
 
   const gerarAjuste = async () => {
-    if (!completas) { toast.error("Informe o saldo real de todas as contas"); return; }
+    if (!completas || !dataValida) { toast.error("Informe a data e o saldo real de todas as contas"); return; }
     if (!window.confirm(`Salvar conferência de ${formatDateBR(data)}? ${Math.abs(totDiff) < 0.005 ? "Sem novo lançamento de ajuste." : `Será criado UM ajuste ${totDiff > 0 ? "de entrada" : "de saída"} de ${formatCurrency(Math.abs(totDiff))}.`} Os saldos de abertura das contas serão atualizados com os saldos informados.`)) return;
     setBusy(true);
     const saldos = linhas.map(l => ({ conta_id: l.c.id, saldo_banco: l.real, saldo_sistema: l.sys }));
@@ -127,7 +128,7 @@ export default function ConciliacaoPage() {
             <Input aria-label="Data do saldo do banco" type="date" min={`${mes}-01`} max={dataConferencia(mes, today())} className="mt-1 w-44" value={data} onChange={e => { setData(e.target.value); setReais({}); }} />
           </div>
           {canEdit && (
-            <Button onClick={gerarAjuste} disabled={busy || !completas || !data}>Salvar conferência</Button>
+            <Button onClick={gerarAjuste} disabled={busy || !completas || !dataValida}>Salvar conferência</Button>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-y py-3">
