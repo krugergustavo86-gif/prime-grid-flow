@@ -1,8 +1,8 @@
 # Custo de início de mês e diagnóstico de uso
-- [ ] Implementar painel com padrão 6 meses, cinco grupos, total operacional e impostos/parcelas separados; sem publicar.
-- [ ] Testar médias, detalhes e telas desktop/mobile com dados reais sem alterar finanças.
-- [ ] Investigar Conciliação e Pendências e propor simplificação sem modificá-las.
-- [ ] Avaliar redundância e sinais de uso dos painéis do Dashboard, sem removê-los.
+- [x] Implementar painel com padrão 6 meses, cinco grupos, total operacional e impostos/parcelas separados; sem publicar.
+- [x] Validar 33 testes e fluxo autenticado 3/6/12 meses, detalhes de materiais/impostos e desktop/mobile com dados reais; nenhuma gravação financeira.
+- [x] Investigar Conciliação e Pendências: última conciliação 06/10, 155 pendências, sem evidência de importação pelo recurso atual; propor simplificação sem modificá-las.
+- [x] Avaliar redundância dos painéis e analytics de páginas; nenhum rastreamento individual de leitura de cards, sem removê-los.
 
 # Correção de segurança das dependências
 - [x] Corrigir jsPDF/DOMPurify e revisar todos os avisos de dependências; DOMPurify 3.4.17, ws 8.22.0, lodash 4.18.1, Router 7.18.4 e Zod 4.6.7; atualizações compatíveis adicionais, sem publicar.
