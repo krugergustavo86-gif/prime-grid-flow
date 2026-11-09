@@ -1,8 +1,7 @@
-import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut, Users, Activity, PieChart, ClipboardCheck, Tags, Inbox, Scale } from "lucide-react";
+import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, LogOut, Users, Activity, PieChart, ClipboardCheck, Tags, Scale } from "lucide-react";
 import logoPrimegrid from "@/assets/logo-primegrid.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
-import { usePendenciasCount } from "@/hooks/usePendenciasCount";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
@@ -14,13 +13,10 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { isAdmin, isGerencia, isLancamentos, isNfControl, isContabilidade, role, user, signOut } = useAuth();
 
-  const pendCount = usePendenciasCount();
   const items = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Conciliação", url: "/conciliacao", icon: Scale, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
-    { title: "Pendências", url: "/pendencias", icon: Inbox, visible: isAdmin || isGerencia || isLancamentos || isContabilidade, badge: pendCount },
-
     { title: "Resumo Anual", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Relatórios", url: "/relatorios", icon: PieChart, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Patrimonial", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia || isContabilidade },
@@ -64,9 +60,6 @@ export function AppSidebar() {
                     <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                       <item.icon className="mr-2 h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
-                      {!collapsed && "badge" in item && item.badge ? (
-                        <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 tabular-nums">{item.badge}</span>
-                      ) : null}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

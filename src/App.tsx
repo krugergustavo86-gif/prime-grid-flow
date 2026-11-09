@@ -16,7 +16,6 @@ import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NFControlPage from "./pages/NFControlPage";
 import UsersPage from "./pages/UsersPage";
 import AtividadesPage from "./pages/AtividadesPage";
-import PendenciasPage from "./pages/PendenciasPage";
 import FornecedoresCategoriasPage from "./pages/FornecedoresCategoriasPage";
 
 import LoginPage from "./pages/LoginPage";
@@ -104,7 +103,7 @@ function AppRoutes() {
             <Route path="/usuarios" element={isAdmin ? <UsersPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/atividades" element={(isAdmin || isGerencia) ? <AtividadesPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/conciliacao" element={(isAdmin || isGerencia || isLancamentos || isContabilidade) ? <ConciliacaoPage /> : <Navigate to={defaultRoute} replace />} />
-            <Route path="/pendencias" element={canAccessLancamentos ? <PendenciasPage /> : <Navigate to={defaultRoute} replace />} />
+            <Route path="/pendencias" element={<Navigate to={defaultRoute} replace />} />
             <Route path="/fornecedores" element={(isAdmin || isGerencia) ? <FornecedoresCategoriasPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/configuracoes" element={canAccessConfig ? <ConfiguracoesPage /> : <Navigate to={defaultRoute} replace />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
