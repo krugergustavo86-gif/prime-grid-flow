@@ -62,3 +62,5 @@
 # Aviso de origem no cadastro de cheques
 - [x] Dar ao aviso "Cheque novo" o mesmo destaque laranja do aviso de individualização; conferido no preview com R$ 30.000,00.
 - [x] Publicar o formulário no site publicado; deploy agendado e a URL respondeu 200.
+# Retirada da tela Pendências
+- [x] Remover Pendências do menu e redirecionar /pendencias para a home, sem tocar em lançamentos, saldos ou categorias; 155 itens (R$ 2.426.890,77) confirmados intactos, build OK, testado no navegador; sem publicar.
