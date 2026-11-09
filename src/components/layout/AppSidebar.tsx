@@ -60,9 +60,6 @@ export function AppSidebar() {
                     <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                       <item.icon className="mr-2 h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
-                      {!collapsed && "badge" in item && item.badge ? (
-                        <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 tabular-nums">{item.badge}</span>
-                      ) : null}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
