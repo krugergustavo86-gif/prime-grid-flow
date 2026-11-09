@@ -2,7 +2,6 @@ import { LayoutDashboard, Receipt, BarChart3, Building2, Settings, FileText, Log
 import logoPrimegrid from "@/assets/logo-primegrid.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
-import { usePendenciasCount } from "@/hooks/usePendenciasCount";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
@@ -14,13 +13,10 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { isAdmin, isGerencia, isLancamentos, isNfControl, isContabilidade, role, user, signOut } = useAuth();
 
-  const pendCount = usePendenciasCount();
   const items = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Lançamentos", url: "/lancamentos", icon: Receipt, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
     { title: "Conciliação", url: "/conciliacao", icon: Scale, visible: isAdmin || isGerencia || isLancamentos || isContabilidade },
-    { title: "Pendências", url: "/pendencias", icon: Inbox, visible: isAdmin || isGerencia || isLancamentos || isContabilidade, badge: pendCount },
-
     { title: "Resumo Anual", url: "/resumo", icon: BarChart3, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Relatórios", url: "/relatorios", icon: PieChart, visible: isAdmin || isGerencia || isContabilidade },
     { title: "Patrimonial", url: "/patrimonial", icon: Building2, visible: isAdmin || isGerencia || isContabilidade },

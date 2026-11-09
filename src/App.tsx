@@ -16,7 +16,6 @@ import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import NFControlPage from "./pages/NFControlPage";
 import UsersPage from "./pages/UsersPage";
 import AtividadesPage from "./pages/AtividadesPage";
-import PendenciasPage from "./pages/PendenciasPage";
 import FornecedoresCategoriasPage from "./pages/FornecedoresCategoriasPage";
 
 import LoginPage from "./pages/LoginPage";
