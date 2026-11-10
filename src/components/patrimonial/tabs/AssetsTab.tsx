@@ -100,7 +100,7 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly
       </div>
 
       {/* Accordions */}
-      <Accordion type="multiple" defaultValue={["Veículos"]}>
+      <Accordion type="multiple">
         {GROUPS.map((group) => {
           const groupAssets = assets.filter(a => a.group === group.key);
           const subtotal = groupAssets.reduce((s, a) => s + a.valueMarket, 0);
