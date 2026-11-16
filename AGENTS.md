@@ -22,3 +22,4 @@
 - OPS debtor balance: only the ops_managed receivable is updated, via ops-ingest evento 'saldo_devedor' → ops_set_saldo_devedor RPC (archives manual value once, history table, audit log); DB guard blocks manual edits — keeps one automated source.
 - Month-start costs reuse monthlyTotals and the existing operational-average window; named category buckets expose taxes and loan installments separately so Dashboard totals stay aligned without financial writes.
 - Monthly reconciliation remains a presentation of existing atomic reconciliation RPCs with explicit confirmation of cash effects; OS summaries count zero-value orders operationally but exclude them from financial ticket averages, preserving source data.
+- Monthly patrimony snapshots (totals + detail) are written only by src/hooks/usePatrimonySnapshots.ts from the Patrimonial page; comparisons use src/utils/patrimonySnapshot.ts — one writer keeps snapshots consistent with usePosicaoPatrimonial.

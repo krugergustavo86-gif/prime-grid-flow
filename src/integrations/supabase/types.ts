@@ -735,6 +735,7 @@ export type Database = {
       patrimony_snapshots: {
         Row: {
           created_at: string
+          detail: Json | null
           gross_patrimony: number
           id: string
           month: string
@@ -745,6 +746,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          detail?: Json | null
           gross_patrimony?: number
           id?: string
           month: string
@@ -755,6 +757,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          detail?: Json | null
           gross_patrimony?: number
           id?: string
           month?: string

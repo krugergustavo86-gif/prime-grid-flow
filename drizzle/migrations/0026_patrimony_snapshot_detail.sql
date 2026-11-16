@@ -1,0 +1,2 @@
+ALTER TABLE public.patrimony_snapshots ADD COLUMN IF NOT EXISTS detail jsonb;
+COMMENT ON COLUMN public.patrimony_snapshots.detail IS 'Detalhe da posição patrimonial do mês (grupos de ativos, caixa, recebíveis, estoque, empréstimos, contas a pagar, bruto, líquido).';

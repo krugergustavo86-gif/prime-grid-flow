@@ -24,6 +24,7 @@ interface Props {
   stockTotal?: number;
   totalLoans?: number;
   totalPayables?: number;
+  compare?: React.ReactNode;
 }
 
 const GROUPS: { key: AssetGroup; label: string; icon: React.ElementType }[] = [
@@ -40,7 +41,7 @@ const CHART_COLORS = [
   "hsl(180, 60%, 35%)", "hsl(280, 45%, 45%)",
 ];
 
-export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly, cashAndInvestments = 0, receivables = 0, stockTotal = 0, totalLoans = 0, totalPayables = 0 }: Props) {
+export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly, cashAndInvestments = 0, receivables = 0, stockTotal = 0, totalLoans = 0, totalPayables = 0, compare }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Asset | null>(null);
   const [defaultGroup, setDefaultGroup] = useState<AssetGroup>("Veículos");
@@ -75,6 +76,7 @@ export function AssetsTab({ assets, addAsset, updateAsset, deleteAsset, readOnly
 
   return (
     <div className="space-y-6">
+      {compare}
       {/* Donut chart */}
       <div className="bg-card rounded-lg border p-4">
         <h3 className="font-semibold text-foreground mb-3">Distribuição do Patrimônio</h3>

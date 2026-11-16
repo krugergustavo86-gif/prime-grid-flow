@@ -1,4 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { usePatrimonySnapshots } from "@/hooks/usePatrimonySnapshots";
+import { PatrimonyCompare } from "@/components/patrimonial/PatrimonyCompare";
+import type { SnapshotDetail } from "@/utils/patrimonySnapshot";
 import { useTransactions } from "@/hooks/useTransactions";
 import { usePosicaoPatrimonial } from "@/hooks/usePosicaoPatrimonial";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +23,16 @@ export default function PatrimonialPage() {
   const { caixaAtual, caixaNota, patrimony, kpis } = usePosicaoPatrimonial(transactions, config);
   const { isAdmin } = useAuth();
   const readOnly = !isAdmin;
+
+  const cashAndInvestments = kpis.cashAvailable + patrimony.cashEntries.filter(c => !c.description.toLowerCase().includes("saldo em conta")).reduce((s, c) => s + c.balance, 0);
+  const currentDetail = useMemo<SnapshotDetail | null>(() => {
+    if (patrimony.assets.length === 0 || transactions.length === 0) return null; // ainda carregando
+    const groups: Record<string, number> = {};
+    for (const a of patrimony.assets) groups[a.group] = (groups[a.group] ?? 0) + a.valueMarket;
+    return { version: 1, groups, cash: cashAndInvestments, receivables: kpis.totalReceivables, stock: kpis.stockTotal,
+      loans: kpis.totalLoanBalance, payables: kpis.totalPayables, gross: kpis.grossPatrimony, net: kpis.netPatrimony };
+  }, [patrimony.assets, transactions.length, cashAndInvestments, kpis]);
+  const { snapshots } = usePatrimonySnapshots(currentDetail, config.numSocios);
 
   const handlePayInstallment = useCallback(async (loan: Loan, paidValue: number) => {
     const today = new Date().toISOString().split("T")[0];
@@ -93,7 +106,8 @@ export default function PatrimonialPage() {
               deleteAsset={patrimony.deleteAsset}
               readOnly={readOnly}
               stockTotal={kpis.stockTotal}
-              cashAndInvestments={kpis.cashAvailable + patrimony.cashEntries.filter(c => !c.description.toLowerCase().includes("saldo em conta")).reduce((s, c) => s + c.balance, 0)}
+              cashAndInvestments={cashAndInvestments}
+              compare={currentDetail ? <PatrimonyCompare current={currentDetail} snapshots={snapshots} numSocios={config.numSocios} /> : null}
               receivables={kpis.totalReceivables}
               totalLoans={kpis.totalLoanBalance}
               totalPayables={kpis.totalPayables}

@@ -183,6 +183,13 @@
       "when": 1793998659025,
       "tag": "0025_archive_pending_boletos",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794840141760,
+      "tag": "0026_patrimony_snapshot_detail",
+      "breakpoints": true
     }
   ]
 }

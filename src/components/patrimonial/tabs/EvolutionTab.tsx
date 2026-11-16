@@ -77,7 +77,7 @@ function formatMonth(month: string) {
 
 const emptyForm = { month: "", gross_patrimony: "", total_debt: "", notes: "" };
 
-export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTotalDebt }: EvolutionTabProps) {
+export function EvolutionTab({ readOnly, numSocios }: EvolutionTabProps) {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -153,37 +153,7 @@ export function EvolutionTab({ readOnly, numSocios, autoGrossPatrimony, autoTota
 
   useEffect(() => { fetchSnapshots(); }, [fetchSnapshots]);
 
-  useEffect(() => {
-    if (autoGrossPatrimony === undefined || loading) return;
-    const now = new Date();
-    const currentMonth = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
-    const debt = autoTotalDebt ?? 0;
-    const netPerPartner = numSocios > 0 ? (autoGrossPatrimony - debt) / numSocios : 0;
-
-    const existing = snapshots.find(s => s.month === currentMonth);
-    const needsUpdate = !existing ||
-      Math.abs(existing.gross_patrimony - autoGrossPatrimony) > 0.01 ||
-      Math.abs(existing.total_debt - debt) > 0.01;
-
-    if (!needsUpdate) return;
-
-    const payload = {
-      month: currentMonth,
-      gross_patrimony: autoGrossPatrimony,
-      total_debt: debt,
-      net_equity_per_partner: netPerPartner,
-      notes: "Atualizado automaticamente",
-    };
-
-    (async () => {
-      if (existing) {
-        await supabase.from("patrimony_snapshots").update(payload).eq("id", existing.id);
-      } else {
-        await supabase.from("patrimony_snapshots").insert(payload);
-      }
-      fetchSnapshots();
-    })();
-  }, [autoGrossPatrimony, autoTotalDebt, numSocios, loading, snapshots, fetchSnapshots]);
+  // A foto do mês corrente é gravada automaticamente por usePatrimonySnapshots (Painel Patrimonial).
 
   const openNew = () => {
     setEditId(null);
